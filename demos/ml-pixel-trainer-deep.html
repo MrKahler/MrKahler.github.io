@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Machines Learn: Deep Pixel Trainer</title>
+<style>
+  :root {
+    --bg: #16151a;
+    --surface: #1f1e24;
+    --surface2: #28272f;
+    --border: #35333d;
+    --border-strong: #4a4756;
+    --text: #e8e6f0;
+    --text-2: #a9a6b8;
+    --text-3: #6c697c;
+    --stop: #f07070;
+    --stop-bg: #2a1a1a;
+    --stop-border: #6b3030;
+    --slow: #e0a84a;
+    --slow-bg: #271f0e;
+    --slow-border: #6b4d18;
+    --go: #6abf6a;
+    --go-bg: #111f11;
+    --go-border: #2a5c2a;
+    --accent: #8b82f0;
+    --accent-bg: #1a1830;
+    --accent-border: #4a44a0;
+    --mono: 'DM Mono', ui-monospace, Menlo, Consolas, monospace;
+    --sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Everything below is in rem, so the whole UI scales with the screen.
+     Base size follows whichever is tighter: width or height. */
+  html { font-size: clamp(12px, min(1.05vw, 1.85vh), 40px); }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem 1.4rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -.01em; }
+  header span { font-size: 0.9rem; color: var(--text-3); font-family: var(--mono); }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.05fr 1.25fr 1fr;
+    gap: 1rem;
+    padding: 0.8rem 1.4rem 0.5rem;
+    min-height: 0;
+    grid-template-rows: minmax(0,1fr);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .section-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 0.8rem;
+    font-family: var(--mono);
+  }
+  .section-label small {
+    font-weight: 400; text-transform: none; letter-spacing: 0;
+    font-family: var(--sans); font-size: 0.85rem; color: var(--text-3);
+  }
+
+  .hr { height: 1px; background: var(--border); margin: 0.9rem 0; flex-shrink: 0; }
+
+  /* ---------- column 1: inputs + labeling ---------- */
+  .toggle-row { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; font-size: 1rem; color: var(--text-2); }
+  .tog { position: relative; width: 2.6rem; height: 1.45rem; flex-shrink: 0; }
+  .tog input { opacity: 0; width: 0; height: 0; }
+  .tog-track { position: absolute; inset: 0; background: var(--border-strong); border-radius: 1rem; transition: background .2s; cursor: pointer; }
+  .tog input:checked + .tog-track { background: var(--accent); }
+  .tog-thumb { position: absolute; top: 0.2rem; left: 0.2rem; width: 1.05rem; height: 1.05rem; background: var(--text); border-radius: 50%; transition: transform .2s; pointer-events: none; }
+  .tog input:checked ~ .tog-thumb { transform: translateX(1.15rem); }
+
+  .pixel-col { display: flex; flex-direction: column; gap: 0.7rem; }
+  .prow { display: flex; align-items: center; gap: 1rem; }
+  .pixel {
+    width: 4.6rem; height: 4.6rem;
+    border-radius: 0.7rem;
+    border: 2px solid var(--border-strong);
+    transition: background .15s;
+    flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+  }
+  .pval { font-size: 0.85rem; font-weight: 500; padding: 0.2rem 0.4rem; opacity: 0.35; font-family: var(--mono); line-height: 1; }
+  .pname { font-size: 1.1rem; color: var(--text-2); width: 2.8rem; flex-shrink: 0; }
+  .slider-wrap { display: flex; align-items: center; gap: 0.8rem; flex: 1; min-width: 0; }
+  input[type=range] {
+    flex: 1; min-width: 0;
+    -webkit-appearance: none; appearance: none;
+    height: 0.5rem; border-radius: 0.3rem;
+    background: var(--border-strong);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1.7rem; height: 1.7rem; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    border: 3px solid var(--surface);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 1.7rem; height: 1.7rem; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    border: 3px solid var(--surface);
+  }
+  input[type=range]:disabled { opacity: 0.35; }
+  input[type=range]:disabled::-webkit-slider-thumb { cursor: default; }
+  .sval { font-size: 1.2rem; font-weight: 500; width: 1.6rem; text-align: right; color: var(--text); font-family: var(--mono); flex-shrink: 0; }
+
+  .guess-label { font-size: 0.85rem; color: var(--text-3); font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 0.4rem; }
+  .gbox {
+    border-radius: 0.6rem; padding: 0.7rem 1rem; font-size: 2rem;
+    font-weight: 700; text-align: center;
+    border: 2px solid var(--border);
+    font-family: var(--mono); letter-spacing: .06em;
+    transition: all .2s;
+  }
+
+  .banner {
+    font-size: 1.15rem; line-height: 1.35; color: var(--text-2);
+    border: 2px solid var(--border); border-radius: 0.6rem;
+    padding: 0.5rem 0.8rem; margin-bottom: 0.5rem; min-height: 3.6rem;
+    display: flex; align-items: center;
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .banner.ok   { background: var(--go-bg);   border-color: var(--go-border);   color: var(--go); }
+  .banner.bad  { background: var(--stop-bg); border-color: var(--stop-border); color: var(--stop); }
+  .banner.none { background: var(--slow-bg); border-color: var(--slow-border); color: var(--slow); }
+  .banner.teach { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+  .cbtn:disabled { opacity: 0.4; cursor: default; }
+
+  /* auto-train controls (footer) */
+  .auto-group { display: flex; align-items: flex-end; gap: 0.7rem; flex-wrap: nowrap; }
+  .auto-btn { width: auto; padding: 0.7rem 1.3rem; font-size: 1.05rem; margin: 0; white-space: nowrap; }
+  .auto-lbl { font-size: 0.8rem; color: var(--text-3); font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; display: flex; flex-direction: column; gap: 0.25rem; }
+  .auto-lbl select {
+    font-size: 1rem; padding: 0.4rem 0.5rem; text-transform: none; letter-spacing: 0;
+    background: var(--surface2); color: var(--text);
+    border: 2px solid var(--border); border-radius: 0.5rem; font-family: var(--sans);
+  }
+  .auto-lbl select:disabled { opacity: 0.4; }
+  .btn-row { display: flex; gap: 0.7rem; }
+  .cbtn {
+    flex: 1; padding: 1.1rem 0.4rem; font-size: 1.5rem; font-weight: 700;
+    border-radius: 0.7rem; cursor: pointer;
+    border: 2px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    font-family: var(--sans); transition: all .15s;
+  }
+  .cbtn.stop { border-color: var(--stop-border); color: var(--stop); }
+  .cbtn.stop:hover { background: var(--stop-bg); }
+  .cbtn.slow { border-color: var(--slow-border); color: var(--slow); }
+  .cbtn.slow:hover { background: var(--slow-bg); }
+  .cbtn.go { border-color: var(--go-border); color: var(--go); }
+  .cbtn.go:hover { background: var(--go-bg); }
+  .cbtn:active { transform: scale(0.97); }
+
+  /* ---------- column 2: weights ---------- */
+  .wdisplay { flex: 1; display: grid; grid-template-rows: repeat(3, 1fr); gap: 0.9rem; min-height: 0; }
+  .wrow {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 0.7rem; padding: 0.7rem 1rem;
+  }
+  .wname { font-size: 1.3rem; color: var(--text); width: 3.2rem; flex-shrink: 0; font-family: var(--mono); font-weight: 500; }
+  .wgroup { display: flex; flex-direction: column; justify-content: center; gap: 0.5rem; flex: 1; min-width: 0; }
+  .wsubrow { display: flex; align-items: center; gap: 0.7rem; }
+  .wclabel { font-size: 0.95rem; width: 3.2rem; flex-shrink: 0; font-family: var(--mono); text-transform: uppercase; font-weight: 500; }
+  .wtrack { flex: 1; height: 1rem; background: var(--surface); border-radius: 0.5rem; border: 1px solid var(--border); overflow: hidden; min-width: 0; }
+  .wfill { height: 100%; border-radius: 0.5rem; transition: width .35s; }
+  .wnum { font-size: 1.05rem; width: 3.4rem; text-align: right; color: var(--text-2); font-family: var(--mono); flex-shrink: 0; }
+
+  /* ---------- column 3: rubric + test ---------- */
+  .rtable { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
+  .rtable th { font-size: 0.95rem; font-weight: 600; padding: 0.5rem 0.3rem; text-align: center; border-bottom: 1px solid var(--border); font-family: var(--mono); text-transform: uppercase; }
+  .rtable td { padding: 0.5rem 0.3rem; text-align: center; border-bottom: 1px solid var(--border); }
+  .rtable td:first-child { text-align: left; color: var(--text-2); font-size: 1.05rem; }
+  .rtable input[type=checkbox] { width: 1.4rem; height: 1.4rem; cursor: pointer; accent-color: var(--accent); }
+  .tie-note { font-size: 0.85rem; color: var(--text-3); font-family: var(--mono); }
+
+  .abtn {
+    width: 100%; padding: 0.9rem; font-size: 1.15rem; font-weight: 600;
+    border-radius: 0.7rem; cursor: pointer;
+    background: var(--surface2); border: 2px solid var(--border);
+    color: var(--text); font-family: var(--sans);
+    transition: all .15s;
+  }
+  .abtn:hover { background: var(--border); }
+  .abtn.accent { border-color: var(--accent-border); color: var(--accent); }
+  .abtn.accent:hover { background: var(--accent-bg); }
+
+  .results-card { background: var(--bg); border-radius: 0.7rem; padding: 0.6rem 1rem 0.7rem; border: 1px solid var(--border); margin-top: 0.8rem; flex: 0 0 auto; }
+  .res-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 1.5rem; font-weight: 600; padding-bottom: 0.4rem; }
+  .res-val { font-family: var(--mono); font-weight: 500; color: var(--text); }
+  .res-split { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; border-top: 1px solid var(--border); padding-top: 0.5rem; }
+  .res-split > div { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; font-size: 1rem; font-family: var(--mono); font-weight: 600; }
+  .res-split .res-val { font-size: 1.15rem; }
+
+  /* test-history graph */
+  .hist-wrap { margin-top: 0.8rem; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .hist-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .hist-clear { font-size: 0.8rem; background: none; border: none; color: var(--text-3); cursor: pointer; font-family: var(--mono); text-decoration: underline; }
+  .hist-svg { width: 100%; flex: 1; min-height: 7rem; display: block; }
+  .hist-svg text { fill: var(--text-2); font-family: var(--mono); font-size: 0.75rem; }
+  .hist-svg .hax { fill: var(--text-3); font-size: 0.7rem; }
+  .hist-svg .hg { stroke: var(--border); stroke-width: 1; }
+  .hist-svg .hl-cur { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .hist-svg .hl-old { fill: none; stroke: var(--text-3); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: 0.7; }
+  .hist-svg .hp-cur { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+  .hist-svg .hp-old { fill: var(--text-3); opacity: 0.7; }
+  .hist-svg .hp-changed { fill: var(--surface); stroke: var(--slow); stroke-width: 2.5; opacity: 1; }
+  .hist-svg .hval { fill: var(--text); font-size: 0.8rem; font-weight: 600; }
+  .hist-svg .hempty { fill: var(--text-3); font-size: 0.85rem; }
+  .hist-note { font-size: 0.7rem; color: var(--text-3); font-family: var(--mono); line-height: 1.4; }
+
+  /* ---------- footer strip ---------- */
+  footer { padding: 0.3rem 1.4rem 0.7rem; }
+  .session-strip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    padding: 0.6rem 1.2rem;
+    display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
+  }
+  .stat { font-size: 1.15rem; color: var(--text-2); white-space: nowrap; }
+  .stat b { color: var(--text); font-family: var(--mono); font-size: 1.4rem; }
+  .vr { width: 1px; align-self: stretch; background: var(--border); }
+  .hint { font-size: 0.85rem; color: var(--text-3); line-height: 1.4; flex: 1; min-width: 18rem; }
+  .hint b { color: var(--text-2); }
+  .rbtn { padding: 0.7rem 1.4rem; font-size: 1rem; font-weight: 500; border-radius: 0.6rem; cursor: pointer; background: var(--surface2); border: 2px solid var(--border); color: var(--text-2); font-family: var(--sans); white-space: nowrap; }
+  .rbtn:hover { background: var(--border); }
+
+  /* narrow windows: stack the columns */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    .session-strip { flex-wrap: wrap; }
+  }
+
+  .net-svg { flex: 1; width: 100%; min-height: 0; display: block; }
+  .net-svg text { font-family: var(--mono); fill: var(--text-2); }
+  .net-svg .cap { fill: var(--text-3); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+  .net-svg .nv { font-size: 11px; fill: var(--text); stroke: var(--bg); stroke-width: 3px; paint-order: stroke; }
+  .net-svg .ol { font-size: 15px; font-weight: 600; }
+  .net-svg .note { fill: var(--text-2); font-size: 13px; }
+  .net-svg .ov { opacity: 0; animation: ovfade .35s ease-out forwards; }
+  @keyframes ovfade { from { opacity: 0; } to { opacity: var(--o, 1); } }
+  .net-svg .pv { font-size: 11px; fill: #fff; font-weight: 600; stroke: none; }
+  .net-svg .hit { cursor: help; }
+  #tip { position: fixed; display: none; z-index: 50; background: var(--surface2); border: 1px solid var(--border-strong); border-radius: 0.5rem; padding: 0.6rem 0.8rem; font-size: 0.85rem; max-width: 25rem; line-height: 1.45; color: var(--text); pointer-events: none; box-shadow: 0 0.4rem 1.2rem rgba(0,0,0,.5); }
+  #tip .tt { color: var(--text-2); font-size: 0.8rem; margin-top: 0.3rem; font-family: var(--mono); }
+  .walk { border: 1px solid var(--accent-border); background: var(--accent-bg); border-radius: 0.6rem; padding: 0.5rem 0.7rem; margin-top: 0.4rem; }
+  .walk-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem; color: var(--accent); }
+  .walk-nav { display: flex; gap: 0.35rem; }
+  .walk-body { font-size: 0.82rem; line-height: 1.5; color: var(--text-2); max-height: 11rem; overflow: auto; }
+  .walk-body b { color: var(--text); }
+  .wbtn { padding: 0.35rem 0.8rem; font-size: 0.85rem; font-weight: 500; border-radius: 0.45rem; cursor: pointer; background: var(--surface2); border: 1px solid var(--border-strong); color: var(--text-2); font-family: var(--sans); white-space: nowrap; }
+  .wbtn.accent { border-color: var(--accent-border); color: var(--accent); }
+  .wbtn:hover:not(:disabled) { background: var(--border); }
+  .wbtn:disabled { opacity: 0.4; cursor: default; }
+  .net-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; }
+  .net-ctl { display: flex; gap: 1.2rem; align-items: flex-end; flex-wrap: nowrap; padding-top: 0.5rem; border-top: 1px solid var(--border); margin-top: 0.4rem; }
+  .net-leg { font-size: 0.75rem; color: var(--text-3); font-family: var(--mono); line-height: 1.4; margin-left: auto; max-width: 22rem; }
+  .net-leg i { display: inline-block; width: 0.9rem; height: 0.28rem; vertical-align: middle; border-radius: 2px; margin: 0 0.2rem 0 0.1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>How Machines Learn, deeper</h1>
+  <span>3 inputs, 2 hidden layers, 3 outputs, trained with backpropagation</span>
+</header>
+
+<main>
+
+  <!-- COLUMN 1: inputs, live guess, labeling -->
+  <section class="card">
+    <div class="section-label">1. Show it an example</div>
+
+    <div class="toggle-row">
+      <label class="tog">
+        <input type="checkbox" id="random-tog" onchange="toggleRandom(this.checked)">
+        <div class="tog-track"></div>
+        <div class="tog-thumb"></div>
+      </label>
+      <span id="tog-label">Manual sliders</span>
+    </div>
+
+    <div class="pixel-col">
+      <div class="prow">
+        <div class="pixel" id="p0"><span class="pval" id="v0">5</span></div>
+        <div class="pname">top</div>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="10" value="5" step="1" id="s0" oninput="sliderChangedByUser()">
+          <span class="sval" id="sv0">5</span>
+        </div>
+      </div>
+      <div class="prow">
+        <div class="pixel" id="p1"><span class="pval" id="v1">5</span></div>
+        <div class="pname">mid</div>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="10" value="5" step="1" id="s1" oninput="sliderChangedByUser()">
+          <span class="sval" id="sv1">5</span>
+        </div>
+      </div>
+      <div class="prow">
+        <div class="pixel" id="p2"><span class="pval" id="v2">5</span></div>
+        <div class="pname">bot</div>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="10" value="5" step="1" id="s2" oninput="sliderChangedByUser()">
+          <span class="sval" id="sv2">5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="guess-label">Model's current guess</div>
+    <div class="gbox" id="gbox">-</div>
+
+    <div class="hr"></div>
+    <div class="banner" id="train-fb"></div>
+    <div class="btn-row">
+      <button class="cbtn stop" onclick="doLabel('stop')">STOP</button>
+      <button class="cbtn slow" onclick="doLabel('slow')">SLOW</button>
+      <button class="cbtn go" onclick="doLabel('go')">GO</button>
+    </div>
+  </section>
+
+  <!-- COLUMN 2: the network -->
+  <section class="card">
+    <div class="section-label">2. The network <small>(lights up as it guesses, flashes gold where backprop changes weights)</small></div>
+    <svg id="net-svg" class="net-svg" viewBox="40 55 600 535" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Neural network"></svg>
+    <div class="walk" id="walk" style="display:none">
+      <div class="walk-head"><span id="walk-title"></span>
+        <span class="walk-nav"><button class="wbtn" id="walk-back" onclick="walkGo(-1)">Back</button><button class="wbtn accent" id="walk-next" onclick="walkGo(1)">Next</button><button class="wbtn" onclick="closeWalk()">Close</button></span></div>
+      <div class="walk-body" id="walk-body"></div>
+    </div>
+    <div id="net-ctl">
+    <div class="net-btns">
+      <button class="wbtn accent" id="why-btn" onclick="startWalk('fwd')">Why this guess?</button>
+      <button class="wbtn accent" id="bp-btn" onclick="startWalk('bwd')" disabled>What did backprop change?</button>
+      <button class="wbtn accent" id="target-btn" onclick="toggleTarget()">Train until 90%</button>
+    </div>
+    <div class="net-ctl">
+      <label class="auto-lbl">Learning rate
+        <select id="lr" onchange="setPrompt()">
+          <option value="0.05">0.05</option>
+          <option value="0.1" selected>0.10</option>
+          <option value="0.2">0.20</option>
+          <option value="0.4">0.40</option>
+        </select>
+      </label>
+      <label class="auto-lbl">Update on
+        <select id="upd-mode">
+          <option value="all" selected>Every example</option>
+          <option value="wrong">Mistakes only</option>
+        </select>
+      </label>
+      <div class="net-leg"><i style="background:#6fb1ff"></i>positive weight<br><i style="background:#ff8f6b"></i>negative weight<br>thicker = stronger</div>
+    </div>
+    </div>
+  </section>
+
+  <!-- COLUMN 3: rubric + test -->
+  <section class="card">
+    <div class="section-label">3. Grade it <small>(rubric: the answer you expect)</small></div>
+    <table class="rtable">
+      <tr>
+        <th></th>
+        <th style="color:var(--stop)">STOP</th>
+        <th style="color:var(--slow)">SLOW</th>
+        <th style="color:var(--go)">GO</th>
+      </tr>
+      <tr>
+        <td>Top brightest</td>
+        <td><input type="checkbox" id="r00" checked></td>
+        <td><input type="checkbox" id="r01"></td>
+        <td><input type="checkbox" id="r02"></td>
+      </tr>
+      <tr>
+        <td>Mid brightest</td>
+        <td><input type="checkbox" id="r10"></td>
+        <td><input type="checkbox" id="r11" checked></td>
+        <td><input type="checkbox" id="r12"></td>
+      </tr>
+      <tr>
+        <td>Bot brightest</td>
+        <td><input type="checkbox" id="r20"></td>
+        <td><input type="checkbox" id="r21"></td>
+        <td><input type="checkbox" id="r22" checked></td>
+      </tr>
+    </table>
+    <div class="tie-note">Tied for brightest: STOP beats SLOW beats GO</div>
+
+    <div class="hr"></div>
+    <button class="abtn accent" onclick="run50()">Run 50-example test</button>
+
+    <div class="results-card">
+      <div class="res-row"><span>Overall</span><span class="res-val" id="res-total">-</span></div>
+      <div class="res-split">
+        <div><span style="color:var(--stop)">STOP</span><span class="res-val" id="res-stop">-</span></div>
+        <div><span style="color:var(--slow)">SLOW</span><span class="res-val" id="res-slow">-</span></div>
+        <div><span style="color:var(--go)">GO</span><span class="res-val" id="res-go">-</span></div>
+      </div>
+    </div>
+
+    <div class="hist-wrap">
+      <div class="hist-head">
+        <div class="section-label" style="margin-bottom:0.3rem">Test history <small>(amber ring = rubric changed)</small></div>
+        
+      </div>
+      <svg id="hist-svg" class="hist-svg" role="img" aria-label="Test score history"></svg>
+      
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="session-strip">
+    <div class="stat">Labeled <b id="nlabeled">0</b></div>
+    <div class="vr"></div>
+    <div class="hint">
+      Each example runs <b>forward</b> (left to right, edges light up by signal), then the error runs <b>backward</b> (right to left, gold edges are the weights that moved most). Try Mixed training with 300+ examples: unlike the one-layer version, this model can learn the &ldquo;brightest pixel&rdquo; rule.
+    </div>
+    <div class="vr"></div>
+    <div class="auto-group">
+      <button class="abtn accent auto-btn" id="auto-btn" onclick="toggleAuto()">Auto-train from rubric</button>
+      <label class="auto-lbl">Examples
+        <select id="auto-n">
+          <option value="20">20</option>
+          <option value="30" selected>30</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="300">300</option>
+          <option value="1000">1000</option>
+        </select>
+      </label>
+      <label class="auto-lbl">Type
+        <select id="auto-kind">
+          <option value="clear" selected>Clear winner</option>
+          <option value="mixed">Mixed (ties, close calls)</option>
+        </select>
+      </label>
+      <label class="auto-lbl">Speed
+        <select id="auto-speed">
+          <option value="slow">Slow</option>
+          <option value="medium" selected>Medium</option>
+          <option value="fast">Fast</option>
+          <option value="instant">Instant</option>
+        </select>
+      </label>
+    </div>
+    <div class="vr"></div>
+    <button class="rbtn" onclick="doReset()">Reset weights</button>
+  </div>
+</footer>
+
+<script>
+var classes = ['stop','slow','go'];
+var pnames = ['top','mid','bot'];
+var ccolors = {stop:'#f07070', slow:'#e0a84a', go:'#6abf6a'};
+var nlabeled, useRandom, curPix;
+var SIZES = [3, 5, 5, 3];
+var net = null, lastDelta = null, lastActs = null, lastTarget = -1, pendingRandom = null;
+var lastNetBefore = null, lastErrs = null, lastLR = 0, lastAfter = null, lastPix = null, lastLoss = 0;
+var POS = '#6fb1ff', NEG = '#ff8f6b', GOLD = '#ffd24a';
+
+function randn(){ return (Math.random()+Math.random()+Math.random()-1.5)*2; }
+function initNet(){
+  net = []; lastDelta = null; lastActs = null; lastTarget = -1; lastNetBefore = null; lastErrs = null; lastAfter = null; lastPix = null;
+  if(typeof updateExplainBtns === 'function') updateExplainBtns();
+  for(var l = 1; l < SIZES.length; l++){
+    var Wm = [];
+    for(var j = 0; j < SIZES[l]; j++){
+      var row = [];
+      for(var i = 0; i < SIZES[l-1]; i++) row.push(randn()*Math.sqrt(1/SIZES[l-1])*1.2);
+      Wm.push(row);
+    }
+    net.push({W: Wm, b: new Array(SIZES[l]).fill(0)});
+  }
+}
+/* returns the activations of every layer: [input, hidden1, hidden2, output probabilities] */
+function forward(pix){
+  var a = pix.map(function(v){ return v/10; }), A = [a];
+  net.forEach(function(ly, li){
+    var z = ly.W.map(function(r, j){ var s = ly.b[j]; for(var i = 0; i < r.length; i++) s += r[i]*a[i]; return s; });
+    if(li < net.length-1){ a = z.map(Math.tanh); }
+    else {
+      var m = Math.max.apply(null, z), e = z.map(function(v){ return Math.exp(v-m); });
+      var sum = e.reduce(function(p, q){ return p+q; }, 0);
+      a = e.map(function(v){ return v/sum; });
+    }
+    A.push(a);
+  });
+  return A;
+}
+/* one step of backpropagation (softmax + cross-entropy output, tanh hidden).
+   Returns everything the walkthrough needs: activations, weight changes, per-layer error signals. */
+function trainStep(pix, y, lr){
+  var before = net.map(function(ly){ return {W: ly.W.map(function(r){ return r.slice(); }), b: ly.b.slice()}; });
+  var A = forward(pix), out = A[A.length-1];
+  var d = out.map(function(p, k){ return p - (k === y ? 1 : 0); });
+  var dW = [], errs = [];
+  for(var l = net.length-1; l >= 0; l--){
+    var ly = net[l], ain = A[l], dn = new Array(ain.length).fill(0), dl = [];
+    errs[l] = d.slice();
+    ly.W.forEach(function(r, j){
+      var row = [];
+      for(var i = 0; i < r.length; i++){ dn[i] += r[i]*d[j]; row.push(-lr*d[j]*ain[i]); }
+      dl.push(row);
+    });
+    ly.W.forEach(function(r, j){ for(var i = 0; i < r.length; i++) r[i] += dl[j][i]; ly.b[j] -= lr*d[j]; });
+    dW[l] = dl;
+    if(l > 0) d = dn.map(function(v, i){ return v*(1 - A[l][i]*A[l][i]); });
+  }
+  var after = forward(pix);
+  return {A: A, dW: dW, errs: errs, before: before, lr: lr, loss: -Math.log(Math.max(out[y], 1e-9)), after: after[after.length-1]};
+}
+
+function init(){
+  autoToken++; autoRunning = false; setAutoUI(false);   /* cancels any auto-train in progress */
+  initNet();
+  nlabeled = 0;
+  clearHistory();                                        /* a reset wipes the graph */
+  document.getElementById('nlabeled').textContent = '0';
+  ['res-total','res-stop','res-slow','res-go'].forEach(function(id){
+    document.getElementById(id).textContent = '-';
+  });
+  if(useRandom) newRandom(); else sliderChanged();
+  setPrompt();
+}
+
+function grayBg(v){ var g = Math.round(((v-1)/9)*255); return 'rgb('+g+','+g+','+g+')'; }
+function textCol(v){ return v > 5 ? '#000' : '#fff'; }
+
+function sliderChanged(){
+  curPix = [
+    parseInt(document.getElementById('s0').value),
+    parseInt(document.getElementById('s1').value),
+    parseInt(document.getElementById('s2').value)
+  ];
+  for(var i = 0; i < 3; i++){
+    document.getElementById('sv'+i).textContent = curPix[i];
+    document.getElementById('p'+i).style.background = grayBg(curPix[i]);
+    var v = document.getElementById('v'+i);
+    v.textContent = curPix[i];
+    v.style.color = textCol(curPix[i]);
+  }
+  updateGuess();
+  if(walk) closeWalk();
+  renderNet('fwd');
+}
+
+function newRandom(){
+  clearTimeout(pendingRandom);
+  for(var i = 0; i < 3; i++){
+    document.getElementById('s'+i).value = Math.ceil(Math.random()*10);
+  }
+  sliderChanged();
+}
+
+function toggleRandom(on){
+  useRandom = on;
+  document.getElementById('tog-label').textContent = on ? 'Random examples' : 'Manual sliders';
+  for(var i = 0; i < 3; i++) document.getElementById('s'+i).disabled = on;
+  if(on) newRandom(); else sliderChanged();
+  setPrompt();
+}
+
+var TIE = 0.02; /* output probabilities closer than this count as "no idea yet" */
+
+function getProbs(pix){ var A = forward(pix); return A[A.length-1]; }
+
+/* Returns the winning class, or null when the model has no clear favorite. */
+function getBest(pix){
+  var sc = getProbs(pix), best = 0;
+  for(var i = 1; i < sc.length; i++) if(sc[i] > sc[best]) best = i;
+  for(var j = 0; j < sc.length; j++){
+    if(j !== best && sc[best] - sc[j] < TIE) return null;
+  }
+  return classes[best];
+}
+
+function updateGuess(){
+  var g = getBest(curPix);
+  var gb = document.getElementById('gbox');
+  if(g === null){
+    gb.textContent = '?';
+    gb.style.background = 'var(--bg)';
+    gb.style.color = 'var(--text-2)';
+    gb.style.borderColor = 'var(--border)';
+    return;
+  }
+  gb.textContent = g.toUpperCase();
+  gb.style.background = 'var(--'+g+'-bg)';
+  gb.style.color = 'var(--'+g+')';
+  gb.style.borderColor = 'var(--'+g+'-border)';
+}
+
+function setBanner(text, kind){
+  var el = document.getElementById('train-fb');
+  el.textContent = text;
+  el.className = 'banner' + (kind ? ' ' + kind : '');
+}
+
+/* Prompt shown before you grade: depends on whether the model has a guess. */
+function setPrompt(){
+  var g = getBest(curPix);
+  if(g === null){
+    setBanner("Model can't guess yet (no clear favorite). What should this be?", '');
+  } else {
+    setBanner('Model guesses ' + g.toUpperCase() + '. Grade it: what should this be?', '');
+  }
+}
+
+function sliderChangedByUser(){
+  sliderChanged();
+  setPrompt();
+}
+
+/* Guess first, then grade. Mode "Every example" backpropagates on every example (standard training);
+   "Mistakes only" matches the one-layer demo. Returns true when the model was wrong. */
+function doLabel(cls, auto){
+  closeWalk();
+  var guess = getBest(curPix);
+  var y = classes.indexOf(cls);
+  var who = auto ? 'rubric' : 'you';
+  var mode = document.getElementById('upd-mode').value;
+  var lr = parseFloat(document.getElementById('lr').value);
+  var wrong = guess !== cls;
+  nlabeled++;
+  document.getElementById('nlabeled').textContent = nlabeled;
+
+  var updated = false, loss = 0;
+  if(wrong || mode === 'all'){
+    var r = trainStep(curPix, y, lr);
+    lastActs = r.A; lastDelta = r.dW; lastTarget = y; loss = r.loss; updated = true;
+    lastNetBefore = r.before; lastErrs = r.errs; lastLR = r.lr; lastAfter = r.after; lastPix = curPix.slice(); lastLoss = r.loss;
+  }
+
+  if(!wrong){
+    setBanner('Correct. Model said ' + cls.toUpperCase() + ', ' + who + ' said ' + cls.toUpperCase() + '.' + (updated ? ' Small nudge to be more sure (loss ' + loss.toFixed(2) + ').' : ' No change.'), 'ok');
+  } else if(guess === null){
+    setBanner('No idea yet. ' + (auto ? 'Rubric' : 'You') + ' said ' + cls.toUpperCase() + '. Backprop (loss ' + loss.toFixed(2) + ').', 'none');
+  } else {
+    setBanner('Wrong. Model said ' + guess.toUpperCase() + ', ' + who + ' said ' + cls.toUpperCase() + '. Backprop (loss ' + loss.toFixed(2) + ').', 'bad');
+  }
+
+  updateExplainBtns();
+  if(updated) renderNet('bwd'); else renderNet('fwd');
+  if(useRandom && !auto){ clearTimeout(pendingRandom); pendingRandom = setTimeout(function(){ newRandom(); setPrompt(); }, 1300); }
+  else updateGuess();
+  return wrong;
+}
+
+/* ---------- network drawing ---------- */
+var NX = [105, 255, 405, 530];
+var walk = null, view = null;
+function nodeY(l, k){
+  var n = SIZES[l], sp = n === 5 ? 98 : 150;
+  return 315 + (k - (n-1)/2)*sp;
+}
+function animSettings(){
+  if(autoRunning){
+    var sp = document.getElementById('auto-speed').value;
+    if(sp === 'instant') return null;          /* skip drawing entirely, final frame is drawn at the end */
+    if(sp === 'fast') return {anim: false};
+    return {anim: true, step: sp === 'slow' ? 0.3 : 0.1};
+  }
+  return {anim: true, step: 0.28};
+}
+
+/* ---- small helpers for text ---- */
+function unitName(l, k){ return l === 0 ? pnames[k] : (l === 3 ? classes[k].toUpperCase() : 'H' + l + '-' + (k+1)); }
+function fmt(v){ return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2); }
+function cspan(c){ return '<span style="color:' + ccolors[c] + ';font-weight:600">' + c.toUpperCase() + '</span>'; }
+/* inputs to node k of layer l+1: activation, weight, and their product */
+function contribs(nt, A, l, k){
+  var r = [];
+  for(var i = 0; i < nt[l].W[k].length; i++) r.push({i: i, a: A[l][i], w: nt[l].W[k][i], p: A[l][i]*nt[l].W[k][i]});
+  return r;
+}
+function zOf(nt, A, l, k){ var s = nt[l].b[k]; contribs(nt, A, l, k).forEach(function(c){ s += c.p; }); return s; }
+function topContribs(nt, A, l, k, n){
+  return contribs(nt, A, l, k).sort(function(a, b){ return Math.abs(b.p) - Math.abs(a.p); }).slice(0, n);
+}
+function workLine(nt, A, l, k, n){
+  return topContribs(nt, A, l, k, n).map(function(c){
+    return unitName(l, c.i) + ' ' + c.a.toFixed(2) + ' × ' + fmt(c.w) + ' = ' + fmt(c.p);
+  }).join(', ');
+}
+function strongest(A, l){ var b = 0; for(var k = 1; k < A[l].length; k++) if(Math.abs(A[l][k]) > Math.abs(A[l][b])) b = k; return b; }
+function pill(cx, cy, txt){
+  var w = txt.length*6.9 + 10;
+  return '<rect x="'+(cx-w/2).toFixed(1)+'" y="'+(cy-8)+'" width="'+w.toFixed(1)+'" height="16" rx="8" fill="rgba(12,11,16,0.85)"/>' +
+         '<text class="pv" x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle">'+txt+'</text>';
+}
+
+/* what the current walkthrough step emphasizes:
+   show = how many node layers have their values revealed, el = which edge layer is the star, all = show every changed edge */
+function stepFocus(){
+  var s = walk.step;
+  if(walk.kind === 'fwd') return {show: [1,2,3,4,4][s-1], el: [-1,0,1,2,-1][s-1], all: false};
+  return {show: 4, el: [-1,2,1,0,-1][s-1], all: s === 5};
+}
+
+function renderNet(mode){
+  var st = animSettings();
+  if(!st && mode !== 'final') return;
+  if(!st) st = {anim: false};
+  var svg = document.getElementById('net-svg');
+  var inWalk = !!walk, F = inWalk ? stepFocus() : null;
+  var useBwd = inWalk ? walk.kind === 'bwd' : (mode === 'bwd');
+  if(useBwd && !lastDelta) useBwd = false;
+  var A = useBwd ? lastActs : forward(curPix);
+  var nt = useBwd ? lastNetBefore : net;
+  var pix = useBwd ? lastPix : curPix;
+  view = {A: A, nt: nt, pix: pix, bwd: useBwd};
+  var anim = !inWalk && st.anim && mode !== 'final' && mode !== 'static', step = st.step || 0.28;
+  var h = '', L = SIZES.length;
+
+  ['Input', 'Hidden 1', 'Hidden 2', 'Output'].forEach(function(t, l){
+    h += '<text class="cap" x="'+NX[l]+'" y="80" text-anchor="middle">'+t+'</text>';
+  });
+
+  var maxD = 1e-9, maxL = [1e-9, 1e-9, 1e-9];
+  if(useBwd) lastDelta.forEach(function(lyr, l){ lyr.forEach(function(r){ r.forEach(function(v){
+    if(Math.abs(v) > maxD) maxD = Math.abs(v);
+    if(Math.abs(v) > maxL[l]) maxL[l] = Math.abs(v);
+  }); }); });
+
+  function edgeDim(l){
+    if(!inWalk) return 1;
+    if(walk.kind === 'fwd'){ if(F.el < 0) return F.show > 1 ? 0.7 : 0.06; return l <= F.el ? (l === F.el ? 1 : 0.55) : 0.06; }
+    return (F.all || F.el < 0 || l === F.el) ? 1 : 0.12;
+  }
+
+  /* base edges: color = sign of weight, thickness = strength */
+  for(var l = 0; l < L-1; l++){
+    var dm = edgeDim(l);
+    for(var j = 0; j < SIZES[l+1]; j++) for(var i = 0; i < SIZES[l]; i++){
+      var w = nt[l].W[j][i], aw = Math.min(Math.abs(w), 2);
+      h += '<line x1="'+NX[l]+'" y1="'+nodeY(l,i)+'" x2="'+NX[l+1]+'" y2="'+nodeY(l+1,j)+'" stroke="'+(w > 0 ? POS : NEG)+'" stroke-width="'+(0.5+aw*1.5).toFixed(2)+'" opacity="'+((0.14+aw*0.2)*dm).toFixed(2)+'"/>';
+    }
+  }
+  /* overlays: forward = signal flowing (activation x weight); backward = size of the weight change */
+  for(var l = 0; l < L-1; l++){
+    if(inWalk){
+      if(walk.kind === 'fwd' && l !== F.el) continue;
+      if(walk.kind === 'bwd' && !F.all && l !== F.el) continue;
+    }
+    for(var j = 0; j < SIZES[l+1]; j++) for(var i = 0; i < SIZES[l]; i++){
+      var x1 = NX[l], y1 = nodeY(l,i), x2 = NX[l+1], y2 = nodeY(l+1,j), col, wd, op, dl = 0;
+      if(useBwd){
+        var d = lastDelta[l][j][i], norm = (inWalk && !F.all) ? maxL[l] : maxD, s = Math.min(1, Math.abs(d)/norm);
+        if(s < (inWalk && !F.all ? 0.1 : 0.18)) continue;
+        col = GOLD; wd = 1.2 + s*4.5; op = 0.35 + s*0.65; dl = (L-2-l)*step;
+      } else {
+        var f = A[l][i]*nt[l].W[j][i], s2 = Math.min(1, Math.abs(f)/0.7);
+        if(s2 < (inWalk ? 0.08 : 0.15)) continue;
+        col = f > 0 ? '#bfe0ff' : '#ffd0bd'; wd = 1 + s2*3.5; op = 0.3 + s2*0.7; dl = l*step;
+      }
+      h += '<line '+(anim ? 'class="ov" style="--o:'+op.toFixed(2)+';animation-delay:'+dl.toFixed(2)+'s"' : 'opacity="'+op.toFixed(2)+'"')+' x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="'+wd.toFixed(2)+'" stroke-linecap="round"/>';
+    }
+  }
+
+  /* nodes */
+  var best = -1;
+  if(!useBwd && getBest(curPix) !== null) best = classes.indexOf(getBest(curPix));
+  var maxBlame = 1e-9;
+  if(inWalk && useBwd && (F.el === 0 || F.el === 1)) errsMax();
+  function errsMax(){ lastErrs[F.el].forEach(function(v){ if(Math.abs(v) > maxBlame) maxBlame = Math.abs(v); }); }
+
+  for(var l = 0; l < L; l++){
+    for(var k = 0; k < SIZES[l]; k++){
+      var cx = NX[l], cy = nodeY(l,k), a = A[l][k];
+      var hidden = inWalk && !useBwd && l >= F.show;          /* not computed yet in this step */
+      var nd = (anim && !useBwd) ? ' class="ov" style="--o:1;animation-delay:'+(l*step).toFixed(2)+'s"' : '';
+      h += '<circle cx="'+cx+'" cy="'+cy+'" r="25" fill="var(--bg)" stroke="var(--border-strong)" stroke-width="1.5"/>';
+      if(hidden){
+        /* empty placeholder */
+      } else if(l === 0){
+        var g = Math.round(((pix[k]-1)/9)*255), tcol = g > 128 ? '#000' : '#fff';
+        h += '<circle'+nd+' cx="'+cx+'" cy="'+cy+'" r="23" fill="rgb('+g+','+g+','+g+')"/>';
+        h += '<text'+nd+' x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" style="fill:'+tcol+';font-size:15px;font-weight:600">'+pix[k]+'</text>';
+      } else if(l < L-1){
+        h += '<circle'+nd+' cx="'+cx+'" cy="'+cy+'" r="23" fill="'+(a > 0 ? POS : NEG)+'" fill-opacity="'+Math.min(0.9, Math.abs(a)).toFixed(2)+'"/>';
+        h += '<g'+nd+'>'+pill(cx, cy, a.toFixed(2))+'</g>';
+      } else {
+        var c = classes[k];
+        h += '<circle'+nd+' cx="'+cx+'" cy="'+cy+'" r="23" fill="'+ccolors[c]+'" fill-opacity="'+(0.15+0.75*a).toFixed(2)+'"/>';
+        h += '<g'+nd+'>'+pill(cx, cy, Math.round(a*100)+'%')+'</g>';
+      }
+      if(l === 0) h += '<text x="'+(cx-34)+'" y="'+(cy+5)+'" text-anchor="end" style="font-size:15px">'+pnames[k]+'</text>';
+      if(l === L-1){
+        var c2 = classes[k];
+        h += '<text class="ol" x="'+(cx+34)+'" y="'+(cy+5)+'" style="fill:'+ccolors[c2]+'">'+c2.toUpperCase()+'</text>';
+        if(!useBwd && k === best && !hidden && !(inWalk && F.show < 4)){
+          h += '<circle'+(anim ? ' class="ov" style="--o:1;animation-delay:'+((L-1)*step+0.1).toFixed(2)+'s"' : '')+' cx="'+cx+'" cy="'+cy+'" r="29" fill="none" stroke="'+ccolors[c2]+'" stroke-width="3"/>';
+        }
+        if(useBwd && k === lastTarget){
+          h += '<circle cx="'+cx+'" cy="'+cy+'" r="29" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 4"/>';
+          h += '<text x="'+(cx+34)+'" y="'+(cy+(inWalk ? 38 : 22))+'" style="font-size:12px">should be</text>';
+        }
+        if(inWalk && useBwd && (walk.step <= 2 || F.all)){
+          var er = lastErrs[2][k];
+          if(walk.step <= 2) h += '<text x="'+(cx+34)+'" y="'+(cy+22)+'" style="font-size:12px;fill:'+(er > 0 ? NEG : POS)+'">error '+fmt(er)+'</text>';
+        }
+      }
+      if(inWalk && !useBwd && l === F.show-1 && !(walk.step === 5)){
+        h += '<circle cx="'+cx+'" cy="'+cy+'" r="29" fill="none" stroke="#fff" stroke-width="2"/>';
+      }
+      if(useBwd){
+        if(inWalk && l > 0 && l < 3 && F.el === l-1){
+          var bl = lastErrs[l-1][k], ns2 = Math.min(1, Math.abs(bl)/maxBlame);
+          if(ns2 > 0.45) h += '<circle cx="'+cx+'" cy="'+cy+'" r="29" fill="none" stroke="'+GOLD+'" stroke-width="3" opacity="'+ns2.toFixed(2)+'"/>';
+          h += '<text x="'+cx+'" y="'+(cy+42)+'" text-anchor="middle" style="font-size:11px;fill:'+(ns2 > 0.45 ? GOLD : 'var(--text-3)')+'">blame '+fmt(bl)+'</text>';
+        } else if(!inWalk && l > 0){
+          var tot = 0; lastDelta[l-1][k].forEach(function(v){ tot += Math.abs(v); });
+          var ns = Math.min(1, tot/(maxD*2.2));
+          if(ns > 0.25) h += '<circle '+(anim ? 'class="ov" style="--o:'+ns.toFixed(2)+';animation-delay:'+((L-1-l)*step+0.05).toFixed(2)+'s"' : 'opacity="'+ns.toFixed(2)+'"')+' cx="'+cx+'" cy="'+cy+'" r="28" fill="none" stroke="'+GOLD+'" stroke-width="3"/>';
+        }
+      }
+      h += '<circle class="hit" data-l="'+l+'" data-k="'+k+'" cx="'+cx+'" cy="'+cy+'" r="29" fill="transparent"/>';
+    }
+  }
+  var note = inWalk ? (walk.kind === 'fwd' ? 'Step-through: why the model guessed this.' : 'Step-through: what backprop changed, and why.')
+           : useBwd ? 'Backprop, right to left. Gold = weights that moved most.'
+           : 'Forward pass, left to right. Hover any node for its arithmetic.';
+  h += '<text class="note" x="340" y="572" text-anchor="middle">'+note+'</text>';
+  svg.innerHTML = h;
+}
+
+/* ---------- hover tooltips ---------- */
+function nodeInfo(l, k){
+  if(!view) return '';
+  var A = view.A, nt = view.nt, nm = unitName(l, k), h = '';
+  if(l === 0){
+    return '<b>' + nm + ' pixel</b><div class="tt">Brightness <b>' + view.pix[k] + '</b> of 10, so the network sees <b>' + (view.pix[k]/10).toFixed(2) + '</b>. It feeds all five Hidden 1 units, each through its own weight.</div>';
+  }
+  var cs = topContribs(nt, A, l-1, k, 3), z = zOf(nt, A, l-1, k), a = A[l][k];
+  if(l < 3){
+    h += '<b>' + nm + '</b> &nbsp;<span class="tt">' + (Math.abs(a) < 0.2 ? 'nearly silent' : a > 0 ? 'firing positive (blue)' : 'firing negative (orange)') + '</span>';
+    h += '<div class="tt">Output <b>' + fmt(a) + '</b> = tanh(sum ' + fmt(z) + ')</div>';
+    h += '<div class="tt">Biggest inputs:<br>' + cs.map(function(c){ return unitName(l-1, c.i) + ' ' + c.a.toFixed(2) + ' × ' + fmt(c.w) + ' = ' + fmt(c.p); }).join('<br>') + '<br>bias ' + fmt(nt[l-1].b[k]) + '</div>';
+    var wired = contribs(nt, A, l-1, k).sort(function(x, y){ return Math.abs(y.w) - Math.abs(x.w); }).filter(function(c){ return Math.abs(c.w) > 0.4; }).slice(0, 3);
+    h += '<div class="tt">Wired to react to: ' + (wired.length ? wired.map(function(c){ return (c.w > 0 ? '+' : '−') + unitName(l-1, c.i); }).join(' ') : 'nothing strongly yet') + '</div>';
+    var outs = nt[l].W.map(function(r, j){ return {j: j, w: r[k]}; }).sort(function(x, y){ return Math.abs(y.w) - Math.abs(x.w); })[0];
+    h += '<div class="tt">Strongest outgoing link: to ' + unitName(l+1, outs.j) + ' (' + fmt(outs.w) + ')</div>';
+  } else {
+    var c3 = classes[k];
+    h += '<b>' + cspan(c3) + '</b> &nbsp;<span class="tt">' + Math.round(a*100) + '%</span>';
+    h += '<div class="tt">Raw score <b>' + fmt(z) + '</b>, then softmax turns the three scores into percentages that add to 100.</div>';
+    h += '<div class="tt">Biggest inputs:<br>' + cs.map(function(c){ return unitName(2, c.i) + ' ' + c.a.toFixed(2) + ' × ' + fmt(c.w) + ' = ' + fmt(c.p); }).join('<br>') + '<br>bias ' + fmt(nt[2].b[k]) + '</div>';
+    if(view.bwd) h += '<div class="tt">' + (k === lastTarget ? 'This was the right answer: backprop raises this score.' : 'Not the right answer: backprop lowers this score in proportion to its error (' + fmt(lastErrs[2][k]) + ').') + '</div>';
+  }
+  if(view.bwd && l > 0){
+    var dl = lastDelta[l-1][k], tot = 0, bi = 0;
+    dl.forEach(function(v, i){ tot += Math.abs(v); if(Math.abs(v) > Math.abs(dl[bi])) bi = i; });
+    h += '<div class="tt">Backprop moved its incoming weights by ' + tot.toFixed(3) + ' in total, most from ' + unitName(l-1, bi) + ' (' + fmt(dl[bi]) + ').</div>';
+  }
+  return h;
+}
+function initTip(){
+  var tip = document.createElement('div'); tip.id = 'tip'; document.body.appendChild(tip);
+  var svg = document.getElementById('net-svg');
+  svg.addEventListener('mousemove', function(e){
+    var t = e.target.closest ? e.target.closest('[data-l]') : null;
+    if(!t){ tip.style.display = 'none'; return; }
+    tip.innerHTML = nodeInfo(parseInt(t.getAttribute('data-l'), 10), parseInt(t.getAttribute('data-k'), 10));
+    tip.style.display = 'block';
+    var r = tip.getBoundingClientRect(), x = e.clientX + 18, y = e.clientY + 14;
+    if(x + r.width > innerWidth - 8) x = e.clientX - r.width - 18;
+    if(y + r.height > innerHeight - 8) y = innerHeight - r.height - 8;
+    tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+  });
+  svg.addEventListener('mouseleave', function(){ tip.style.display = 'none'; });
+}
+
+/* ---------- step-through explanations ---------- */
+var FWD_TITLES = ['The input', 'Hidden layer 1: five small detectors', 'Hidden layer 2: detectors of detectors', 'Output: scores become percentages', 'The verdict'];
+var BWD_TITLES = ['How wrong was it?', 'Output weights', 'Hidden layer 2 weights', 'Hidden layer 1 weights', 'The result'];
+
+var TARGET = 90, TARGET_CAP = 5000, TARGET_CHUNK = 50, TARGET_TEST = 500, targetMode = false;
+function updateExplainBtns(){
+  var w = document.getElementById('why-btn'), b = document.getElementById('bp-btn');
+  if(w) w.disabled = !!autoRunning;
+  if(b) b.disabled = !!autoRunning || !lastDelta;
+}
+function startWalk(kind){
+  if(autoRunning || (kind === 'bwd' && !lastDelta)) return;
+  walk = {kind: kind, step: 1};
+  document.getElementById('net-ctl').style.display = 'none';
+  document.getElementById('walk').style.display = 'block';
+  walkRender();
+}
+function closeWalk(){
+  if(!walk) return;
+  walk = null;
+  document.getElementById('walk').style.display = 'none';
+  document.getElementById('net-ctl').style.display = 'block';
+  renderNet('static');
+}
+function walkGo(d){
+  if(!walk) return;
+  walk.step = Math.max(1, Math.min(5, walk.step + d));
+  walkRender();
+}
+function walkRender(){
+  var titles = walk.kind === 'fwd' ? FWD_TITLES : BWD_TITLES;
+  document.getElementById('walk-title').textContent = walk.step + '/5  ' + titles[walk.step-1];
+  document.getElementById('walk-body').innerHTML = walk.kind === 'fwd' ? fwdText(walk.step) : bwdText(walk.step);
+  document.getElementById('walk-back').disabled = walk.step === 1;
+  document.getElementById('walk-next').disabled = walk.step === 5;
+  renderNet('walk');
+}
+
+function fwdText(s){
+  var A = forward(curPix), nt = net, P = A[3], t;
+  if(s === 1){
+    return 'The pixels have brightness <b>' + curPix.join(', ') + '</b>. The network divides each by 10, so it actually sees <b>' + curPix.map(function(v){ return (v/10).toFixed(2); }).join(', ') + '</b>. That is all it gets. It has no idea a rubric exists or what &ldquo;brightest&rdquo; means.';
+  }
+  if(s === 2){
+    var u = strongest(A, 1);
+    return 'Each of the five units multiplies the inputs by its own weights, adds a bias, and squashes the sum into −1 to +1 (tanh). Blue is positive, orange is negative. Strongest here is <b>H1-' + (u+1) + '</b> at ' + fmt(A[1][u]) + ': ' + workLine(nt, A, 0, u, 3) + ', plus bias ' + fmt(nt[0].b[u]) + ' = ' + fmt(zOf(nt, A, 0, u)) + ', and tanh makes that ' + fmt(A[1][u]) + '.';
+  }
+  if(s === 3){
+    var u2 = strongest(A, 2);
+    return 'Layer 2 never sees the pixels. It only sees layer 1’s five numbers and combines them into bigger patterns. Strongest is <b>H2-' + (u2+1) + '</b> at ' + fmt(A[2][u2]) + ', mostly from: ' + workLine(nt, A, 1, u2, 3) + ' (the rest and the bias make up the sum ' + fmt(zOf(nt, A, 1, u2)) + ').';
+  }
+  if(s === 4){
+    var zs = [0,1,2].map(function(k){ return zOf(nt, A, 2, k); }), w = P.indexOf(Math.max.apply(null, P));
+    return 'Each output adds up layer 2 with its own weights to get a raw score: ' + classes.map(function(c, k){ return cspan(c) + ' ' + fmt(zs[k]); }).join(', ') + '. Softmax turns the scores into percentages that add to 100: ' + classes.map(function(c, k){ return cspan(c) + ' ' + Math.round(P[k]*100) + '%'; }).join(', ') + '. The leader, ' + cspan(classes[w]) + ', gets most of its score from ' + workLine(nt, A, 2, w, 2) + '.';
+  }
+  var g = getBest(curPix), rl = rubricLabel(curPix);
+  t = g === null ? 'No answer leads by 2 points or more, so the model shows &ldquo;?&rdquo;. ' : 'The model picks ' + cspan(g) + ' (' + Math.round(P[classes.indexOf(g)]*100) + '%). ';
+  if(!rl.label) return t + 'The rubric has no answer ticked for this input.';
+  t += 'The rubric says ' + cspan(rl.label) + ' (' + (rl.tied.length === 1 ? pnames[rl.tied[0]] + ' is brightest at ' + rl.max : 'tie for brightest, STOP then SLOW then GO') + '). ';
+  return t + (g === rl.label ? 'They match, so only a tiny nudge is needed.' : 'They differ: grade it with the right button, then open &ldquo;What did backprop change?&rdquo; to see the fix.');
+}
+
+function changeLines(l, n){
+  var flat = [], A = lastActs;
+  lastDelta[l].forEach(function(r, j){ r.forEach(function(d, i){ flat.push({j: j, i: i, d: d}); }); });
+  flat.sort(function(a, b){ return Math.abs(b.d) - Math.abs(a.d); });
+  return flat.slice(0, n).map(function(c){
+    var err = lastErrs[l][c.j];
+    return unitName(l, c.i) + ' → ' + unitName(l+1, c.j) + ' <b>' + fmt(c.d) + '</b> (' + (l === 2 ? 'error' : 'blame') + ' ' + fmt(err) + ', signal ' + fmt(A[l][c.i]) + ')';
+  }).join('<br>');
+}
+function bwdText(s){
+  var P = lastActs[3], y = lastTarget, right = P.indexOf(Math.max.apply(null, P)) === y;
+  if(s === 1){
+    return (right ? 'The model was right, so the errors are small and the nudge will be tiny. ' : '') + 'For inputs <b>' + lastPix.join(', ') + '</b> the right answer was ' + cspan(classes[y]) + ', but the model said ' + classes.map(function(c, k){ return cspan(c) + ' ' + Math.round(P[k]*100) + '%'; }).join(', ') + '. Loss = −ln(' + P[y].toFixed(2) + ') = <b>' + lastLoss.toFixed(2) + '</b> (close to 0 when the right answer gets nearly 100%). Error = what it said minus what it should have said: ' + classes.map(function(c, k){ return cspan(c) + ' ' + fmt(lastErrs[2][k]) + (lastErrs[2][k] > 0 ? ' (too high)' : ' (too low)'); }).join(', ') + '.';
+  }
+  if(s === 2){
+    return 'Rule: <b>change = −learning rate (' + lastLR + ') × error × the signal on that connection</b>. A connection carrying a big signal toward a wrong answer gets cut, one carrying signal toward the right answer gets boosted. Biggest changes:<br>' + changeLines(2, 3);
+  }
+  if(s === 3){
+    var bl = lastErrs[1].map(function(v, i){ return {i: i, v: v}; }).sort(function(a, b){ return Math.abs(b.v) - Math.abs(a.v); }).slice(0, 2);
+    return 'Hidden units were never told what they should have output, so the output error travels backward along the same connections. Each H2 unit is blamed by (its weights to the outputs × their errors), scaled down if tanh is saturated near ±1. Most blamed: ' + bl.map(function(b){ return '<b>' + unitName(2, b.i) + '</b> ' + fmt(b.v); }).join(', ') + '. Same rule with blame in place of error. Biggest changes:<br>' + changeLines(1, 3);
+  }
+  if(s === 4){
+    var bl1 = lastErrs[0].map(function(v, i){ return {i: i, v: v}; }).sort(function(a, b){ return Math.abs(b.v) - Math.abs(a.v); }).slice(0, 2);
+    return 'The blame keeps flowing back one more layer, now to H1. Most blamed: ' + bl1.map(function(b){ return '<b>' + unitName(1, b.i) + '</b> ' + fmt(b.v); }).join(', ') + '. The signals here are the pixels themselves, so a bright pixel moves its weights more than a dim one. Biggest changes:<br>' + changeLines(0, 3);
+  }
+  return 'Every weight in all three layers moved a little, output end first (the &ldquo;back&rdquo; in backpropagation). Same input again: ' + classes.map(function(c, k){ return cspan(c) + ' ' + Math.round(P[k]*100) + '% → <b>' + Math.round(lastAfter[k]*100) + '%</b>'; }).join(', ') + '. One nudge is small; hundreds add up, and that is all training is. Gold edges on the diagram are the ones that moved most.';
+}
+
+document.addEventListener('keydown', function(e){
+  if(!walk) return;
+  if(e.key === 'ArrowRight') walkGo(1);
+  else if(e.key === 'ArrowLeft') walkGo(-1);
+  else if(e.key === 'Escape') closeWalk();
+});
+
+/* The rubric row for pixel i names its answer (first ticked box, STOP before SLOW before GO). */
+function rowAnswer(i){
+  for(var j = 0; j < 3; j++){
+    if(document.getElementById('r'+i+j).checked) return classes[j];
+  }
+  return null;
+}
+
+/* The teacher: brightest pixel wins. If pixels tie for brightest, the answers
+   they point to compete and STOP beats SLOW beats GO. Used by Auto-train and the 50-run test. */
+function rubricLabel(pix){
+  var m = Math.max(pix[0], pix[1], pix[2]);
+  var tied = [], cands = [];
+  for(var i = 0; i < 3; i++){
+    if(pix[i] === m){
+      tied.push(i);
+      var a = rowAnswer(i);
+      if(a) cands.push(a);
+    }
+  }
+  var label = null;
+  for(var k = 0; k < classes.length && !label; k++){
+    if(cands.indexOf(classes[k]) >= 0) label = classes[k];
+  }
+  return {label: label, tied: tied, max: m};
+}
+
+function getRubricAnswer(pix){ return rubricLabel(pix).label; }
+
+/* ---------- Auto-train: the rubric plays the teacher, the same loop runs by itself ---------- */
+var autoToken = 0, autoRunning = false, autoDone = 0, autoMistakes = 0;
+var SPEEDS = { slow:[1000,900,1000], medium:[450,400,450], fast:[80,60,80], instant:[0,0,0] };
+
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+function rnd10(){ return Math.ceil(Math.random()*10); }
+
+function genExample(kind){
+  if(kind === 'mixed') return [rnd10(), rnd10(), rnd10()];
+  /* clear winner: one pixel bright (8-10), the others dark (1-3), winner chosen at random */
+  var p = [1+Math.floor(Math.random()*3), 1+Math.floor(Math.random()*3), 1+Math.floor(Math.random()*3)];
+  p[Math.floor(Math.random()*3)] = 8 + Math.floor(Math.random()*3);
+  return p;
+}
+
+function teacherText(t){
+  if(t.tied.length === 1){
+    return 'Rubric: brightest is ' + pnames[t.tied[0]].toUpperCase() + ' (' + t.max + '), so the answer is ' + t.label.toUpperCase() + '.';
+  }
+  var names = t.tied.map(function(i){ return pnames[i].toUpperCase(); }).join(' and ');
+  return 'Rubric: ' + names + ' tie at ' + t.max + '. Ties prefer STOP, then SLOW, then GO, so the answer is ' + t.label.toUpperCase() + '.';
+}
+
+function setAutoUI(running){
+  updateExplainBtns();
+  document.getElementById('auto-btn').textContent = (running && !targetMode) ? 'Stop' : 'Auto-train from rubric';
+  document.getElementById('auto-btn').disabled = running && targetMode;
+  document.getElementById('target-btn').textContent = (running && targetMode) ? 'Stop' : 'Train until ' + TARGET + '%';
+  document.getElementById('target-btn').disabled = running && !targetMode;
+  document.getElementById('auto-n').disabled = running;
+  document.getElementById('auto-kind').disabled = running;
+  document.getElementById('random-tog').disabled = running;
+  document.querySelectorAll('.cbtn').forEach(function(b){ b.disabled = running; });
+  for(var i = 0; i < 3; i++) document.getElementById('s'+i).disabled = running || !!useRandom;
+}
+
+/* "Train until TARGET%": train a chunk, test on fresh examples, repeat until the average clears the target or the cap is hit. */
+async function toggleTarget(){
+  if(autoRunning){
+    if(targetMode){
+      autoToken++; autoRunning = false; targetMode = false; setAutoUI(false); renderNet('final');
+      sliderChanged(); setBanner('Stopped. The weights stay where they are.', 'none');
+    }
+    return;
+  }
+  var token = ++autoToken;
+  closeWalk();
+  targetMode = true; autoRunning = true; autoDone = 0; autoMistakes = 0;
+  setAutoUI(true);
+  var lr = parseFloat(document.getElementById('lr').value), mode = document.getElementById('upd-mode').value;
+  var r = runTest(TARGET_TEST), pct = r.t ? r.c/r.t*100 : 0, trained = 0, best = pct, stuck = false;
+  setBanner('Starting at ' + pct.toFixed(0) + '%. Training ' + TARGET_CHUNK + ' examples at a time, then testing on ' + TARGET_TEST + ' fresh ones.', 'teach');
+  while(pct < TARGET && trained < TARGET_CAP && token === autoToken){
+    await sleep(180);
+    if(token !== autoToken) return;
+    var did = 0;
+    for(var i = 0; i < TARGET_CHUNK; i++){
+      var pix = genExample('mixed'), t = rubricLabel(pix);
+      if(!t.label) continue;
+      if(getBest(pix) !== t.label || mode === 'all') trainStep(pix, classes.indexOf(t.label), lr);
+      nlabeled++; did++;
+    }
+    if(did === 0){ stuck = true; break; }
+    trained += did;
+    document.getElementById('nlabeled').textContent = nlabeled;
+    r = runTest(TARGET_TEST); pct = r.t ? r.c/r.t*100 : 0; if(pct > best) best = pct;
+    renderNet('final');
+    setBanner('Trained ' + trained + ' examples so far. Latest test: ' + pct.toFixed(0) + '% (target ' + TARGET + '%).', 'teach');
+  }
+  if(token !== autoToken) return;
+  autoRunning = false; targetMode = false; setAutoUI(false);
+  if(useRandom) newRandom(); else sliderChanged();
+  if(stuck) setBanner('Nothing to train on: tick an answer in the rubric rows first.', 'none');
+  else if(pct >= TARGET) setBanner('Reached ' + pct.toFixed(0) + '% on a ' + TARGET_TEST + '-example test after ' + trained + ' more examples (' + nlabeled + ' in total).', 'ok');
+  else setBanner('Stopped after ' + trained + ' examples at ' + pct.toFixed(0) + '% (best ' + best.toFixed(0) + '%). The curve has flattened below ' + TARGET + '%: this model may be near its ceiling for this rubric.', 'none');
+}
+
+function toggleAuto(){
+  if(autoRunning){
+    autoToken++; autoRunning = false; setAutoUI(false); renderNet('final');
+    setBanner('Stopped after ' + autoDone + ' examples (' + autoMistakes + ' mistakes). The weights stay where they are.', 'none');
+  } else {
+    runAuto();
+  }
+}
+
+async function runAuto(){
+  var n = parseInt(document.getElementById('auto-n').value, 10);
+  var kind = document.getElementById('auto-kind').value;
+  var token = ++autoToken;
+  closeWalk();
+  autoRunning = true; autoDone = 0; autoMistakes = 0;
+  setAutoUI(true);
+
+  for(var k = 0; k < n && token === autoToken; k++){
+    var sp = SPEEDS[document.getElementById('auto-speed').value];   /* re-read each step so speed can change live */
+    var pix = genExample(kind);
+    var t = rubricLabel(pix);
+    if(!t.label) continue;                         /* rubric has no answer ticked for this case */
+
+    for(var i = 0; i < 3; i++) document.getElementById('s'+i).value = pix[i];
+    sliderChanged();                               /* 1. show the example and the model's guess */
+    setPrompt();
+    if(sp[0]){ await sleep(sp[0]); if(token !== autoToken) break; }
+
+    setBanner(teacherText(t), 'teach');            /* 2. the rubric says what it should be */
+    if(sp[1]){ await sleep(sp[1]); if(token !== autoToken) break; }
+
+    if(doLabel(t.label, true)) autoMistakes++;     /* 3. compare, and nudge only if wrong */
+    autoDone++;
+    if(sp[2]) await sleep(sp[2]); else if(k % 10 === 9) await sleep(0);
+  }
+
+  if(token === autoToken){
+    autoRunning = false; setAutoUI(false); renderNet('final');
+    if(autoDone === 0){
+      setBanner('Nothing to train on: tick an answer in the rubric rows first.', 'none');
+    } else {
+      setBanner('Auto-train finished: ' + autoDone + ' examples, ' + autoMistakes + ' mistakes.', 'ok');
+    }
+  }
+}
+
+function run50(){ runTest(50); }
+
+/* Grades n fresh random examples against the rubric, fills the results card, adds a point to the history graph. */
+function runTest(n){
+  var cor = {stop:0, slow:0, go:0}, tot = {stop:0, slow:0, go:0};
+  for(var i = 0; i < n; i++){
+    var pix = [Math.ceil(Math.random()*10), Math.ceil(Math.random()*10), Math.ceil(Math.random()*10)];
+    var rubric = getRubricAnswer(pix);
+    if(!rubric) continue;
+    tot[rubric]++;
+    if(getBest(pix) === rubric) cor[rubric]++;
+  }
+  var c = cor.stop + cor.slow + cor.go;
+  var t = tot.stop + tot.slow + tot.go;
+  document.getElementById('res-total').textContent = c + '/' + t;
+  document.getElementById('res-stop').textContent = cor.stop + '/' + tot.stop;
+  document.getElementById('res-slow').textContent = cor.slow + '/' + tot.slow;
+  document.getElementById('res-go').textContent = cor.go + '/' + tot.go;
+  recordTest(c, t);
+  return {c: c, t: t};
+}
+
+/* ---------- Test history graph: each 50-run test adds a point at "examples trained so far" ---------- */
+var testHistory = [[]];   /* one series per model; Reset weights starts a new series */
+
+function rubricSig(){
+  var s = '';
+  for(var i = 0; i < 3; i++) for(var j = 0; j < 3; j++) s += document.getElementById('r'+i+j).checked ? '1' : '0';
+  return s;
+}
+
+function recordTest(correct, total){
+  if(!total) return;
+  testHistory[testHistory.length-1].push({x: nlabeled, y: correct/total*100, c: correct, t: total, sig: rubricSig()});
+  drawHistory();
+}
+
+function startNewSeries(){
+  if(testHistory[testHistory.length-1].length){
+    testHistory.push([]);
+    if(testHistory.length > 3) testHistory.shift();   /* keep the current model plus two earlier ones */
+  }
+  drawHistory();
+}
+
+function clearHistory(){ testHistory = [[]]; drawHistory(); }
+
+window.addEventListener('resize', function(){ drawHistory(); });
+function drawHistory(){
+  var svg = document.getElementById('hist-svg');
+  var u = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  var Wd = svg.clientWidth || 520, Ht = svg.clientHeight || 160, L = 3*u, R = 0.8*u, T = 1.1*u, B = 2.5*u, pw = Wd - L - R, ph = Ht - T - B;
+  var maxX = 20;
+  testHistory.forEach(function(s){ s.forEach(function(p){ if(p.x > maxX) maxX = p.x; }); });
+  maxX = Math.ceil(maxX/10) * 10;
+  function X(v){ return L + v/maxX*pw; }
+  function Y(v){ return T + (1 - v/100)*ph; }
+
+  var h = '';
+  [0,25,50,75,100].forEach(function(g){
+    h += '<line class="hg" x1="'+L+'" x2="'+(Wd-R)+'" y1="'+Y(g)+'" y2="'+Y(g)+'"/>';
+    h += '<text x="'+(L-0.4*u)+'" y="'+(Y(g)+0.28*u)+'" text-anchor="end">'+g+'%</text>';
+  });
+  [0, maxX/2, maxX].forEach(function(v){
+    h += '<text x="'+X(v)+'" y="'+(Ht-1.2*u)+'" text-anchor="middle">'+v+'</text>';
+  });
+  h += '<text class="hax" x="'+(L+pw/2)+'" y="'+(Ht-0.2*u)+'" text-anchor="middle">examples trained</text>';
+
+  var any = false, last = testHistory.length - 1;
+  testHistory.forEach(function(s, si){
+    if(!s.length) return;
+    any = true;
+    var cur = (si === last);
+    if(s.length > 1){
+      h += '<polyline class="'+(cur ? 'hl-cur' : 'hl-old')+'" points="' +
+        s.map(function(p){ return X(p.x).toFixed(1)+','+Y(p.y).toFixed(1); }).join(' ') + '"/>';
+    }
+    s.forEach(function(p, k){
+      var changed = k > 0 && p.sig !== s[k-1].sig;
+      h += '<circle class="'+(cur ? 'hp-cur' : 'hp-old')+(changed ? ' hp-changed' : '')+'" cx="'+X(p.x).toFixed(1)+'" cy="'+Y(p.y).toFixed(1)+'" r="'+(0.33*u).toFixed(1)+'">' +
+        '<title>After '+p.x+' examples: '+p.c+'/'+p.t+' ('+Math.round(p.y)+'%)'+(changed ? ', rubric changed' : '')+'</title></circle>';
+    });
+    if(cur){
+      s.forEach(function(p, k){
+        if(s.length > 8 && k !== s.length-1) return;      /* crowded: label only the latest */
+        var tx = X(p.x), anchor = tx > Wd - 2.5*u ? 'end' : 'middle';
+        var ty = Math.max(Y(p.y) - 0.7*u, T + 0.7*u);
+        h += '<text class="hval" x="'+tx.toFixed(1)+'" y="'+ty.toFixed(1)+'" text-anchor="'+anchor+'">'+Math.round(p.y)+'%</text>';
+      });
+    }
+  });
+  if(!any) h += '<text class="hempty" x="'+(L+pw/2)+'" y="'+(T+ph/2)+'" text-anchor="middle">Run a test to start the graph</text>';
+  svg.innerHTML = h;
+}
+
+function doReset(){ init(); }
+useRandom = false;
+initTip();
+init();
+</script>
+</body>
+</html>

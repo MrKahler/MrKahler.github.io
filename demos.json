@@ -172,6 +172,19 @@
       "about": "Students train a tiny model by grading its guesses, then test it. Flip the rubric and the score drops, because the model learned the old rule. Retrain and it recovers. A hands-on look at how training shapes behavior."
     },
     {
+      "id": "ml-pixel-trainer-deep",
+      "title": "Pixel Trainer: Deep Network",
+      "file": "demos/ml-pixel-trainer-deep.html",
+      "category": "ml",
+      "grades": "8-9",
+      "blurb": "The same pixel task with two hidden layers and real backpropagation you can watch.",
+      "about": "A bigger network trains on the same brightest-pixel task. Watch signals flow forward and weight changes flash backward after each grade, hover any node to see its arithmetic, and step through 'Why this guess?' and 'What did backprop change?' Then hit 'Train until 90%' to see why extra layers beat the one-layer ceiling.",
+      "source": {
+        "type": "local",
+        "path": "OneDrive/Scott/Code/Artifacts/ml_pixel_trainer_deep.html"
+      }
+    },
+    {
       "id": "tonys-picker",
       "title": "Tony's Picker",
       "file": "demos/tonys-picker.html",
