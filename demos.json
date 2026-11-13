@@ -1,11 +1,31 @@
 {
   "site": "Tony Bony's Science Lab",
   "categories": [
-    { "id": "earth",   "name": "Rocks & Earth",        "emoji": "🪨" },
-    { "id": "atoms",   "name": "Atoms & Particles",    "emoji": "⚛️" },
-    { "id": "physics", "name": "Forces & Space",       "emoji": "🚀" },
-    { "id": "ml",      "name": "How Machines Learn",   "emoji": "🤖" },
-    { "id": "tools",   "name": "Classroom Tools",      "emoji": "🎡" }
+    {
+      "id": "earth",
+      "name": "Rocks & Earth",
+      "emoji": "🪨"
+    },
+    {
+      "id": "atoms",
+      "name": "Atoms & Particles",
+      "emoji": "⚛️"
+    },
+    {
+      "id": "physics",
+      "name": "Forces & Space",
+      "emoji": "🚀"
+    },
+    {
+      "id": "ml",
+      "name": "How Machines Learn",
+      "emoji": "🤖"
+    },
+    {
+      "id": "tools",
+      "name": "Classroom Tools",
+      "emoji": "🎡"
+    }
   ],
   "demos": [
     {
@@ -15,7 +35,11 @@
       "category": "earth",
       "grades": "1-3",
       "blurb": "Cook up rocks with Tony! Blend, squish, and melt your way around the rock cycle.",
-      "source": { "type": "artifact", "slug": "54a54c3c-79ab-4054-b7f6-57cd9bece2d2" }
+      "source": {
+        "type": "artifact",
+        "slug": "54a54c3c-79ab-4054-b7f6-57cd9bece2d2"
+      },
+      "about": "Kids pull rocks from the cabinet and run them through kitchen machines like the Weather Blender to see what they turn into. Tony fills orders, cheers discoveries, and tells a pun for every occasion. Built for grades 1–3 playing with a parent."
     },
     {
       "id": "rock-cycle-kitchen",
@@ -24,7 +48,11 @@
       "category": "earth",
       "grades": "4-9",
       "blurb": "The older-grades kitchen: rock-cycle quests, machines, and the real names for every step.",
-      "source": { "type": "artifact", "slug": "f385f384-04c7-42ab-8856-5b4c24d7752d" }
+      "source": {
+        "type": "artifact",
+        "slug": "f385f384-04c7-42ab-8856-5b4c24d7752d"
+      },
+      "about": "The same kitchen for older students, with the real vocabulary: weathering, compaction, metamorphism, and melting. Quest mode walks a rock all the way around the cycle, one machine at a time."
     },
     {
       "id": "atom-builder",
@@ -33,7 +61,11 @@
       "category": "atoms",
       "grades": "4-9",
       "blurb": "Add protons, neutrons, and electrons and watch the element change.",
-      "source": { "type": "artifact", "slug": "540052ee-c45a-4b0c-a252-22142acdf549" }
+      "source": {
+        "type": "artifact",
+        "slug": "540052ee-c45a-4b0c-a252-22142acdf549"
+      },
+      "about": "Click to add or remove protons, neutrons, and electrons. The element card updates live with its name, mass number, and charge, so students see that the proton count decides which element it is."
     },
     {
       "id": "atom-builder-2",
@@ -42,7 +74,11 @@
       "category": "atoms",
       "grades": "6-9",
       "blurb": "Build atoms, highlight valence electrons, then switch to reaction mode.",
-      "source": { "type": "artifact", "slug": "9225c532-39b4-4641-a4ed-330cdc2b3104" }
+      "source": {
+        "type": "artifact",
+        "slug": "9225c532-39b4-4641-a4ed-330cdc2b3104"
+      },
+      "about": "Everything in Atom Builder plus electron shells, a valence-electron highlight, and a reaction mode for exploring how atoms combine."
     },
     {
       "id": "beta-decay-lab",
@@ -51,7 +87,11 @@
       "category": "atoms",
       "grades": "8-9",
       "blurb": "Step through a neutron turning into a proton, one vertex at a time.",
-      "source": { "type": "artifact", "slug": "e2f7f0bb-689b-4f8c-8423-1185ca96da5c" }
+      "source": {
+        "type": "artifact",
+        "slug": "e2f7f0bb-689b-4f8c-8423-1185ca96da5c"
+      },
+      "about": "A step-by-step walkthrough of beta decay. Students advance through each moment as a neutron becomes a proton, and the lab tracks charge and particle counts so they can check that everything balances."
     },
     {
       "id": "pane-fracture-lab",
@@ -60,7 +100,11 @@
       "category": "physics",
       "grades": "4-9",
       "blurb": "Pick a pane and an impactor, then see how annealed and tempered glass crack differently.",
-      "source": { "type": "artifact", "slug": "10d4c02a-c575-42a6-b832-bfc01e580824" }
+      "source": {
+        "type": "artifact",
+        "slug": "10d4c02a-c575-42a6-b832-bfc01e580824"
+      },
+      "about": "Choose a glass pane (annealed or tempered), an impactor, and a strike strength, then hit it. Annealed glass breaks into long shards, while tempered glass shatters into small cubes. Great for talking about stored stress and safety glass."
     },
     {
       "id": "glass-breaking-sim",
@@ -69,7 +113,11 @@
       "category": "physics",
       "grades": "4-9",
       "blurb": "The first-try glass simulator, kept for comparison with Pane Fracture Lab.",
-      "source": { "type": "artifact", "slug": "4190a993-87aa-440c-b13f-48c3aaf63643" }
+      "source": {
+        "type": "artifact",
+        "slug": "4190a993-87aa-440c-b13f-48c3aaf63643"
+      },
+      "about": "The first version of the glass simulator, left as it was (apart from an animation fix) so students can compare it with Pane Fracture Lab and see how a model improves when you test it."
     },
     {
       "id": "oneill-cylinder",
@@ -78,7 +126,11 @@
       "category": "physics",
       "grades": "6-9",
       "blurb": "Spin up a space habitat and see how rotation makes artificial gravity.",
-      "source": { "type": "artifact", "slug": "86dba482-ab06-4a72-9f9a-4ae78079fdc4" }
+      "source": {
+        "type": "artifact",
+        "slug": "86dba482-ab06-4a72-9f9a-4ae78079fdc4"
+      },
+      "about": "A 3D model of a rotating space habitat. Change its size and spin rate and watch the 'gravity' felt on the inside surface change. Throw a ball to see why things move strangely inside a spinning world."
     },
     {
       "id": "spacetime-block",
@@ -87,7 +139,11 @@
       "category": "physics",
       "grades": "8-9",
       "blurb": "Stack the frames of a video into a 3D block to see motion as a shape in space and time.",
-      "source": { "type": "artifact", "slug": "ccad9594-638a-4b98-b9d2-a116b37a840e" }
+      "source": {
+        "type": "artifact",
+        "slug": "ccad9594-638a-4b98-b9d2-a116b37a840e"
+      },
+      "about": "Stack a video's frames into a 3D block so that time becomes a direction you can see. Moving objects trace out tubes and curves through the block, which turns motion into a shape."
     },
     {
       "id": "ml-pixel-trainer",
@@ -96,7 +152,11 @@
       "category": "ml",
       "grades": "6-9",
       "blurb": "Train a tiny model by grading its guesses, then flip the rubric and watch what it learned.",
-      "source": { "type": "local", "path": "Downloads/ml_pixel_trainer3.html" }
+      "source": {
+        "type": "local",
+        "path": "Downloads/ml_pixel_trainer3.html"
+      },
+      "about": "Students train a tiny model by grading its guesses, then test it. Flip the rubric and the score drops, because the model learned the old rule. Retrain and it recovers. A hands-on look at how training shapes behavior."
     },
     {
       "id": "tonys-picker",
@@ -105,7 +165,11 @@
       "category": "tools",
       "grades": "All",
       "blurb": "Spin the wheel and let Tony pick who's next. Saves your class lists.",
-      "source": { "type": "artifact", "slug": "fe964b7d-fe92-4480-b01a-db0cd54d9944" }
+      "source": {
+        "type": "artifact",
+        "slug": "fe964b7d-fe92-4480-b01a-db0cd54d9944"
+      },
+      "about": "A spinning name wheel for calling on students, with Tony as host. It keeps lists for several classes and can remove names as they're picked, so everyone gets a turn."
     }
   ]
 }
