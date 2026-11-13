@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tony Bony's Science Lab · Mr. Kahler</title>
+<meta name="description" content="Interactive science demos and games from Mr. Kahler's classes, hosted by Tony Bony.">
+<link rel="icon" href="assets/tony.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2d2452; --ink-soft:#5e5590; --cream:#fff4e2; --paper:#fffaf1;
+  --pink:#ff6fa8; --sun:#ffd03d; --coral:#ff8466; --grape:#8b6cff;
+  --mint:#4fd1a5; --sky:#5fb8ff; --wood:#c47f45;
+  --display:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--body); color:var(--ink); background:var(--cream);
+  background-image:radial-gradient(rgba(45,36,82,.07) 1.5px,transparent 1.6px);
+  background-size:22px 22px; min-height:100vh;
+}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ---------- hero ---------- */
+header{padding:34px 0 10px}
+.hero{display:grid;grid-template-columns:190px 1fr;gap:28px;align-items:end}
+.tony{width:190px;height:300px;cursor:pointer;position:relative;user-select:none}
+.tony img{width:100%;height:100%;display:block;animation:bob 3.2s ease-in-out infinite;transform-origin:50% 100%}
+.tony.boing img{animation:boing .45s ease-out}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes boing{0%{transform:translateY(0) scaleY(1)}30%{transform:translateY(-26px) scaleY(1.04)}60%{transform:translateY(0) scaleY(.94)}100%{transform:translateY(0) scaleY(1)}}
+.hero-text{padding-bottom:34px}
+.kicker{font-family:var(--display);font-weight:600;color:var(--ink-soft);letter-spacing:.04em;text-transform:uppercase;font-size:14px;margin:0 0 6px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(40px,6vw,68px);line-height:.98;margin:0;letter-spacing:-.01em}
+h1 .c1{color:var(--pink)} h1 .c2{color:var(--grape)} h1 .c3{color:var(--coral)}
+h1 .lab{display:inline-block;background:var(--sun);border:3px solid var(--ink);border-radius:18px;padding:0 14px 4px;transform:rotate(-2deg);box-shadow:4px 4px 0 var(--ink);margin-left:6px}
+.bubble{position:relative;display:inline-block;margin-top:20px;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 18px;font-weight:700;font-size:17px;max-width:560px;box-shadow:4px 4px 0 var(--ink);min-height:52px}
+.bubble::before{content:"";position:absolute;left:-17px;bottom:14px;border:9px solid transparent;border-right:14px solid var(--ink)}
+.bubble::after{content:"";position:absolute;left:-10px;bottom:17px;border:6px solid transparent;border-right:10px solid #fff}
+.bubble small{display:block;font-weight:600;color:var(--ink-soft);font-size:13px;margin-top:4px}
+
+/* ---------- filters ---------- */
+.shelf{position:sticky;top:0;z-index:5;background:linear-gradient(var(--cream) 80%,transparent);padding:14px 0 18px}
+.shelf-inner{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{font-family:var(--display);font-weight:600;font-size:15px;border:2.5px solid var(--ink);background:#fff;color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);transition:transform .08s}
+.chip:hover{transform:translateY(-1px)}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff}
+.sep{width:2px;height:28px;background:rgba(45,36,82,.2);margin:0 4px}
+.chip.g[aria-pressed="true"]{background:var(--grape);border-color:var(--ink)}
+
+/* ---------- cards ---------- */
+main{padding-bottom:40px}
+.section-title{font-family:var(--display);font-weight:700;font-size:26px;margin:26px 0 14px;display:flex;align-items:center;gap:10px}
+.section-title .count{font-size:14px;font-weight:600;color:var(--ink-soft);background:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px}
+.card{background:#fff;border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);display:flex;flex-direction:column;text-decoration:none;transition:transform .12s,box-shadow .12s}
+.card:hover,.card:focus-visible{transform:translate(-2px,-3px) rotate(-.4deg);box-shadow:8px 9px 0 var(--ink);outline:none}
+.thumb{aspect-ratio:16/10;background:var(--ink) center/cover no-repeat;border-bottom:3px solid var(--ink);position:relative}
+.badge{position:absolute;top:10px;left:10px;font-family:var(--display);font-weight:600;font-size:13px;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:2px 10px}
+.card-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card h3{font-family:var(--display);font-weight:600;font-size:20px;line-height:1.15;margin:0}
+.card p{margin:0;color:var(--ink-soft);font-weight:600;font-size:15px;line-height:1.4;flex:1}
+.play{align-self:flex-start;font-family:var(--display);font-weight:600;font-size:15px;background:var(--pink);color:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:6px 14px;box-shadow:2px 2px 0 var(--ink)}
+.cat-earth .play{background:var(--coral)} .cat-atoms .play{background:var(--sky)}
+.cat-physics .play{background:var(--grape)} .cat-ml .play{background:var(--mint);color:var(--ink)}
+.cat-tools .play{background:var(--sun);color:var(--ink)}
+.empty{font-weight:700;color:var(--ink-soft);padding:30px 0}
+
+footer{border-top:3px dashed rgba(45,36,82,.25);padding:22px 0 40px;color:var(--ink-soft);font-weight:700;font-size:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+footer em{font-style:normal;color:var(--ink)}
+
+@media (max-width:640px){
+  .hero{grid-template-columns:110px 1fr;gap:14px}
+  .tony{width:110px;height:174px}
+  .hero-text{padding-bottom:14px}
+  .bubble{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){.tony img{animation:none}.card{transition:none}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="hero">
+    <div class="tony" id="tony" role="button" tabindex="0" aria-label="Click Tony for a joke">
+      <img src="assets/tony.svg" alt="Tony Bony, a friendly cartoon skeleton in a chef hat">
+    </div>
+    <div class="hero-text">
+      <p class="kicker">Mr. Kahler's science demos</p>
+      <h1><span class="c1">Tony</span> <span class="c2">Bony's</span><br><span class="c3">Science</span> <span class="lab">Lab</span></h1>
+      <div class="bubble" id="bubble" aria-live="polite">Hi, I'm Tony Bony! Pick a demo and let's go explore.<small>Click me for a joke.</small></div>
+    </div>
+  </div>
+</header>
+
+<nav class="shelf" aria-label="Filter demos">
+  <div class="wrap shelf-inner" id="filters"></div>
+</nav>
+
+<main class="wrap" id="main"><p class="empty">Loading demos…</p></main>
+
+<footer class="wrap">
+  <span>Created by <em>Scott Kahler</em> · © 2026 S. Kahler Teaching</span>
+  <span>"Seeing God in everything He created" · Romans 1:20</span>
+</footer>
+
+<script>
+const JOKES=[
+  "Did you know my eyes are made from ping pong balls?",
+  "Don't take me for granite!",
+  "Why didn't the skeleton go to the dance? He had no body to go with.",
+  "I'd tell you a chemistry joke, but I know I wouldn't get a reaction.",
+  "Never trust an atom. They make up everything!",
+  "I lost an electron. Now I have to keep an ion it.",
+  "What's a skeleton's favorite instrument? The trom-BONE!",
+  "I tried to tell a sedimentary joke, but it had too many layers.",
+  "Why are skeletons so calm? Nothing gets under their skin!",
+  "That rock is gneiss. Really gneiss.",
+  "I'd make a joke about glass, but I'm afraid it would crack you up.",
+  "Why don't skeletons ever fight each other? They don't have the guts.",
+  "How does a skeleton call his friends? On the tele-BONE!",
+  "Protons are always so positive.",
+  "God made gravity, and I'm really falling for it!"
+];
+let ji=-1;
+const tony=document.getElementById('tony'), bubble=document.getElementById('bubble');
+function joke(){
+  ji=(ji+1)%JOKES.length; bubble.textContent=JOKES[ji];
+  tony.classList.remove('boing'); void tony.offsetWidth; tony.classList.add('boing');
+}
+tony.addEventListener('click',joke);
+tony.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();joke()}});
+
+const GRADES=[{id:'all',name:'All grades'},{id:'1-3',name:'Grades 1–3'},{id:'4-6',name:'Grades 4–6'},{id:'7-9',name:'Grades 7–9'}];
+function range(g){if(!g||/all/i.test(g))return[0,12];const m=String(g).match(/(\d+)\s*-\s*(\d+)/);if(m)return[+m[1],+m[2]];const n=parseInt(g);return[n,n]}
+function overlaps(a,b){return a[0]<=b[1]&&b[0]<=a[1]}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let DATA,cat='all',grade='all';
+function chips(){
+  const f=document.getElementById('filters');
+  const c=[{id:'all',name:'Everything',emoji:'✨'},...DATA.categories];
+  f.innerHTML=c.map(x=>`<button class="chip" data-cat="${x.id}" aria-pressed="${x.id===cat}">${x.emoji} ${esc(x.name)}</button>`).join('')
+   +'<span class="sep"></span>'
+   +GRADES.map(g=>`<button class="chip g" data-grade="${g.id}" aria-pressed="${g.id===grade}">${g.name}</button>`).join('');
+  f.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{cat=b.dataset.cat;render()});
+  f.querySelectorAll('[data-grade]').forEach(b=>b.onclick=()=>{grade=b.dataset.grade;render()});
+}
+function card(d){
+  const thumb=d.thumb||('thumbs/'+d.id+'.jpg');
+  return `<a class="card cat-${d.category}" href="play.html?d=${encodeURIComponent(d.id)}">
+    <div class="thumb" style="background-image:url('${esc(thumb)}')"><span class="badge">${/all/i.test(d.grades)?'All grades':'Grades '+esc(d.grades)}</span></div>
+    <div class="card-body"><h3>${esc(d.title)}</h3><p>${esc(d.blurb)}</p><span class="play">Play ▸</span></div></a>`;
+}
+function render(){
+  chips();
+  const gr=grade==='all'?null:range(grade);
+  const list=DATA.demos.filter(d=>!d.hidden&&(cat==='all'||d.category===cat)&&(!gr||overlaps(range(d.grades),gr)));
+  const main=document.getElementById('main');
+  if(!list.length){main.innerHTML='<p class="empty">Tony looked everywhere, but nothing matches. Try another filter!</p>';return}
+  main.innerHTML=DATA.categories.map(c=>{
+    const items=list.filter(d=>d.category===c.id); if(!items.length)return'';
+    return `<h2 class="section-title">${c.emoji} ${esc(c.name)} <span class="count">${items.length}</span></h2><div class="grid">${items.map(card).join('')}</div>`;
+  }).join('');
+}
+fetch('demos.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{DATA=j;render()})
+ .catch(()=>{document.getElementById('main').innerHTML='<p class="empty">Couldn\'t load the demo list. (If you opened this file directly, run it from a web server or GitHub Pages.)</p>'});
+</script>
+</body>
+</html>

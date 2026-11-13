@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Machines Learn — Pixel Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #16151a;
+    --surface: #1f1e24;
+    --surface2: #28272f;
+    --border: #35333d;
+    --border-strong: #4a4756;
+    --text: #e8e6f0;
+    --text-2: #9c99ab;
+    --text-3: #5e5b6e;
+    --stop: #f07070;
+    --stop-bg: #2a1a1a;
+    --stop-border: #6b3030;
+    --slow: #e0a84a;
+    --slow-bg: #271f0e;
+    --slow-border: #6b4d18;
+    --go: #6abf6a;
+    --go-bg: #111f11;
+    --go-border: #2a5c2a;
+    --accent: #8b82f0;
+    --accent-bg: #1a1830;
+    --accent-border: #4a44a0;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  header h1 { font-size: 14px; font-weight: 600; letter-spacing: -.01em; color: var(--text); }
+  header span { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+  .top-row {
+    display: flex;
+    gap: 16px;
+    padding: 16px 16px 0;
+    align-items: start;
+    width: 100%;
+  }
+
+  .bottom-row { padding: 12px 16px 16px; }
+
+  .session-strip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .col-left { flex: 0 0 220px; min-width: 0; }
+  .col-right { flex: 1; min-width: 0; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+  }
+
+  .hr { height: 1px; background: var(--border); margin: 12px 0; }
+
+  .pixel-col { display: flex; flex-direction: column; gap: 6px; }
+  .prow { display: flex; align-items: center; gap: 8px; }
+  .pixel {
+    width: 52px; height: 52px;
+    border-radius: 7px;
+    border: 1px solid var(--border-strong);
+    transition: background .15s;
+    flex-shrink: 0;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+  }
+  .pval { font-size: 10px; font-weight: 500; padding: 2px 4px; opacity: 0.35; font-family: var(--mono); line-height: 1; }
+  .pname { font-size: 12px; color: var(--text-2); width: 32px; flex-shrink: 0; }
+  .slider-wrap { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+  .slider-wrap input[type=range] {
+    flex: 1; min-width: 0;
+    -webkit-appearance: none;
+    height: 4px; border-radius: 2px;
+    background: var(--border-strong);
+    outline: none;
+  }
+  .slider-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--surface);
+    box-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+  .sval { font-size: 11px; font-weight: 500; width: 14px; color: var(--text-2); font-family: var(--mono); flex-shrink: 0; }
+
+  .toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; color: var(--text-2); }
+  .tog { position: relative; width: 30px; height: 17px; flex-shrink: 0; }
+  .tog input { opacity: 0; width: 0; height: 0; }
+  .tog-track { position: absolute; inset: 0; background: var(--border-strong); border-radius: 9px; transition: background .2s; cursor: pointer; }
+  .tog input:checked + .tog-track { background: var(--accent); }
+  .tog-thumb { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; background: var(--text); border-radius: 50%; transition: transform .2s; pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .tog input:checked ~ .tog-thumb { transform: translateX(13px); }
+
+  .right-panels { display: flex; gap: 14px; align-items: start; }
+  .panel-weights { flex: 1; min-width: 0; }
+  .panel-rubric { flex: 0 0 200px; min-width: 0; }
+
+  .wrow { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; }
+  .wname { font-size: 11px; color: var(--text-2); width: 28px; flex-shrink: 0; font-family: var(--mono); }
+  .wgroup { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .wsubrow { display: flex; align-items: center; gap: 4px; }
+  .wclabel { font-size: 9px; color: var(--text-3); width: 26px; flex-shrink: 0; font-family: var(--mono); text-transform: uppercase; }
+  .wtrack { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; border: 1px solid var(--border); overflow: hidden; min-width: 0; }
+  .wfill { height: 100%; border-radius: 3px; transition: width .35s; }
+  .wnum { font-size: 10px; width: 28px; text-align: right; color: var(--text-3); font-family: var(--mono); flex-shrink: 0; }
+
+  .phase-badge {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; margin-bottom: 10px;
+    font-family: var(--mono); letter-spacing: .04em; text-transform: uppercase;
+  }
+  .phase-train { background: var(--go-bg); color: var(--go); border: 1px solid var(--go-border); }
+  .phase-test { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
+
+  .btn-row { display: flex; gap: 5px; margin-top: 6px; }
+  .cbtn {
+    flex: 1; padding: 8px 2px; font-size: 12px; font-weight: 600;
+    border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text);
+    font-family: var(--sans); transition: all .15s;
+  }
+  .cbtn.stop { border-color: var(--stop-border); color: var(--stop); }
+  .cbtn.stop:hover { background: var(--stop-bg); }
+  .cbtn.slow { border-color: var(--slow-border); color: var(--slow); }
+  .cbtn.slow:hover { background: var(--slow-bg); }
+  .cbtn.go { border-color: var(--go-border); color: var(--go); }
+  .cbtn.go:hover { background: var(--go-bg); }
+
+  .abtn {
+    width: 100%; padding: 7px; font-size: 11px; font-weight: 500;
+    border-radius: 7px; cursor: pointer;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); margin-top: 6px; font-family: var(--sans);
+    transition: all .15s;
+  }
+  .abtn:hover { background: var(--border); }
+  .abtn.accent { border-color: var(--accent-border); color: var(--accent); }
+  .abtn.accent:hover { background: var(--accent-bg); }
+
+  .gbox {
+    border-radius: 7px; padding: 8px 12px; font-size: 16px;
+    font-weight: 700; text-align: center;
+    border: 1px solid var(--border);
+    margin: 6px 0; font-family: var(--mono);
+    letter-spacing: .05em; transition: all .2s;
+  }
+
+  .rtable { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 6px; }
+  .rtable th { font-size: 10px; font-weight: 600; padding: 4px 3px; text-align: center; border-bottom: 1px solid var(--border); font-family: var(--mono); text-transform: uppercase; color: var(--text-2); }
+  .rtable td { padding: 4px 3px; text-align: center; border-bottom: 1px solid var(--border); }
+  .rtable td:first-child { text-align: left; color: var(--text-2); font-size: 10px; }
+  .rtable input[type=checkbox] { width: 13px; height: 13px; cursor: pointer; accent-color: var(--accent); }
+
+  .results-card { background: var(--bg); border-radius: 7px; padding: 8px 10px; margin-bottom: 6px; border: 1px solid var(--border); }
+  .res-title { font-size: 10px; font-weight: 600; margin-bottom: 6px; font-family: var(--mono); color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; }
+  .res-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .res-row:last-child { border-bottom: none; }
+  .res-val { font-family: var(--mono); font-weight: 500; color: var(--text); }
+
+  .stat { font-size: 12px; color: var(--text-2); }
+  .stat b { color: var(--text); font-family: var(--mono); }
+  .hint { font-size: 11px; color: var(--text-3); line-height: 1.7; }
+  .fb { font-size: 11px; color: var(--text-2); margin-bottom: 5px; min-height: 15px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>How Machines Learn</h1>
+  <span>supervised learning demo — pixel trainer</span>
+</header>
+
+<div class="top-row">
+
+  <div class="col-left card">
+    <div class="section-label">Pixel inputs</div>
+
+    <div class="toggle-row">
+      <label class="tog">
+        <input type="checkbox" id="random-tog" onchange="toggleRandom(this.checked)">
+        <div class="tog-track"></div>
+        <div class="tog-thumb"></div>
+      </label>
+      <span id="tog-label">Manual sliders</span>
+    </div>
+
+    <div id="slider-area">
+      <div class="pixel-col">
+        <div class="prow">
+          <div class="pixel" id="p0"><span class="pval" id="v0">5</span></div>
+          <div class="pname">top</div>
+          <div class="slider-wrap">
+            <input type="range" min="1" max="10" value="5" step="1" id="s0" oninput="sliderChanged()">
+            <span class="sval" id="sv0">5</span>
+          </div>
+        </div>
+        <div class="prow">
+          <div class="pixel" id="p1"><span class="pval" id="v1">5</span></div>
+          <div class="pname">mid</div>
+          <div class="slider-wrap">
+            <input type="range" min="1" max="10" value="5" step="1" id="s1" oninput="sliderChanged()">
+            <span class="sval" id="sv1">5</span>
+          </div>
+        </div>
+        <div class="prow">
+          <div class="pixel" id="p2"><span class="pval" id="v2">5</span></div>
+          <div class="pname">bot</div>
+          <div class="slider-wrap">
+            <input type="range" min="1" max="10" value="5" step="1" id="s2" oninput="sliderChanged()">
+            <span class="sval" id="sv2">5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="random-area" style="display:none">
+      <div class="pixel-col">
+        <div class="prow"><div class="pixel" id="rp0"><span class="pval" id="rv0">5</span></div><div class="pname">top</div></div>
+        <div class="prow"><div class="pixel" id="rp1"><span class="pval" id="rv1">5</span></div><div class="pname">mid</div></div>
+        <div class="prow"><div class="pixel" id="rp2"><span class="pval" id="rv2">5</span></div><div class="pname">bot</div></div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+    <span class="phase-badge phase-train" id="phase-badge">Training</span>
+
+    <div id="train-ui">
+      <div class="fb" id="train-fb">What does this mean?</div>
+      <div class="btn-row">
+        <button class="cbtn stop" onclick="doLabel('stop')">STOP</button>
+        <button class="cbtn slow" onclick="doLabel('slow')">SLOW</button>
+        <button class="cbtn go" onclick="doLabel('go')">GO</button>
+      </div>
+      <button class="abtn accent" onclick="switchTest()">Test it (50 runs)</button>
+    </div>
+
+    <div id="test-ui" style="display:none">
+      <div class="gbox" id="gbox" style="background:var(--bg);color:var(--text-2)">—</div>
+      <div class="fb" id="test-fb">Press Run 50-example test</div>
+      <div class="results-card" id="test-results" style="display:none">
+        <div class="res-title">50-run results</div>
+        <div class="res-row"><span>Overall</span><span class="res-val" id="res-total">—</span></div>
+        <div class="res-row"><span style="color:var(--stop)">STOP</span><span class="res-val" id="res-stop">—</span></div>
+        <div class="res-row"><span style="color:var(--slow)">SLOW</span><span class="res-val" id="res-slow">—</span></div>
+        <div class="res-row"><span style="color:var(--go)">GO</span><span class="res-val" id="res-go">—</span></div>
+      </div>
+      <button class="abtn accent" onclick="run50()">Run 50-example test</button>
+      <button class="abtn" onclick="switchTrain()">Back to training</button>
+    </div>
+  </div>
+
+  <div class="col-right card">
+    <div class="right-panels">
+
+      <div class="panel-weights">
+        <div class="section-label">Learned weights</div>
+        <div id="wdisplay"></div>
+      </div>
+
+      <div class="panel-rubric">
+        <div class="section-label">Rubric <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;font-family:var(--sans)">50-run scoring</span></div>
+        <table class="rtable">
+          <tr><th></th><th style="color:var(--stop)">STP</th><th style="color:var(--slow)">SLW</th><th style="color:var(--go)">GO</th></tr>
+          <tr>
+            <td>Top high</td>
+            <td><input type="checkbox" id="r00" checked></td>
+            <td><input type="checkbox" id="r01"></td>
+            <td><input type="checkbox" id="r02"></td>
+          </tr>
+          <tr>
+            <td>Mid high</td>
+            <td><input type="checkbox" id="r10"></td>
+            <td><input type="checkbox" id="r11" checked></td>
+            <td><input type="checkbox" id="r12"></td>
+          </tr>
+          <tr>
+            <td>Bot high</td>
+            <td><input type="checkbox" id="r20"></td>
+            <td><input type="checkbox" id="r21"></td>
+            <td><input type="checkbox" id="r22" checked></td>
+          </tr>
+        </table>
+        <div style="font-size:9px;color:var(--text-3);font-family:var(--mono)">Ties → model preference wins</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-row">
+  <div class="session-strip">
+    <div>
+      <div class="section-label" style="margin-bottom:2px">Session</div>
+      <div class="stat">Labeled <b id="nlabeled">0</b></div>
+    </div>
+    <div style="height:32px;width:1px;background:var(--border)"></div>
+    <div class="hint" style="flex:1">
+      <b style="color:var(--text)">Round 1:</b> Train top-bright=STOP, bot-bright=GO, mid-bright=SLOW. Test it. &nbsp;
+      <b style="color:var(--text)">Round 2:</b> Flip rubric → score drops. &nbsp;
+      <b style="color:var(--text)">Round 3:</b> Reset + retrain → score recovers. &nbsp;
+      <span style="color:var(--text-3)">Same model. Different training. Different behavior.</span>
+    </div>
+    <div style="height:32px;width:1px;background:var(--border)"></div>
+    <button class="abtn" onclick="doReset()" style="width:auto;padding:7px 16px;margin-top:0;color:var(--text-2)">Reset weights</button>
+  </div>
+</div>
+
+<script>
+var classes=['stop','slow','go'];
+var pnames=['top','mid','bot'];
+var ccolors={stop:'#f07070',slow:'#e0a84a',go:'#6abf6a'};
+var W, nlabeled, useRandom, curPix;
+var LR=0.12;
+
+function init(){
+  W={stop:[0.33,0.33,0.33],slow:[0.33,0.33,0.33],go:[0.33,0.33,0.33]};
+  nlabeled=0;
+  document.getElementById('nlabeled').textContent='0';
+  document.getElementById('train-fb').textContent='What does this mean?';
+  updateWeightDisplay();
+  sliderChanged();
+}
+
+function grayBg(v){ var g=Math.round(((v-1)/9)*255); return 'rgb('+g+','+g+','+g+')'; }
+function textCol(v){ return v>5?'#000':'#fff'; }
+
+function setPixels(ids,vids,vals){
+  for(var i=0;i<3;i++){
+    document.getElementById(ids[i]).style.background=grayBg(vals[i]);
+    var el=document.getElementById(vids[i]);
+    if(el){ el.textContent=vals[i]; el.style.color=textCol(vals[i]); }
+  }
+}
+
+function sliderChanged(){
+  curPix=[
+    parseInt(document.getElementById('s0').value),
+    parseInt(document.getElementById('s1').value),
+    parseInt(document.getElementById('s2').value)
+  ];
+  for(var i=0;i<3;i++) document.getElementById('sv'+i).textContent=curPix[i];
+  setPixels(['p0','p1','p2'],['v0','v1','v2'],curPix);
+}
+
+function newRandom(){
+  curPix=[Math.ceil(Math.random()*10),Math.ceil(Math.random()*10),Math.ceil(Math.random()*10)];
+  setPixels(['rp0','rp1','rp2'],['rv0','rv1','rv2'],curPix);
+}
+
+function toggleRandom(on){
+  useRandom=on;
+  document.getElementById('tog-label').textContent=on?'Random examples':'Manual sliders';
+  document.getElementById('slider-area').style.display=on?'none':'block';
+  document.getElementById('random-area').style.display=on?'block':'none';
+  if(on) newRandom(); else sliderChanged();
+}
+
+function getScores(pix){
+  return classes.map(function(c){
+    var s=0; for(var i=0;i<3;i++) s+=(pix[i]/10)*W[c][i]; return s;
+  });
+}
+
+function getBest(pix){
+  var sc=getScores(pix),best=0;
+  for(var i=1;i<sc.length;i++) if(sc[i]>sc[best]) best=i;
+  return classes[best];
+}
+
+function doLabel(cls){
+  for(var i=0;i<3;i++){
+    var n=curPix[i]/10;
+    W[cls][i]=Math.min(2,W[cls][i]+LR*n);
+    classes.forEach(function(c){ if(c!==cls) W[c][i]=Math.max(0,W[c][i]-LR*n*0.5); });
+  }
+  nlabeled++;
+  document.getElementById('nlabeled').textContent=nlabeled;
+  document.getElementById('train-fb').textContent='Labeled '+cls.toUpperCase()+'. Next:';
+  updateWeightDisplay();
+  if(useRandom) newRandom(); else sliderChanged();
+}
+
+function updateWeightDisplay(){
+  var h='';
+  for(var i=0;i<3;i++){
+    h+='<div class="wrow"><div class="wname">'+pnames[i]+'</div><div class="wgroup">';
+    classes.forEach(function(c){
+      var pct=Math.min(100,Math.round((W[c][i]/2)*100));
+      h+='<div class="wsubrow"><div class="wclabel">'+c+'</div>';
+      h+='<div class="wtrack"><div class="wfill" style="width:'+pct+'%;background:'+ccolors[c]+'"></div></div>';
+      h+='<div class="wnum">'+W[c][i].toFixed(2)+'</div></div>';
+    });
+    h+='</div></div>';
+  }
+  document.getElementById('wdisplay').innerHTML=h;
+}
+
+function getRubricAnswer(pix){
+  var maxVal=Math.max(pix[0],pix[1],pix[2]);
+  var domIdx=maxVal===pix[0]?0:maxVal===pix[1]?1:2;
+  for(var j=0;j<3;j++){
+    if(document.getElementById('r'+domIdx+j).checked) return classes[j];
+  }
+  return null;
+}
+
+function run50(){
+  var corStop=0,totStop=0,corSlow=0,totSlow=0,corGo=0,totGo=0;
+  for(var i=0;i<50;i++){
+    var pix=[Math.ceil(Math.random()*10),Math.ceil(Math.random()*10),Math.ceil(Math.random()*10)];
+    var rubric=getRubricAnswer(pix);
+    if(!rubric) continue;
+    var guess=getBest(pix);
+    var ok=guess===rubric;
+    if(rubric==='stop'){totStop++;if(ok)corStop++;}
+    else if(rubric==='slow'){totSlow++;if(ok)corSlow++;}
+    else{totGo++;if(ok)corGo++;}
+  }
+  var tot=corStop+corSlow+corGo;
+  var total=totStop+totSlow+totGo;
+  document.getElementById('res-total').textContent=tot+'/'+total;
+  document.getElementById('res-stop').textContent=corStop+'/'+totStop;
+  document.getElementById('res-slow').textContent=corSlow+'/'+totSlow;
+  document.getElementById('res-go').textContent=corGo+'/'+totGo;
+  document.getElementById('test-results').style.display='block';
+
+  var pix2=[Math.ceil(Math.random()*10),Math.ceil(Math.random()*10),Math.ceil(Math.random()*10)];
+  curPix=pix2;
+  if(useRandom) setPixels(['rp0','rp1','rp2'],['rv0','rv1','rv2'],pix2);
+  else setPixels(['p0','p1','p2'],['v0','v1','v2'],pix2);
+  var g=getBest(pix2);
+  var gb=document.getElementById('gbox');
+  gb.textContent=g.toUpperCase();
+  if(g==='stop'){gb.style.background='var(--stop-bg)';gb.style.color='var(--stop)';gb.style.border='1px solid var(--stop-border)';}
+  else if(g==='slow'){gb.style.background='var(--slow-bg)';gb.style.color='var(--slow)';gb.style.border='1px solid var(--slow-border)';}
+  else{gb.style.background='var(--go-bg)';gb.style.color='var(--go)';gb.style.border='1px solid var(--go-border)';}
+  document.getElementById('test-fb').textContent='Last example guess:';
+}
+
+function switchTest(){
+  document.getElementById('phase-badge').className='phase-badge phase-test';
+  document.getElementById('phase-badge').textContent='Testing';
+  document.getElementById('train-ui').style.display='none';
+  document.getElementById('test-ui').style.display='block';
+  document.getElementById('test-results').style.display='none';
+  document.getElementById('gbox').textContent='—';
+  document.getElementById('gbox').style.cssText='background:var(--bg);color:var(--text-2);border:1px solid var(--border);';
+  document.getElementById('test-fb').textContent='Press Run 50-example test';
+}
+
+function switchTrain(){
+  document.getElementById('phase-badge').className='phase-badge phase-train';
+  document.getElementById('phase-badge').textContent='Training';
+  document.getElementById('train-ui').style.display='block';
+  document.getElementById('test-ui').style.display='none';
+  document.getElementById('train-fb').textContent='What does this mean?';
+  if(useRandom) newRandom(); else sliderChanged();
+}
+
+function doReset(){ init(); }
+useRandom=false;
+init();
+</script>
+</body>
+</html>

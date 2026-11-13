@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Space-time block</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#080b11; --panel:#111620; --panel-2:#181f2d; --line:#262e3f;
+  --text:#e3e8f2; --dim:#8b95aa; --past:#4b8dff; --now:#ffb454; --danger:#ff9a86;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[hidden]{display:none!important}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:var(--ink);color:var(--text);
+  font:14px/1.45 "Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+:focus-visible{outline:2px solid var(--past);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 320px}
+.stage{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--ink)}
+.view{position:absolute;inset:0;touch-action:none;cursor:grab;outline:none}
+.view.pan{cursor:move}
+.view.drag{cursor:grabbing}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#ov{pointer-events:none}
+
+.caption{position:absolute;left:16px;top:14px;pointer-events:none;max-width:70%}
+.caption b{display:block;font-weight:600;font-size:16px}
+.caption span{color:var(--dim);font-size:12.5px}
+
+.transport{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:12px;
+  background:rgba(17,22,32,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:14px;padding:8px 12px}
+.transport input[type=range]{flex:1;min-width:60px;accent-color:var(--now)}
+.transport output{font-variant-numeric:tabular-nums;color:var(--text);min-width:96px;text-align:right;font-size:13px}
+.round{width:38px;height:38px;border-radius:50%;border:0;background:var(--now);color:#241703;display:grid;place-items:center;cursor:pointer;flex:none}
+.transport select{max-width:70px}
+
+.busy{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:12px;
+  background:rgba(8,11,17,.66);opacity:0;pointer-events:none;transition:opacity .15s}
+.busy.on{opacity:1;pointer-events:auto}
+.bar{width:220px;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--now)}
+.nogl{position:absolute;inset:0;display:grid;place-content:center;padding:24px;text-align:center;color:var(--danger)}
+
+.panel{border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:18px 18px 28px}
+.panel h2{font-size:14px;font-weight:600;margin:0 0 10px}
+.panel section{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.panel section:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+#preview{width:100%;max-height:170px;background:#000;border-radius:8px;display:block;margin:0 0 8px}
+.note{color:var(--dim);font-size:12.5px;margin:8px 0 0}
+.note.err{color:var(--danger)}
+.field{display:grid;gap:4px;margin:0 0 10px;color:var(--dim);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 10px}
+select,input[type=number]{width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--line);
+  border-radius:8px;padding:8px 9px;font:inherit}
+input[type=number]:disabled{opacity:.45}
+.btn{width:100%;background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;
+  padding:9px 12px;font:inherit;cursor:pointer;margin:0 0 8px}
+.btn:hover{border-color:#3a455d}
+.btn:disabled{opacity:.5;cursor:default}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:6px}
+.seg button{background:transparent;color:var(--text);border:0;border-right:1px solid var(--line);padding:9px 4px;font:inherit;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--now);color:#241703;font-weight:600}
+
+.slider{display:grid;grid-template-columns:1fr auto;gap:0 8px;margin:14px 0 0}
+.slider input{grid-column:1/-1;width:100%;margin:6px 0 0;accent-color:var(--now)}
+.slider output{color:var(--dim);font-variant-numeric:tabular-nums}
+.check{display:flex;align-items:center;gap:9px;margin:12px 0 0;cursor:pointer}
+.check input{accent-color:var(--now);width:16px;height:16px;margin:0}
+.swatch{display:inline-block;width:44px;height:8px;border-radius:4px;margin-left:auto;
+  background:linear-gradient(90deg,#3d85ff,#cc6ccc,#ffbd4d)}
+.legend{margin:0;padding-left:18px;color:#c4ccdc;font-size:13px}
+.legend li{margin:0 0 7px}
+
+html{-webkit-text-size-adjust:100%}
+body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+.view{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.panel{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+.tools{position:absolute;right:10px;top:10px;display:none;gap:8px}
+.tool{background:rgba(17,22,32,.8);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--text);
+  border:1px solid var(--line);border-radius:10px;min-height:42px;padding:0 14px;font:inherit;cursor:pointer}
+.tool[aria-pressed=true],.tool[aria-expanded=true]{background:var(--now);color:#241703;border-color:var(--now);font-weight:600}
+.tool.sheet-only,.tool.reset-only{display:none}
+
+@media (pointer:coarse){
+  .tools{display:flex}
+  select,input[type=number]{font-size:16px;min-height:44px}
+  .btn{min-height:44px}
+  input[type=range]{height:32px}
+  .check{min-height:36px}
+  .check input{width:22px;height:22px}
+  .seg button{min-height:44px}
+}
+@media (max-width:760px){
+  .tools{display:flex}
+  .tool.sheet-only,.tool.reset-only{display:block}
+  .app{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  .panel{display:none;border-left:0;border-top:1px solid var(--line);max-height:50dvh;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+  .app.sheet-open .panel{display:block}
+  .caption{max-width:calc(100% - 250px)}
+  .caption b{font-size:15px}
+  .caption span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .transport{left:8px;right:8px;bottom:8px;gap:8px;padding:6px 10px}
+  .transport output{min-width:72px;font-size:12.5px}
+  .transport select{max-width:64px}
+}
+@media (prefers-reduced-motion:reduce){.busy{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage" id="stage">
+    <div class="view" id="view" tabindex="0" aria-label="Space-time block. Drag to turn, right-drag to move, scroll to zoom.">
+      <canvas id="gl"></canvas>
+      <canvas id="ov"></canvas>
+    </div>
+    <div class="caption"><b>Space-time block</b><span id="capsub">Preparing the example</span></div>
+    <div class="tools">
+      <button class="tool" id="modeBtn" aria-pressed="false" hidden>One finger: turn</button>
+      <button class="tool reset-only" id="resetTop">Reset</button>
+      <button class="tool sheet-only" id="sheetBtn" aria-expanded="false">Controls</button>
+    </div>
+    <div class="transport">
+      <button class="round" id="play" aria-label="Play"></button>
+      <input type="range" id="scrub" min="0" max="1000" value="1000" aria-label="Time">
+      <output id="tread">0.0 s</output>
+      <select id="speed" aria-label="Speed">
+        <option value="1">1×</option>
+        <option value="0.5">0.5×</option>
+        <option value="0.25">0.25×</option>
+      </select>
+    </div>
+    <div class="busy" id="busy" role="status" aria-live="polite"><div id="busymsg">Building block</div><div class="bar"><i id="busybar"></i></div></div>
+    <div class="nogl" id="nogl" hidden>This browser could not start WebGL 2, which the block needs.</div>
+  </div>
+
+  <aside class="panel">
+    <section>
+      <h2>Video</h2>
+      <label class="field">Example
+        <select id="scene">
+          <option value="0">Motion lab: four things at once</option>
+          <option value="1">Steady vs speeding up</option>
+          <option value="2">Circling</option>
+          <option value="3">Bouncing ball</option>
+        </select>
+      </label>
+      <button class="btn" id="pick">Use your own video…</button>
+      <input type="file" id="file" accept="video/*" hidden>
+      <div id="previewbox" hidden>
+        <video id="preview" controls playsinline muted preload="metadata"></video>
+        <button class="btn" id="fromHere">Make block from this moment</button>
+      </div>
+      <div class="grid2">
+        <label class="field">Start (s)<input type="number" id="start" min="0" step="0.5" value="0" disabled></label>
+        <label class="field">Length (s)<input type="number" id="len" min="1" max="120" step="0.5" value="4"></label>
+        <label class="field">Frames
+          <select id="frames"><option>48</option><option>72</option><option selected>96</option><option>144</option><option>200</option><option>300</option></select>
+        </label>
+        <label class="field">Detail
+          <select id="detail"><option value="96">Low</option><option value="160" selected>Medium</option><option value="240">High</option></select>
+        </label>
+      </div>
+      <p class="note" id="rate" style="margin:-2px 0 10px"></p>
+      <button class="btn" id="rebuild">Rebuild block</button>
+      <p class="note" id="srcnote"></p>
+      <p class="note">YouTube links cannot be read by the page. Record or save the moment you want as a video file, then load it here.</p>
+    </section>
+
+    <section>
+      <h2>Look</h2>
+      <div class="seg" role="group" aria-label="Presets">
+        <button data-preset="solid" aria-pressed="false">Solid block</button>
+        <button data-preset="see" aria-pressed="true">See-through</button>
+        <button data-preset="lines" aria-pressed="false">Worldlines</button>
+      </div>
+      <label class="slider"><span>Scenery opacity</span><output id="o_scene">8%</output>
+        <input type="range" id="i_scene" min="0" max="100" value="8"></label>
+      <label class="slider"><span>Moving things opacity</span><output id="o_move">85%</output>
+        <input type="range" id="i_move" min="0" max="100" value="85"></label>
+      <label class="slider"><span>Ignore small changes</span><output id="o_thr">10%</output>
+        <input type="range" id="i_thr" min="0" max="40" value="10"></label>
+      <label class="slider"><span>Time depth</span><output id="o_depth">1.0×</output>
+        <input type="range" id="i_depth" min="30" max="400" value="100"></label>
+      <label class="slider"><span>Current frame</span><output id="o_slice">90%</output>
+        <input type="range" id="i_slice" min="0" max="100" value="90"></label>
+      <label class="slider"><span>Later times opacity</span><output id="o_fut">12%</output>
+        <input type="range" id="i_fut" min="0" max="100" value="12"></label>
+      <label class="check"><input type="checkbox" id="c_time"><span>Color by time</span><i class="swatch" aria-hidden="true"></i></label>
+      <label class="check"><input type="checkbox" id="c_cut"><span>Only show up to the current time</span></label>
+      <label class="check"><input type="checkbox" id="c_auto"><span>Turn slowly</span></label>
+      <label class="field" style="margin-top:14px">Render quality
+        <select id="quality"><option value="110">Fast</option><option value="200" selected>Balanced</option><option value="360">Fine</option></select>
+      </label>
+      <button class="btn" id="reset">Reset view</button>
+      <p class="note">Drag to turn. Right-drag or Shift-drag to move in all three directions. Scroll to zoom. On a touchscreen, one finger turns and two fingers move and zoom.</p>
+    </section>
+
+    <section>
+      <h2>Reading the block</h2>
+      <ul class="legend">
+        <li>Left and right are <b>x</b>, up and down are <b>y</b>, and depth is <b>time</b>. Each slice is one frame of the video.</li>
+        <li>Something that stays put for a while draws a line straight along the time axis.</li>
+        <li>Steady motion draws a straight, slanted line. The faster it moves, the further the line leans away from the time axis.</li>
+        <li>Speeding up bends the line into a curve. Circling makes a spiral.</li>
+        <li>Pixels that barely change count as scenery. Lower the scenery opacity to fade them out and leave only the worldlines of moving things.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const view = $('view'), glc = $('gl'), ovc = $('ov'), octx = ovc.getContext('2d');
+const TAN = Math.tan(20 * Math.PI / 180);   // vertical field of view is 40 degrees
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const norm = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0]/l, a[1]/l, a[2]/l]; };
+
+/* ---------- shaders ---------- */
+const VERT = `#version 300 es
+out vec2 vUv;
+void main(){
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  vUv = p * 2.0 - 1.0;
+  gl_Position = vec4(vUv, 0.0, 1.0);
+}`;
+
+const FRAG = `#version 300 es
+precision highp float;
+precision highp int;
+precision highp sampler3D;
+in vec2 vUv;
+out vec4 fragColor;
+uniform sampler3D uVol;
+uniform vec3 uCam;
+uniform vec3 uRight;
+uniform vec3 uUp;
+uniform vec3 uFwd;
+uniform vec3 uHalf;
+uniform float uTan;
+uniform float uAsp;
+uniform float uKScene;
+uniform float uKMove;
+uniform vec2 uRange;
+uniform float uClip;
+uniform float uPlay;
+uniform float uSlice;
+uniform float uFut;
+uniform float uTimeCol;
+uniform int uSteps;
+uniform vec3 uBg;
+
+vec4 vol(vec3 p){
+  vec3 uvw = vec3(p.x + uHalf.x, uHalf.y - p.y, p.z + uHalf.z) / (2.0 * uHalf);
+  return texture(uVol, uvw);
+}
+vec3 ramp(float t){
+  vec3 a = vec3(0.24, 0.52, 1.00);
+  vec3 b = vec3(0.80, 0.42, 0.80);
+  vec3 c = vec3(1.00, 0.74, 0.30);
+  return t < 0.5 ? mix(a, b, t * 2.0) : mix(b, c, (t - 0.5) * 2.0);
+}
+vec3 sliceRgb(vec3 p){
+  return vol(p).rgb;
+}
+void main(){
+  vec3 rd = normalize(uFwd + vUv.x * uAsp * uTan * uRight + vUv.y * uTan * uUp);
+  vec3 sd = mix(rd, vec3(1e-5), lessThan(abs(rd), vec3(1e-5)));
+  vec3 inv = 1.0 / sd;
+  vec3 bmin = -uHalf;
+  vec3 bmax = vec3(uHalf.xy, -uHalf.z + 2.0 * uHalf.z * uClip);
+  vec3 t0 = (bmin - uCam) * inv;
+  vec3 t1 = (bmax - uCam) * inv;
+  vec3 tmn = min(t0, t1);
+  vec3 tmx = max(t0, t1);
+  float tn = max(max(tmn.x, tmn.y), max(tmn.z, 0.0));
+  float tf = min(min(tmx.x, tmx.y), tmx.z);
+  vec3 col = vec3(0.0);
+  float T = 1.0;
+  if (tf > tn) {
+    float dt = (tf - tn) / float(uSteps);
+    float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+    float tp = (-uHalf.z + 2.0 * uHalf.z * uPlay - uCam.z) / sd.z;
+    bool need = uSlice > 0.001 && tp >= tn && tp <= tf;
+    for (int i = 0; i < 1024; i++) {
+      if (i >= uSteps) break;
+      float t = tn + (float(i) + jit) * dt;
+      if (need && t >= tp) {
+        col += T * uSlice * sliceRgb(uCam + rd * tp);
+        T *= (1.0 - 0.35 * uSlice);
+        need = false;
+      }
+      vec3 p = uCam + rd * t;
+      vec4 s = vol(p);
+      float m = smoothstep(uRange.x, uRange.y, s.a);
+      float w = clamp((p.z + uHalf.z) / (2.0 * uHalf.z), 0.0, 1.0);
+      float k = mix(uKScene, uKMove, m);
+      if (w > uPlay) k *= uFut;
+      float a = 1.0 - exp(-k * dt);
+      vec3 c = mix(s.rgb, ramp(w), uTimeCol * m);
+      col += T * a * c;
+      T *= (1.0 - a);
+      if (T < 0.004) break;
+    }
+    if (need && T >= 0.004) {
+      col += T * uSlice * sliceRgb(uCam + rd * tp);
+      T *= (1.0 - 0.35 * uSlice);
+    }
+  }
+  fragColor = vec4(col + T * uBg, 1.0);
+}`;
+
+/* ---------- WebGL setup ---------- */
+const gl = glc.getContext('webgl2', {antialias:false, alpha:false, depth:false, stencil:false, powerPreference:'high-performance'}) || glc.getContext('webgl2');
+let prog, U = {}, tex;
+function initGL(){
+  const mk = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  prog = gl.createProgram();
+  gl.attachShader(prog, mk(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  ['uVol','uCam','uRight','uUp','uFwd','uHalf','uTan','uAsp','uKScene','uKMove','uRange','uClip','uPlay','uSlice','uFut','uTimeCol','uSteps','uBg']
+    .forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  gl.bindVertexArray(gl.createVertexArray());
+  tex = gl.createTexture();
+}
+if (!gl) { const n = $('nogl'); n.hidden = false; n.textContent = 'This browser did not give the page a WebGL 2 context. Try Safari or Chrome directly, or update the browser.'; return; }
+try { initGL(); } catch (err) { const n = $('nogl'); n.hidden = false; n.textContent = 'Shader problem: ' + err.message; return; }
+
+/* ---------- state ---------- */
+const S = {
+  sceneIdx:0, start:0, len:4, frames:96, detail:160,
+  kScene:0.08, kMove:0.85, thr:0.10, depth:1.0,
+  timeColor:false, sliceA:0.9, future:0.12, cut:false, auto:false, steps:200,
+  play:1, playing:false, speed:1
+};
+const IS_TOUCH = window.matchMedia('(pointer:coarse)').matches;
+const MAX_PX = IS_TOUCH ? 0.9e6 : 2.2e6;
+const MAX_DPR = IS_TOUCH ? 2 : 1.5;
+let interacting = false, idleT = 0, touchMove = false;
+if (IS_TOUCH){ S.steps = 110; S.frames = 72; $('frames').value = '72'; $('quality').value = '110'; $('modeBtn').hidden = false; }
+const MAX3D = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+[...$('frames').options].forEach(o => { if (parseInt(o.value, 10) > MAX3D) o.remove(); });
+let vol = null;            // {W,H,F,aspect,len,name}
+let source = {kind:'demo'};
+let dirty = true, buildToken = 0, cssW = 800, cssH = 600, dprO = 1;
+let yaw = 0.62, pitch = 0.30, dist = 3.3, target = [0, 0, 0];
+const invalidate = () => { dirty = true; };
+
+/* ---------- camera ---------- */
+function basis(){
+  const cp = Math.cos(pitch), sp = Math.sin(pitch), cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const d = [cp*sy, sp, cp*cy];
+  const pos = [target[0] + d[0]*dist, target[1] + d[1]*dist, target[2] + d[2]*dist];
+  const fwd = [-d[0], -d[1], -d[2]];
+  const right = norm(cross(fwd, [0, 1, 0]));
+  const up = cross(right, fwd);
+  return {pos, fwd, right, up};
+}
+function resetView(){
+  yaw = 0.62; pitch = 0.30; target = [0, 0, 0];
+  const asp = cssW / Math.max(1, cssH);
+  dist = Math.max(3.1, 1.55 / (TAN * asp));
+  invalidate();
+}
+function panBy(dx, dy){
+  const B = basis();
+  const k = 2 * dist * TAN / Math.max(1, cssH);
+  for (let i = 0; i < 3; i++) target[i] += -B.right[i]*dx*k + B.up[i]*dy*k;
+}
+
+/* ---------- demo scenes ---------- */
+function ball(c, x, y, r, col){
+  c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(x - r*0.3, y - r*0.3, r*0.35, 0, Math.PI*2); c.fill();
+}
+const SCENES = [
+  {name:'Motion lab', draw(c, W, H, u){
+    if (u >= 0.25 && u <= 0.65){ const s = 0.11*H; c.fillStyle = '#ffd166'; c.fillRect(0.10*W - s/2, 0.20*H - s/2, s, s); }
+    ball(c, (0.06 + 0.88*u)*W, 0.90*H, 0.05*H, '#ff5b4d');
+    const p = (u*3) % 1, h = (2*p - 1) ** 2;
+    ball(c, 0.62*W, (0.80 - 0.66*h)*H, 0.06*H, '#45d5ff');
+    const a = Math.PI*4*u;
+    ball(c, 0.30*W + 0.20*H*Math.cos(a), 0.46*H + 0.20*H*Math.sin(a), 0.05*H, '#6ee7a0');
+  }},
+  {name:'Steady vs speeding up', draw(c, W, H, u){
+    ball(c, (0.06 + 0.88*u)*W, 0.30*H, 0.06*H, '#ff5b4d');
+    ball(c, (0.06 + 0.88*u*u)*W, 0.70*H, 0.06*H, '#45d5ff');
+  }},
+  {name:'Circling', draw(c, W, H, u){
+    const a = Math.PI*6*u;
+    ball(c, 0.5*W + 0.30*H*Math.cos(a), 0.5*H + 0.30*H*Math.sin(a), 0.06*H, '#6ee7a0');
+  }},
+  {name:'Bouncing ball', draw(c, W, H, u){
+    const p = (u*4) % 1, h = (2*p - 1) ** 2;
+    ball(c, (0.10 + 0.80*u)*W, (0.84 - 0.70*h)*H, 0.06*H, '#45d5ff');
+  }}
+];
+function drawScene(c, W, H, u, sc){
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#1d2433'); g.addColorStop(1, '#141a26');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 1; c.beginPath();
+  for (let k = 1; k < 8; k++){ const x = Math.round(W*k/8) + 0.5; c.moveTo(x, 0); c.lineTo(x, H); }
+  for (let k = 1; k < 4; k++){ const y = Math.round(H*k/4) + 0.5; c.moveTo(0, y); c.lineTo(W, y); }
+  c.stroke();
+  sc.draw(c, W, H, u);
+}
+
+/* ---------- building the volume ---------- */
+const tick = () => new Promise(r => setTimeout(r, 0));
+const nextFrame = () => new Promise(r => { let d = false; const f = () => { if (!d){ d = true; r(); } }; requestAnimationFrame(f); setTimeout(f, 60); });
+function seekTo(v, t){
+  return new Promise(res => {
+    const tt = clamp(t, 0, Math.max(0, v.duration - 0.05));
+    if (Math.abs(v.currentTime - tt) < 0.0005 && v.readyState >= 2) { res(); return; }
+    let done = false, to;
+    const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); clearTimeout(to); res(); };
+    to = setTimeout(fin, 3000);
+    v.addEventListener('seeked', fin);
+    v.currentTime = tt;
+  });
+}
+function setBusy(on, msg, frac){
+  $('busy').classList.toggle('on', on);
+  if (msg) $('busymsg').textContent = msg;
+  if (frac != null) $('busybar').style.width = Math.round(clamp(frac, 0, 1)*100) + '%';
+}
+function updateRate(){
+  const len = clamp(parseFloat($('len').value) || 4, 1, 120), F = parseInt($('frames').value, 10) || 96;
+  const fps = (F - 1)/len;
+  $('rate').textContent = fps.toFixed(1) + ' frames per second in the block.' +
+    (fps < 8 ? ' Fast motion may look dotted. Raise Frames or shorten the length.' : '');
+}
+function note(msg, isErr){ const n = $('srcnote'); n.textContent = msg; n.classList.toggle('err', !!isErr); }
+
+async function build(){
+  const token = ++buildToken;
+  S.playing = false; syncTransport();
+  $('rebuild').disabled = true;
+  setBusy(true, 'Reading frames', 0);
+  const isVideo = source.kind === 'video';
+  const v = source.video;
+  const asp = isVideo ? (v.videoWidth / Math.max(1, v.videoHeight)) : 16/9;
+  const W = S.detail, H = Math.max(2, Math.round(W / asp)), F = S.frames;
+  const WH = W*H, stride = WH*4;
+  const cap = document.createElement('canvas'); cap.width = W; cap.height = H;
+  const c = cap.getContext('2d', {willReadFrequently:true});
+  const out = new Uint8Array(stride * F);
+  try {
+    for (let i = 0; i < F; i++){
+      if (token !== buildToken) return;
+      const u = i / (F - 1);
+      if (isVideo){ await seekTo(v, S.start + u*S.len); await nextFrame(); c.drawImage(v, 0, 0, W, H); }
+      else drawScene(c, W, H, u, SCENES[S.sceneIdx]);
+      out.set(c.getImageData(0, 0, W, H).data, i*stride);
+      if (i % 3 === 0){ setBusy(true, 'Reading frames', 0.6*i/F); await tick(); }
+    }
+    setBusy(true, 'Finding what moves', 0.6);
+    await tick();
+    const tmp = new Uint8Array(F);
+    for (let p = 0; p < WH; p++){
+      if (token !== buildToken) return;
+      const base = p*4, med = [0, 0, 0];
+      for (let ch = 0; ch < 3; ch++){
+        for (let i = 0; i < F; i++) tmp[i] = out[i*stride + base + ch];
+        tmp.sort();
+        med[ch] = tmp[F >> 1];
+      }
+      for (let i = 0; i < F; i++){
+        const o = i*stride + base;
+        const d = Math.max(Math.abs(out[o] - med[0]), Math.abs(out[o+1] - med[1]), Math.abs(out[o+2] - med[2]));
+        out[o+3] = d;
+      }
+      if ((p & 2047) === 0){ setBusy(true, 'Finding what moves', 0.6 + 0.4*p/WH); await tick(); }
+    }
+    gl.bindTexture(gl.TEXTURE_3D, tex);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, W, H, F, 0, gl.RGBA, gl.UNSIGNED_BYTE, out);
+    gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+    const name = isVideo ? source.name : SCENES[S.sceneIdx].name;
+    vol = {W, H, F, aspect: W/H, len: S.len, name};
+    S.play = 1;
+    $('capsub').textContent = name + ', ' + F + ' frames over ' + S.len.toFixed(1) + ' s';
+    syncTransport(); invalidate();
+  } catch (err) {
+    note('Could not build the block: ' + err.message, true);
+  } finally {
+    if (token === buildToken){ setBusy(false); $('rebuild').disabled = false; }
+  }
+}
+
+async function loadVideo(file){
+  if (source.url) URL.revokeObjectURL(source.url);
+  const url = URL.createObjectURL(file);
+  const v = document.createElement('video');
+  v.muted = true; v.playsInline = true; v.preload = 'auto';
+  v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+  v.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none';
+  document.body.appendChild(v);
+  setBusy(true, 'Opening video', 0);
+  try {
+    await new Promise((res, rej) => {
+      v.onloadedmetadata = res;
+      v.onerror = () => rej(new Error('This browser could not open that video file.'));
+      v.src = url; v.load();
+    });
+    if (!isFinite(v.duration) || v.duration <= 0) throw new Error('That video has no readable length.');
+    try { await Promise.race([v.play(), new Promise(r => setTimeout(r, 1500))]); v.pause(); v.currentTime = 0; } catch (_) {}
+    if (source.video) source.video.remove();
+    source = {kind:'video', video:v, url, name:file.name.replace(/\.[^.]+$/, ''), duration:v.duration};
+    S.start = 0; S.len = Math.round(Math.min(5, v.duration)*10)/10;
+    $('start').disabled = false; $('start').max = Math.max(0, v.duration - 0.5).toFixed(1);
+    $('start').value = S.start; $('len').value = S.len; updateRate();
+    $('preview').src = url; $('previewbox').hidden = false;
+    note('Scrub the preview to any moment, then tap "Make block from this moment". The block covers the length set below, 5 s by default. Still-camera footage works best, and anything that stays put for more than half the clip counts as scenery.');
+    await build();
+  } catch (err) {
+    v.remove(); URL.revokeObjectURL(url);
+    setBusy(false);
+    note(err.message + ' If your browser blocks local files inside this page, save the page and open it from your computer.', true);
+  }
+}
+
+/* ---------- rendering ---------- */
+function sizeGL(){
+  const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+  let w = cssW*dpr, h = cssH*dpr;
+  if (w*h > MAX_PX){ const k = Math.sqrt(MAX_PX/(w*h)); w *= k; h *= k; }
+  const f = (IS_TOUCH && interacting) ? 0.65 : 1;   // draw coarser while a finger is moving the view
+  const nw = Math.max(2, Math.round(w*f)), nh = Math.max(2, Math.round(h*f));
+  if (glc.width !== nw || glc.height !== nh){ glc.width = nw; glc.height = nh; }
+}
+function resize(){
+  const r = view.getBoundingClientRect();
+  const firstTime = cssW === 800 && cssH === 600;
+  cssW = r.width; cssH = r.height;
+  sizeGL();
+  dprO = Math.min(window.devicePixelRatio || 1, 2);
+  ovc.width = Math.max(2, Math.round(cssW*dprO)); ovc.height = Math.max(2, Math.round(cssH*dprO));
+  if (firstTime) resetView();
+  invalidate();
+}
+
+function render(){
+  gl.viewport(0, 0, glc.width, glc.height);
+  if (!vol){
+    gl.clearColor(0.031, 0.043, 0.067, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+    octx.setTransform(dprO, 0, 0, dprO, 0, 0); octx.clearRect(0, 0, cssW, cssH);
+    return;
+  }
+  const B = basis();
+  const hx = vol.aspect/2, hy = 0.5, hz = S.depth/2;
+  gl.useProgram(prog);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_3D, tex);
+  gl.uniform1i(U.uVol, 0);
+  gl.uniform3f(U.uCam, B.pos[0], B.pos[1], B.pos[2]);
+  gl.uniform3f(U.uRight, B.right[0], B.right[1], B.right[2]);
+  gl.uniform3f(U.uUp, B.up[0], B.up[1], B.up[2]);
+  gl.uniform3f(U.uFwd, B.fwd[0], B.fwd[1], B.fwd[2]);
+  gl.uniform3f(U.uHalf, hx, hy, hz);
+  gl.uniform1f(U.uTan, TAN);
+  gl.uniform1f(U.uAsp, glc.width / glc.height);
+  gl.uniform1f(U.uKScene, 60*S.kScene*S.kScene);
+  gl.uniform1f(U.uKMove, 60*S.kMove*S.kMove);
+  gl.uniform2f(U.uRange, S.thr, S.thr + 0.12);
+  gl.uniform1f(U.uClip, S.cut ? Math.max(0.004, S.play) : 1);
+  gl.uniform1f(U.uPlay, S.play);
+  gl.uniform1f(U.uSlice, S.sliceA);
+  gl.uniform1f(U.uFut, S.future*S.future);
+  gl.uniform1f(U.uTimeCol, S.timeColor ? 1 : 0);
+  gl.uniform1i(U.uSteps, S.steps);
+  gl.uniform3f(U.uBg, 0.031, 0.043, 0.067);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  drawOverlay(B, hx, hy, hz);
+}
+
+function drawOverlay(B, hx, hy, hz){
+  const cw = cssW, ch = cssH, asp = glc.width / glc.height, near = 0.05;
+  octx.setTransform(dprO, 0, 0, dprO, 0, 0);
+  octx.clearRect(0, 0, cw, ch);
+  const depthOf = p => (p[0]-B.pos[0])*B.fwd[0] + (p[1]-B.pos[1])*B.fwd[1] + (p[2]-B.pos[2])*B.fwd[2];
+  const proj = p => {
+    const v = [p[0]-B.pos[0], p[1]-B.pos[1], p[2]-B.pos[2]];
+    const z = dot(v, B.fwd);
+    return [(dot(v, B.right)/(z*TAN*asp)*0.5 + 0.5)*cw, (0.5 - dot(v, B.up)/(z*TAN)*0.5)*ch];
+  };
+  const lerp3 = (a, b, t) => [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+  const seg = (a, b) => {
+    const za = depthOf(a), zb = depthOf(b);
+    if (za < near && zb < near) return null;
+    let A = a, Bp = b;
+    if (za < near) A = lerp3(a, b, (near - za)/(zb - za));
+    else if (zb < near) Bp = lerp3(b, a, (near - zb)/(za - zb));
+    return [proj(A), proj(Bp)];
+  };
+  const line = (a, b) => { const s = seg(a, b); if (!s) return; octx.moveTo(s[0][0], s[0][1]); octx.lineTo(s[1][0], s[1][1]); };
+  const text = (str, p, dx, dy, color, align) => {
+    if (depthOf(p) < near) return;
+    const q = proj(p);
+    octx.fillStyle = color; octx.textAlign = align || 'center'; octx.fillText(str, q[0] + dx, q[1] + dy);
+  };
+  octx.font = '500 13px "Schibsted Grotesk", system-ui, sans-serif';
+  octx.textBaseline = 'middle';
+
+  // box edges
+  octx.strokeStyle = 'rgba(170,185,215,.30)'; octx.lineWidth = 1; octx.beginPath();
+  for (const sy of [-1, 1]) for (const sz of [-1, 1]) line([-hx, sy*hy, sz*hz], [hx, sy*hy, sz*hz]);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) line([sx*hx, -hy, sz*hz], [sx*hx, hy, sz*hz]);
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) line([sx*hx, sy*hy, -hz], [sx*hx, sy*hy, hz]);
+  octx.stroke();
+
+  // current-frame outline
+  const zp = -hz + 2*hz*S.play;
+  if (S.sliceA > 0){
+    octx.strokeStyle = 'rgba(255,180,84,.85)'; octx.lineWidth = 1.5; octx.beginPath();
+    line([-hx, -hy, zp], [hx, -hy, zp]); line([hx, -hy, zp], [hx, hy, zp]);
+    line([hx, hy, zp], [-hx, hy, zp]); line([-hx, hy, zp], [-hx, -hy, zp]);
+    octx.stroke();
+  }
+
+  // time axis
+  const ax = -hx - 0.12, ay = -hy - 0.12;
+  octx.strokeStyle = '#ffb454'; octx.lineWidth = 1.6; octx.beginPath();
+  line([ax, ay, -hz], [ax, ay, hz]);
+  const step = Math.max(1, Math.ceil(vol.len/10));
+  for (let s = 0; s <= vol.len + 1e-6; s += step){
+    const z = -hz + 2*hz*s/vol.len;
+    line([ax - 0.03, ay, z], [ax + 0.03, ay, z]);
+  }
+  octx.stroke();
+  const sA = seg([ax, ay, hz - 0.12], [ax, ay, hz]);
+  if (sA){
+    const [p0, p1] = sA, dx = p1[0]-p0[0], dy = p1[1]-p0[1], l = Math.hypot(dx, dy) || 1;
+    const ux = dx/l, uy = dy/l;
+    octx.fillStyle = '#ffb454'; octx.beginPath();
+    octx.moveTo(p1[0] + ux*9, p1[1] + uy*9);
+    octx.lineTo(p1[0] - uy*5, p1[1] + ux*5);
+    octx.lineTo(p1[0] + uy*5, p1[1] - ux*5);
+    octx.closePath(); octx.fill();
+  }
+  text('0 s', [ax, ay, -hz], 0, 16, '#c9d1e2');
+  text(vol.len.toFixed(1) + ' s', [ax, ay, hz], 0, 20, '#c9d1e2');
+  text('time', [ax, ay, 0], -6, 16, '#ffb454');
+  // playhead marker
+  if (depthOf([ax, ay, zp]) > near){
+    const q = proj([ax, ay, zp]);
+    octx.fillStyle = '#ffb454'; octx.beginPath(); octx.arc(q[0], q[1], 4.5, 0, Math.PI*2); octx.fill();
+  }
+  // spatial axes
+  text('x', [hx + 0.10, -hy, hz], 0, 0, '#c9d1e2');
+  text('y', [-hx, hy + 0.10, hz], 0, 0, '#c9d1e2');
+}
+
+/* ---------- transport ---------- */
+const ICON_PLAY = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>';
+function syncTransport(){
+  $('play').innerHTML = S.playing ? ICON_PAUSE : ICON_PLAY;
+  $('play').setAttribute('aria-label', S.playing ? 'Pause' : 'Play');
+  $('scrub').value = Math.round(S.play*1000);
+  $('tread').textContent = (S.play*(vol ? vol.len : S.len)).toFixed(2) + ' s';
+}
+function togglePlay(){
+  if (!vol) return;
+  if (!S.playing && S.play >= 0.999) S.play = 0;
+  S.playing = !S.playing;
+  syncTransport(); invalidate();
+}
+$('play').addEventListener('click', togglePlay);
+$('scrub').addEventListener('input', e => { S.playing = false; S.play = e.target.value/1000; syncTransport(); invalidate(); });
+$('speed').addEventListener('change', e => { S.speed = parseFloat(e.target.value); });
+
+/* ---------- panel controls ---------- */
+const PRESETS = {solid:{s:1, m:1}, see:{s:0.08, m:0.85}, lines:{s:0, m:0.85}};
+function markPreset(k){
+  document.querySelectorAll('[data-preset]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === k)));
+}
+function syncLook(){
+  $('i_scene').value = Math.round(S.kScene*100); $('o_scene').textContent = Math.round(S.kScene*100) + '%';
+  $('i_move').value = Math.round(S.kMove*100); $('o_move').textContent = Math.round(S.kMove*100) + '%';
+}
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+  const p = PRESETS[b.dataset.preset]; S.kScene = p.s; S.kMove = p.m; syncLook(); markPreset(b.dataset.preset); invalidate();
+}));
+$('i_scene').addEventListener('input', e => { S.kScene = e.target.value/100; $('o_scene').textContent = e.target.value + '%'; markPreset(null); invalidate(); });
+$('i_move').addEventListener('input', e => { S.kMove = e.target.value/100; $('o_move').textContent = e.target.value + '%'; markPreset(null); invalidate(); });
+$('i_thr').addEventListener('input', e => { S.thr = e.target.value/100; $('o_thr').textContent = e.target.value + '%'; invalidate(); });
+$('i_depth').addEventListener('input', e => { S.depth = e.target.value/100; $('o_depth').textContent = S.depth.toFixed(1) + '×'; invalidate(); });
+$('c_time').addEventListener('change', e => { S.timeColor = e.target.checked; invalidate(); });
+$('i_slice').addEventListener('input', e => { S.sliceA = e.target.value/100; $('o_slice').textContent = e.target.value + '%'; invalidate(); });
+$('i_fut').addEventListener('input', e => { S.future = e.target.value/100; $('o_fut').textContent = e.target.value + '%'; invalidate(); });
+$('c_cut').addEventListener('change', e => { S.cut = e.target.checked; invalidate(); });
+$('c_auto').addEventListener('change', e => { S.auto = e.target.checked; invalidate(); });
+$('quality').addEventListener('change', e => { S.steps = parseInt(e.target.value, 10); invalidate(); });
+$('reset').addEventListener('click', resetView);
+['len', 'frames'].forEach(id => { $(id).addEventListener('input', updateRate); $(id).addEventListener('change', updateRate); });
+$('fromHere').addEventListener('click', () => {
+  const pv = $('preview'); pv.pause();
+  $('start').value = pv.currentTime.toFixed(1);
+  $('rebuild').click();
+});
+$('resetTop').addEventListener('click', resetView);
+$('modeBtn').addEventListener('click', () => {
+  touchMove = !touchMove;
+  $('modeBtn').setAttribute('aria-pressed', String(touchMove));
+  $('modeBtn').textContent = touchMove ? 'One finger: move' : 'One finger: turn';
+});
+$('sheetBtn').addEventListener('click', () => {
+  const open = document.querySelector('.app').classList.toggle('sheet-open');
+  $('sheetBtn').setAttribute('aria-expanded', String(open));
+  $('sheetBtn').textContent = open ? 'Hide controls' : 'Controls';
+});
+
+$('scene').addEventListener('change', e => {
+  $('previewbox').hidden = true; $('preview').pause(); $('preview').removeAttribute('src'); $('preview').load();
+  if (source.video){ source.video.remove(); if (source.url) URL.revokeObjectURL(source.url); }
+  source = {kind:'demo'}; S.sceneIdx = parseInt(e.target.value, 10);
+  $('start').disabled = true; S.len = clamp(parseFloat($('len').value) || 4, 1, 120);
+  S.frames = parseInt($('frames').value, 10); S.detail = parseInt($('detail').value, 10);
+  note('Built-in example. The page draws every frame itself, so the paths are exact.');
+  build();
+});
+$('pick').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) loadVideo(f); });
+$('rebuild').addEventListener('click', () => {
+  S.len = clamp(parseFloat($('len').value) || 4, 1, 120);
+  S.start = Math.max(0, parseFloat($('start').value) || 0);
+  if (source.kind === 'video'){
+    S.len = Math.min(S.len, source.duration);
+    S.start = Math.min(S.start, Math.max(0, source.duration - S.len));
+    $('start').value = S.start.toFixed(1); $('len').value = S.len;
+  }
+  S.frames = parseInt($('frames').value, 10);
+  S.detail = parseInt($('detail').value, 10);
+  build();
+});
+
+/* ---------- mouse, touch, keyboard ---------- */
+const ptrs = new Map(); let gest = null;
+const g2 = () => {
+  const [a, b] = [...ptrs.values()];
+  return {d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x)/2, my: (a.y + b.y)/2};
+};
+view.addEventListener('pointerdown', e => {
+  view.focus({preventScroll:true});
+  view.setPointerCapture(e.pointerId);
+  const pan = e.pointerType === 'mouse' ? (e.button === 2 || e.button === 1 || e.shiftKey || e.ctrlKey) : touchMove;
+  if (IS_TOUCH){ clearTimeout(idleT); if (!interacting){ interacting = true; sizeGL(); } }
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY, pan});
+  if (ptrs.size === 2) gest = g2();
+  view.classList.add(pan ? 'pan' : 'drag');
+  e.preventDefault();
+});
+view.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 1){
+    if (p.pan) panBy(dx, dy);
+    else { yaw -= dx*0.006; pitch = clamp(pitch + dy*0.006, -1.45, 1.45); }
+  } else if (ptrs.size === 2){
+    const g = g2();
+    if (gest){ dist = clamp(dist*gest.d/Math.max(g.d, 1), 0.8, 14); panBy(g.mx - gest.mx, g.my - gest.my); }
+    gest = g;
+  }
+  invalidate();
+});
+const endPtr = e => {
+  ptrs.delete(e.pointerId); gest = null;
+  if (!ptrs.size){
+    view.classList.remove('pan', 'drag');
+    if (IS_TOUCH){ idleT = setTimeout(() => { interacting = false; sizeGL(); invalidate(); }, 250); }
+  }
+};
+view.addEventListener('pointerup', endPtr);
+view.addEventListener('pointercancel', endPtr);
+view.addEventListener('contextmenu', e => e.preventDefault());
+view.addEventListener('wheel', e => {
+  e.preventDefault();
+  const k = e.deltaMode === 1 ? 16 : 1;
+  dist = clamp(dist*Math.exp(e.deltaY*k*0.0012), 0.8, 14);
+  invalidate();
+}, {passive:false});
+view.addEventListener('dblclick', resetView);
+view.addEventListener('keydown', e => {
+  let used = true;
+  switch (e.key){
+    case 'ArrowLeft': yaw += 0.08; break;
+    case 'ArrowRight': yaw -= 0.08; break;
+    case 'ArrowUp': pitch = clamp(pitch + 0.08, -1.45, 1.45); break;
+    case 'ArrowDown': pitch = clamp(pitch - 0.08, -1.45, 1.45); break;
+    case '+': case '=': dist = clamp(dist*0.9, 0.8, 14); break;
+    case '-': dist = clamp(dist/0.9, 0.8, 14); break;
+    case ' ': togglePlay(); break;
+    case 'r': case 'R': resetView(); break;
+    default: used = false;
+  }
+  if (used){ e.preventDefault(); invalidate(); }
+});
+
+/* ---------- main loop ---------- */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.1, (now - last)/1000); last = now;
+  if (S.playing && vol){
+    S.play += dt*S.speed/vol.len;
+    if (S.play >= 1){ S.play = 0; }
+    syncTransport(); dirty = true;
+  }
+  if (S.auto){ yaw += dt*0.35; dirty = true; }
+  if (dirty){ dirty = false; render(); }
+  requestAnimationFrame(frame);
+}
+
+new ResizeObserver(resize).observe(view);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(invalidate);
+resize(); syncTransport(); syncLook();
+note('Built-in example. The page draws every frame itself, so the paths are exact.');
+updateRate();
+requestAnimationFrame(frame);
+build();
+})();
+</script>
+</body>
+</html>

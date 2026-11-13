@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atom Builder</title>
+<style>
+:root{
+  --bg:#0a1020; --panel:#121a2e; --panel2:#1a2540; --text:#eef3ff; --muted:#9db0d3; --line:#2a3a5e;
+  --ring:#6f8bd0; --stage1:#16223f; --stage2:#0a1020; --good:#5be3a0;
+  --p:#ef4a55; --n:#9aa6bd; --e:#3ea6ff;
+}
+[data-theme="light"]{
+  --bg:#eef2f9; --panel:#ffffff; --panel2:#f1f5fc; --text:#0e1a33; --muted:#51618a; --line:#c9d4ea;
+  --ring:#5a76b8; --stage1:#ffffff; --stage2:#e3eaf7; --good:#0f8a52;
+  --p:#e0323f; --n:#7d8aa5; --e:#1b7de0;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{height:100vh;height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,29vw,440px);grid-template-rows:auto minmax(0,1fr);gap:12px;padding:12px}
+header{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header h1{margin:0;font-size:clamp(20px,3vh,30px);letter-spacing:.2px}
+header .hint{color:var(--muted);font-size:14px;margin-left:12px;font-weight:400}
+.hbtns{display:flex;gap:8px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:14px}
+.chip:hover{border-color:var(--ring)}
+#left{display:flex;flex-direction:column;gap:12px;min-height:0}
+#stage{position:relative;flex:1;min-height:0;border-radius:18px;border:1px solid var(--line);overflow:hidden;
+  background:radial-gradient(circle at 50% 50%,var(--stage1),var(--stage2))}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px}
+#controls{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:16px}
+.row.sub{gap:24px;flex-wrap:wrap}
+.sl{flex:1;min-width:180px;--c:var(--p)}
+.sl.n{--c:var(--n)} .sl.e{--c:var(--e)}
+.sl label.t{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;font-size:clamp(16px,2.4vh,24px);font-weight:600}
+.sl label.t b{font-size:clamp(26px,4.4vh,44px);line-height:1;color:var(--c);min-width:2ch}
+.sl label.t .el{color:var(--muted);font-weight:500;margin-left:auto;font-size:clamp(15px,2.2vh,22px)}
+.sl.small label.t{font-size:clamp(14px,2vh,19px);margin-bottom:4px}
+.sl.small label.t b{font-size:clamp(20px,3vh,30px)}
+.dot{display:inline-block;width:.8em;height:.8em;border-radius:50%;background:var(--c,var(--p));flex:none;align-self:center}
+.dot.p{background:var(--p)} .dot.n{background:var(--n)} .dot.e{background:var(--e)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);outline:none;margin:0;display:block}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:36px;height:36px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
+.sl.small input[type=range]::-webkit-slider-thumb{width:26px;height:26px}
+.sl.small input[type=range]::-moz-range-thumb{width:20px;height:20px}
+input[type=range]:focus-visible{box-shadow:0 0 0 3px var(--ring)}
+input[type=range]:disabled{opacity:.45}
+input[type=range]:disabled::-webkit-slider-thumb{cursor:default}
+.big{background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:14px 20px;font-size:clamp(18px,2.8vh,26px);font-weight:700;white-space:nowrap}
+.big:hover:not(:disabled){border-color:var(--p);background:var(--panel)}
+.big:disabled{opacity:.35;cursor:default}
+.toggle{display:flex;align-items:center;gap:10px;font-size:clamp(14px,2vh,18px);cursor:pointer;user-select:none}
+.toggle input{width:22px;height:22px;accent-color:var(--e)}
+#snap{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:15px}
+#snap:hover{border-color:var(--good)}
+#snap[hidden]{display:none}
+
+#info{padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+.tile{position:relative;text-align:center;border:3px solid var(--ring);border-radius:16px;background:var(--panel2);padding:18px 12px 14px}
+.corner{position:absolute;top:10px;display:flex;flex-direction:column;line-height:1.1}
+.corner.l{left:14px;align-items:flex-start} .corner.r{right:14px;align-items:flex-end}
+.corner b{font-size:clamp(20px,3.2vh,32px)}
+.corner small{color:var(--muted);font-size:clamp(11px,1.6vh,14px)}
+.ts{font-size:clamp(76px,15vh,160px);font-weight:800;line-height:1}
+.tn{font-size:clamp(22px,3.4vh,36px);font-weight:600;margin-top:2px}
+.ti{color:var(--muted);font-size:clamp(14px,2.2vh,22px);margin-top:2px}
+.status{text-align:center;font-size:clamp(15px,2.2vh,21px);font-weight:600;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel2)}
+.status.ok{color:var(--good);border-color:var(--good)}
+.counts{display:flex;flex-direction:column;gap:6px}
+.crow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:6px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.crow .dot{width:clamp(20px,3vh,30px);height:clamp(20px,3vh,30px)}
+.crow .cl{font-size:clamp(18px,2.8vh,28px);font-weight:600}
+.crow .cl small{color:var(--muted);font-weight:500;font-size:.7em;margin-left:4px}
+.crow .cv{font-size:clamp(34px,6.4vh,64px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.crow.p .cv{color:var(--p)} .crow.n .cv{color:var(--n)} .crow.e .cv{color:var(--e)}
+dl.facts{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:clamp(14px,2.1vh,20px)}
+dl.facts dt{color:var(--muted)}
+dl.facts dd{margin:0;font-weight:700;text-align:right}
+
+@media (max-width:900px){
+  #app{height:auto;min-height:100vh;grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  header{grid-column:1}
+  #stage{min-height:62vw;flex:none;height:62vw}
+  header .hint{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Atom Builder <span class="hint">Left / Right arrow keys step through the elements</span></h1>
+    <div class="hbtns">
+      <button class="chip" id="themeBtn" type="button">Light mode</button>
+      <button class="chip" id="fsBtn" type="button">Full screen</button>
+    </div>
+  </header>
+
+  <div id="left">
+    <div id="stage"><canvas id="cv" aria-label="Atom model"></canvas></div>
+    <div id="controls" class="card">
+      <div class="row">
+        <button class="big" id="prev" type="button">&#9664; Prev</button>
+        <div class="sl p">
+          <label class="t" for="pS"><span class="dot"></span>Protons <b id="pVal">1</b><span class="el" id="elLabel"></span></label>
+          <input id="pS" type="range" min="1" max="36" step="1" value="1">
+        </div>
+        <button class="big" id="next" type="button">Next &#9654;</button>
+      </div>
+      <div class="row sub">
+        <div class="sl small n">
+          <label class="t" for="nS"><span class="dot"></span>Neutrons <b id="nVal">0</b></label>
+          <input id="nS" type="range" min="0" max="60" step="1" value="0" disabled>
+        </div>
+        <div class="sl small e">
+          <label class="t" for="eS"><span class="dot"></span>Electrons <b id="eVal">1</b></label>
+          <input id="eS" type="range" min="0" max="36" step="1" value="1" disabled>
+        </div>
+        <label class="toggle"><input type="checkbox" id="auto" checked> Auto-fill neutrons and electrons</label>
+        <button id="snap" type="button" hidden>Snap to standard atom</button>
+      </div>
+    </div>
+  </div>
+
+  <aside id="info" class="card" aria-live="polite">
+    <div class="tile">
+      <div class="corner l"><b id="tZ">1</b><small>atomic #</small></div>
+      <div class="corner r"><b id="tA">1</b><small>mass #</small></div>
+      <div class="ts" id="tSym">H</div>
+      <div class="tn" id="tName">Hydrogen</div>
+      <div class="ti" id="tIso">Hydrogen-1</div>
+    </div>
+    <div class="status ok" id="status">Neutral atom</div>
+    <div class="counts">
+      <div class="crow p"><span class="dot p"></span><span class="cl">Protons<small>(+)</small></span><span class="cv" id="cP">1</span></div>
+      <div class="crow n"><span class="dot n"></span><span class="cl">Neutrons<small>(0)</small></span><span class="cv" id="cN">0</span></div>
+      <div class="crow e"><span class="dot e"></span><span class="cl">Electrons<small>(&minus;)</small></span><span class="cv" id="cE">1</span></div>
+    </div>
+    <dl class="facts">
+      <dt>Mass number (p + n)</dt><dd id="fA">1</dd>
+      <dt>Net charge</dt><dd id="fC">0</dd>
+      <dt>Electrons per shell</dt><dd id="fS">1</dd>
+      <dt>Outer shell electrons</dt><dd id="fO">1</dd>
+    </dl>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const TAU = Math.PI * 2;
+const MAXZ = 36;
+
+/* ---------- Element data (Z = 1..36) ---------- */
+const SYM  = [null,'H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr'];
+const NAME = [null,'Hydrogen','Helium','Lithium','Beryllium','Boron','Carbon','Nitrogen','Oxygen','Fluorine','Neon','Sodium','Magnesium','Aluminum','Silicon','Phosphorus','Sulfur','Chlorine','Argon','Potassium','Calcium','Scandium','Titanium','Vanadium','Chromium','Manganese','Iron','Cobalt','Nickel','Copper','Zinc','Gallium','Germanium','Arsenic','Selenium','Bromine','Krypton'];
+// mass number of the most abundant isotope
+const MASS = [0,1,4,7,9,11,12,14,16,19,20,23,24,27,28,31,32,35,40,39,40,45,48,51,52,55,56,59,58,63,64,69,74,75,80,79,84];
+// electrons per shell for the neutral atom with Z electrons
+const CFG = [[],[1],[2],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,8,1],[2,8,2],[2,8,3],[2,8,4],[2,8,5],[2,8,6],[2,8,7],[2,8,8],
+  [2,8,8,1],[2,8,8,2],[2,8,9,2],[2,8,10,2],[2,8,11,2],[2,8,13,1],[2,8,13,2],[2,8,14,2],[2,8,15,2],[2,8,16,2],[2,8,18,1],[2,8,18,2],
+  [2,8,18,3],[2,8,18,4],[2,8,18,5],[2,8,18,6],[2,8,18,7],[2,8,18,8]];
+const NSH = 4;
+const SR = [0.40, 0.60, 0.80, 1.0];       // shell radii as a fraction of Rm
+const SPEED = [1.15, 0.78, 0.56, 0.42];   // rad/s
+
+/* ---------- State ---------- */
+const state = { p:1, n:0, e:1, auto:true };
+const protons = [], neutrons = [], dying = [];
+const shells = [[],[],[],[]];
+const ringA = [0,0,0,0];
+let order = [];       // nucleons in layout order
+let nextId = 1;
+let now = 0;
+
+/* ---------- Canvas ---------- */
+const cv = $('cv'), ctx = cv.getContext('2d');
+let W = 300, H = 300, dpr = 1, Rm = 130, er = 10, rnCur = 0;
+let colRing = '#6f8bd0';
+
+function resize(){
+  const r = $('stage').getBoundingClientRect();
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const half = Math.min(W, H) / 2;
+  er = Math.max(9, Math.min(24, half * 0.045));
+  Rm = half - er - 8;
+}
+new ResizeObserver(resize).observe($('stage'));
+
+function readTheme(){ colRing = getComputedStyle(document.documentElement).getPropertyValue('--ring').trim() || colRing; }
+
+/* ---------- Particles ---------- */
+function nucleusTypes(P, N){
+  const T = P + N, out = [];
+  for (let i = 0; i < T; i++) out.push(Math.floor((i+1)*P/T) > Math.floor(i*P/T) ? 'p' : 'n');
+  return out;
+}
+function layoutNucleus(){
+  const P = protons.length, N = neutrons.length, T = P + N;
+  order = [];
+  if (!T) return;
+  const c = 1.12, pts = [];
+  let sx = 0, sy = 0;
+  for (let i = 0; i < T; i++){
+    const r = c * Math.sqrt(i + 0.5), a = i * 2.399963;
+    const x = r * Math.cos(a), y = r * Math.sin(a);
+    pts.push([x, y]); sx += x; sy += y;
+  }
+  sx /= T; sy /= T;
+  const types = nucleusTypes(P, N);
+  let pi = 0, ni = 0;
+  for (let i = 0; i < T; i++){
+    const o = types[i] === 'p' ? protons[pi++] : neutrons[ni++];
+    o.tx = pts[i][0] - sx; o.ty = pts[i][1] - sy;
+    if (o.needInit){ o.x = o.tx; o.y = o.ty; o.needInit = false; }
+    order.push(o);
+  }
+}
+function nucR(T){ return Math.min(0.15 * Rm, 0.32 * Rm / (1.12 * Math.sqrt(T) + 1)); }
+
+function sync(initial){
+  const eNow = shells.reduce((s, a) => s + a.length, 0);
+  const total = Math.max(0, state.p - protons.length) + Math.max(0, state.n - neutrons.length) + Math.max(0, state.e - eNow);
+  const step = total > 0 ? Math.min(0.12, 0.9 / total) : 0;
+  let idx = 0;
+  const base = now + (initial ? 0.35 : 0);
+
+  const adjust = (arr, type, target) => {
+    while (arr.length < target){
+      arr.push({ type, id: nextId++, x:0, y:0, tx:0, ty:0, needInit:true, born: base + idx * step, ang: Math.random() * TAU, seed: Math.random() * 6.28 });
+      idx++;
+    }
+    while (arr.length > target){ const o = arr.pop(); o.dieAt = now; dying.push(o); }
+  };
+  adjust(protons, 'p', state.p);
+  adjust(neutrons, 'n', state.n);
+
+  const cfg = CFG[state.e];
+  for (let k = 0; k < NSH; k++){
+    const want = cfg[k] || 0, arr = shells[k];
+    while (arr.length < want){ arr.push({ type:'e', k, off:undefined, born: base + idx * step, px:0, py:0 }); idx++; }
+    while (arr.length > want){ const o = arr.pop(); o.dieAt = now; o.dyingElectron = true; dying.push(o); }
+  }
+  layoutNucleus();
+}
+
+/* ---------- Easing ---------- */
+const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeOutBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+
+/* ---------- Drawing ---------- */
+const PAL = {
+  p: ['#ffc2c6', '#ef4a55', '#8f1621'],
+  n: ['#eef2fa', '#9aa6bd', '#4d5873'],
+  e: ['#c9e8ff', '#3ea6ff', '#0b4f96']
+};
+function sphere(x, y, r, type, alpha){
+  if (r <= 0.3) return;
+  const pal = PAL[type];
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (type === 'e'){ ctx.shadowColor = '#3ea6ff'; ctx.shadowBlur = r * 1.2; }
+  const g = ctx.createRadialGradient(x - r*0.35, y - r*0.4, r*0.08, x, y, r);
+  g.addColorStop(0, pal[0]); g.addColorStop(0.55, pal[1]); g.addColorStop(1, pal[2]);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = Math.max(1, r * 0.06);
+  ctx.strokeStyle = 'rgba(0,0,0,.35)';
+  ctx.stroke();
+  if (r >= 8 && type !== 'n'){
+    ctx.strokeStyle = 'rgba(255,255,255,.95)';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(1.5, r * 0.2);
+    const h = r * 0.42;
+    ctx.beginPath(); ctx.moveTo(x - h, y); ctx.lineTo(x + h, y);
+    if (type === 'p'){ ctx.moveTo(x, y - h); ctx.lineTo(x, y + h); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function flash(x, y, r, type, f){
+  if (f <= 0 || f >= 1) return;
+  ctx.save();
+  ctx.globalAlpha = (1 - f) * 0.85;
+  ctx.strokeStyle = PAL[type][1];
+  ctx.lineWidth = Math.max(2, r * 0.18);
+  ctx.beginPath(); ctx.arc(x, y, r * (1.1 + f * 2.4), 0, TAU); ctx.stroke();
+  ctx.restore();
+}
+
+function update(dt){
+  const lk = 1 - Math.exp(-dt * 9);
+  const T = Math.max(1, protons.length + neutrons.length);
+  const target = nucR(T);
+  rnCur = rnCur ? rnCur + (target - rnCur) * (1 - Math.exp(-dt * 6)) : target;
+
+  for (const o of order){ o.x += (o.tx - o.x) * lk; o.y += (o.ty - o.y) * lk; }
+
+  const le = 1 - Math.exp(-dt * 5);
+  for (let k = 0; k < NSH; k++){
+    const arr = shells[k], m = arr.length;
+    ringA[k] += ((m > 0 ? 1 : 0) - ringA[k]) * le;
+    for (let i = 0; i < m; i++){
+      const o = arr[i], t = i * TAU / m;
+      if (o.off === undefined) o.off = t;
+      else {
+        let d = t - o.off;
+        d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
+        o.off += d * le;
+      }
+    }
+  }
+  for (let i = dying.length - 1; i >= 0; i--) if (now - dying[i].dieAt > 0.3) dying.splice(i, 1);
+}
+
+function draw(){
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2;
+
+  // orbit rings
+  for (let k = 0; k < NSH; k++){
+    if (ringA[k] < 0.02) continue;
+    ctx.save();
+    ctx.globalAlpha = ringA[k] * 0.6;
+    ctx.strokeStyle = colRing;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, SR[k] * Rm, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
+
+  // nucleus glow
+  const T = protons.length + neutrons.length;
+  if (T){
+    const gr = rnCur * (1.12 * Math.sqrt(T) + 1) * 1.7;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr);
+    g.addColorStop(0, 'rgba(239,74,85,0.28)'); g.addColorStop(1, 'rgba(239,74,85,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, gr, 0, TAU); ctx.fill();
+  }
+
+  // nucleons: dying, settled, then flying-in
+  const far = Rm * 0.95;
+  const nucPos = (o, sc, fly) => {
+    const jx = Math.sin(now * 2.3 + o.seed * 5) * 0.05, jy = Math.cos(now * 2.1 + o.seed * 7) * 0.05;
+    return [cx + (o.x + jx) * rnCur + Math.cos(o.ang) * far * fly, cy + (o.y + jy) * rnCur + Math.sin(o.ang) * far * fly];
+  };
+  for (const o of dying){
+    if (o.type === 'e') continue;
+    const s = 1 - (now - o.dieAt) / 0.3;
+    const [x, y] = nucPos(o, 1, 0);
+    sphere(x, y, rnCur * Math.max(0, s), o.type, Math.max(0, s));
+  }
+  const flying = [];
+  for (const o of order){
+    const u = (now - o.born) / 0.8;
+    if (u < 0) continue;
+    if (u < 1){ flying.push(o); continue; }
+    const [x, y] = nucPos(o, 1, 0);
+    sphere(x, y, rnCur, o.type, 1);
+    flash(x, y, rnCur, o.type, (u - 1) / 0.5);
+  }
+  for (const o of flying){
+    const u = (now - o.born) / 0.8;
+    const fly = 1 - easeOutCubic(u);
+    const [x, y] = nucPos(o, 1, fly);
+    sphere(x, y, rnCur * clamp(easeOutBack(clamp(u * 1.4)), 0, 1.2), o.type, clamp(u * 4));
+  }
+
+  // electrons
+  for (let k = 0; k < NSH; k++){
+    const arr = shells[k];
+    const R = SR[k] * Rm;
+    for (const o of arr){
+      const u = (now - o.born) / 0.9;
+      if (u < 0) continue;
+      const ang = k * 0.7 + now * SPEED[k] + (o.off || 0);
+      const rr = R + (1 - easeOutCubic(clamp(u))) * Rm * 0.5;
+      const x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr;
+      o.px = x; o.py = y;
+      sphere(x, y, er * clamp(easeOutBack(clamp(u * 1.4)), 0, 1.2), 'e', clamp(u * 4));
+      flash(x, y, er, 'e', (u - 1) / 0.5);
+    }
+  }
+  for (const o of dying){
+    if (o.type !== 'e') continue;
+    const s = 1 - (now - o.dieAt) / 0.3;
+    sphere(o.px, o.py, er * Math.max(0, s), 'e', Math.max(0, s));
+  }
+}
+
+let last = performance.now();
+function frame(ts){
+  const dt = Math.min(0.05, (ts - last) / 1000);
+  last = ts; now += dt;
+  update(dt); draw();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- UI ---------- */
+const pS = $('pS'), nS = $('nS'), eS = $('eS');
+function fmtCharge(c){ return c === 0 ? '0' : (c > 0 ? '+' + c : '−' + (-c)); }
+
+function updateUI(){
+  const { p, n, e } = state;
+  const A = p + n, charge = p - e, stdN = MASS[p] - p;
+  pS.value = p; nS.value = n; eS.value = e;
+  $('pVal').textContent = p; $('nVal').textContent = n; $('eVal').textContent = e;
+  $('elLabel').textContent = SYM[p] + ' · ' + NAME[p];
+  $('tZ').textContent = p; $('tA').textContent = A;
+  $('tSym').textContent = SYM[p]; $('tName').textContent = NAME[p];
+  $('tIso').textContent = NAME[p] + '-' + A;
+  $('cP').textContent = p; $('cN').textContent = n; $('cE').textContent = e;
+  $('fA').textContent = A; $('fC').textContent = fmtCharge(charge);
+  const cfg = CFG[e];
+  $('fS').textContent = cfg.length ? cfg.join(' · ') : 'none';
+  $('fO').textContent = cfg.length ? cfg[cfg.length - 1] : 0;
+
+  const parts = [];
+  if (charge > 0) parts.push('Positive ion (' + fmtCharge(charge) + ')');
+  if (charge < 0) parts.push('Negative ion (' + fmtCharge(charge) + ')');
+  if (n !== stdN) parts.push('Isotope: ' + NAME[p] + '-' + A);
+  const std = parts.length === 0;
+  const st = $('status');
+  st.textContent = std ? 'Neutral atom' : parts.join(' · ');
+  st.classList.toggle('ok', std);
+
+  $('prev').disabled = p <= 1;
+  $('next').disabled = p >= MAXZ;
+  nS.disabled = eS.disabled = state.auto;
+  $('snap').hidden = state.auto || (n === stdN && e === p);
+}
+
+function snapStd(p){
+  state.p = clamp(p, 1, MAXZ);
+  state.n = MASS[state.p] - state.p;
+  state.e = state.p;
+  sync(); updateUI();
+}
+
+pS.addEventListener('input', () => {
+  state.p = +pS.value;
+  if (state.auto){ state.n = MASS[state.p] - state.p; state.e = state.p; }
+  sync(); updateUI();
+});
+nS.addEventListener('input', () => { state.n = +nS.value; sync(); updateUI(); });
+eS.addEventListener('input', () => { state.e = +eS.value; sync(); updateUI(); });
+$('auto').addEventListener('change', ev => {
+  state.auto = ev.target.checked;
+  if (state.auto) snapStd(state.p); else updateUI();
+});
+$('next').addEventListener('click', () => snapStd(state.p + 1));
+$('prev').addEventListener('click', () => snapStd(state.p - 1));
+$('snap').addEventListener('click', () => snapStd(state.p));
+
+document.addEventListener('keydown', ev => {
+  const t = ev.target;
+  if (t && t.tagName === 'INPUT' && t.type === 'range') return;
+  if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp'){ ev.preventDefault(); snapStd(state.p + 1); }
+  else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown'){ ev.preventDefault(); snapStd(state.p - 1); }
+});
+
+$('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const light = root.getAttribute('data-theme') !== 'light';
+  root.setAttribute('data-theme', light ? 'light' : 'dark');
+  $('themeBtn').textContent = light ? 'Dark mode' : 'Light mode';
+  readTheme();
+});
+const fsBtn = $('fsBtn');
+if (!document.documentElement.requestFullscreen) fsBtn.hidden = true;
+fsBtn.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+});
+document.addEventListener('fullscreenchange', () => {
+  fsBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+});
+
+/* ---------- Go ---------- */
+readTheme(); resize();
+sync(true); updateUI();
+requestAnimationFrame(ts => { last = ts; frame(ts); });
+})();
+</script>
+</body>
+</html>

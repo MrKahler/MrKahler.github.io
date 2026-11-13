@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tony Bony's Science Lab</title>
+<link rel="icon" href="assets/tony.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2d2452;--cream:#fff4e2;--sun:#ffd03d;--pink:#ff6fa8}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--ink)}
+.bar{height:46px;display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--cream);border-bottom:3px solid var(--ink);font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);box-sizing:border-box}
+.bar img{height:38px;width:24px;object-fit:cover;object-position:top}
+.bar a{font-weight:600;font-size:15px;text-decoration:none;color:var(--ink);border:2.5px solid var(--ink);border-radius:10px;padding:3px 11px;background:#fff;box-shadow:2px 2px 0 var(--ink);white-space:nowrap}
+.bar a.home{background:var(--sun)}
+.bar h1{font-size:18px;font-weight:700;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+iframe{display:block;width:100%;height:calc(100% - 46px);border:0;background:#fff}
+@media (max-width:520px){.bar .full{display:none}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <a class="home" href="./">◂ Lab</a>
+  <img src="assets/tony.svg" alt="">
+  <h1 id="t">Loading…</h1>
+  <a class="full" id="full" href="#" target="_blank" rel="noopener">Open full page ↗</a>
+</div>
+<iframe id="f" title="Demo" allow="fullscreen; clipboard-write; autoplay" allowfullscreen></iframe>
+<script>
+const id=new URLSearchParams(location.search).get('d');
+fetch('demos.json',{cache:'no-cache'}).then(r=>r.json()).then(j=>{
+  const d=j.demos.find(x=>x.id===id);
+  if(!d){document.getElementById('t').textContent="Tony can't find that demo";return}
+  document.title=d.title+' · Tony Bony\'s Science Lab';
+  document.getElementById('t').textContent=d.title;
+  document.getElementById('full').href=d.file;
+  document.getElementById('f').src=d.file;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atom Builder 2.0</title>
+<style>
+:root{
+  --bg:#0a1020; --panel:#121a2e; --panel2:#1a2540; --text:#eef3ff; --muted:#9db0d3; --line:#2a3a5e;
+  --ring:#6f8bd0; --stage1:#16223f; --stage2:#0a1020; --good:#5be3a0;
+  --p:#ef4a55; --n:#9aa6bd; --e:#3ea6ff; --o:#ff9f1c; --v:#ffd23f; --cur:#38e8ff; --curtxt:#06222b;
+}
+[data-theme="light"]{
+  --bg:#eef2f9; --panel:#ffffff; --panel2:#f1f5fc; --text:#0e1a33; --muted:#51618a; --line:#c9d4ea;
+  --ring:#5a76b8; --stage1:#ffffff; --stage2:#e3eaf7; --good:#0f8a52;
+  --p:#e0323f; --n:#7d8aa5; --e:#1b7de0; --o:#e07b00; --v:#d49a00; --cur:#0a8fb5; --curtxt:#ffffff;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button,select{font:inherit;color:inherit;cursor:pointer}
+#app{height:100vh;height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,29vw,440px);grid-template-rows:auto minmax(0,1fr);gap:12px;padding:12px}
+header{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hl{display:flex;align-items:center;gap:14px}
+header h1{margin:0;font-size:clamp(20px,3vh,30px);letter-spacing:.2px;white-space:nowrap}
+header .hint{color:var(--muted);font-size:14px;margin-left:12px;font-weight:400}
+.hbtns{display:flex;gap:8px;align-items:center}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:14px}
+.chip:hover{border-color:var(--ring)}
+label.chip{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+label.chip input{accent-color:var(--v);width:18px;height:18px}
+.seg{display:flex;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{background:var(--panel);border:0;padding:8px 18px;font-size:clamp(14px,2vh,18px);font-weight:700}
+.seg button.on{background:var(--e);color:#fff}
+#left{display:flex;flex-direction:column;gap:12px;min-height:0}
+#stage{position:relative;flex:1;min-height:0;border-radius:18px;border:1px solid var(--line);overflow:hidden;
+  background:radial-gradient(circle at 50% 50%,var(--stage1),var(--stage2))}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px}
+#controls{padding:14px 18px}
+#ctlBuild,#ctlReact{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:16px}
+.row.sub{gap:20px;flex-wrap:wrap}
+.sl{flex:1;min-width:180px;--c:var(--p)}
+.sl.n{--c:var(--n)} .sl.e{--c:var(--e)} .sl.rx{--c:var(--v)}
+.sl label.t{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;font-size:clamp(16px,2.4vh,24px);font-weight:600}
+.sl label.t b{font-size:clamp(26px,4.4vh,44px);line-height:1;color:var(--c);min-width:2ch}
+.sl label.t .el{color:var(--muted);font-weight:500;margin-left:auto;font-size:clamp(15px,2.2vh,22px)}
+.sl.small label.t{font-size:clamp(14px,2vh,19px);margin-bottom:4px}
+.sl.small label.t b{font-size:clamp(20px,3vh,30px)}
+.dot{display:inline-block;width:.8em;height:.8em;border-radius:50%;background:var(--c,var(--p));flex:none;align-self:center}
+.dot.p{background:var(--p)} .dot.n{background:var(--n)} .dot.e{background:var(--e)} .dot.o{background:var(--o)} .dot.v{background:var(--v)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);outline:none;margin:0;display:block}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:36px;height:36px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
+.sl.small input[type=range]::-webkit-slider-thumb{width:26px;height:26px}
+.sl.small input[type=range]::-moz-range-thumb{width:20px;height:20px}
+input[type=range]:focus-visible{box-shadow:0 0 0 3px var(--ring)}
+input[type=range]:disabled{opacity:.45}
+.big{background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:14px 20px;font-size:clamp(18px,2.8vh,26px);font-weight:700;white-space:nowrap}
+.big:hover:not(:disabled){border-color:var(--p);background:var(--panel)}
+.big:disabled{opacity:.35;cursor:default}
+.toggle{display:flex;align-items:center;gap:10px;font-size:clamp(14px,2vh,18px);cursor:pointer;user-select:none}
+.toggle input{width:22px;height:22px;accent-color:var(--e)}
+#snap{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:15px}
+#snap:hover{border-color:var(--good)}
+.pick{display:flex;flex-direction:column;gap:6px;min-width:190px}
+.pick label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:clamp(14px,2vh,18px)}
+.pick select{font-size:clamp(16px,2.5vh,22px);padding:8px 10px;border-radius:10px;background:var(--panel2);border:3px solid var(--c);font-weight:600}
+.pick.a{--c:var(--e)} .pick.b{--c:var(--o)}
+.pick.a .dot{background:var(--e)} .pick.b .dot{background:var(--o)}
+.presets{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:clamp(14px,2vh,18px)}
+.presets .chip{font-size:clamp(14px,2vh,18px);font-weight:700;color:var(--text)}
+
+#info{padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:0}
+#infoBuild,#infoReact{display:flex;flex-direction:column;gap:10px}
+.tile{position:relative;text-align:center;border:3px solid var(--ring);border-radius:16px;background:var(--panel2);padding:14px 12px 10px}
+.corner{position:absolute;top:8px;display:flex;flex-direction:column;line-height:1.1}
+.corner.l{left:12px;align-items:flex-start} .corner.r{right:12px;align-items:flex-end}
+.corner b{font-size:clamp(18px,2.8vh,28px)}
+.corner small{color:var(--muted);font-size:clamp(10px,1.5vh,13px)}
+.ts{font-size:clamp(60px,11vh,120px);font-weight:800;line-height:1}
+.tn{font-size:clamp(20px,3vh,30px);font-weight:600;margin-top:2px}
+.ti{color:var(--muted);font-size:clamp(13px,2vh,19px);margin-top:1px}
+.status{text-align:center;font-size:clamp(14px,2vh,19px);font-weight:600;padding:7px 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel2)}
+.status.ok{color:var(--good);border-color:var(--good)}
+.counts{display:flex;flex-direction:column;gap:5px}
+.crow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:4px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.crow .dot{width:clamp(18px,2.6vh,26px);height:clamp(18px,2.6vh,26px)}
+.crow .cl{font-size:clamp(16px,2.5vh,25px);font-weight:600}
+.crow .cl small{color:var(--muted);font-weight:500;font-size:.68em;margin-left:4px}
+.crow .cv{font-size:clamp(28px,5.2vh,52px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.crow.p .cv{color:var(--p)} .crow.n .cv{color:var(--n)} .crow.e .cv{color:var(--e)} .crow.v .cv{color:var(--v)}
+.crow.v{border-color:var(--v)}
+dl.facts{margin:0;display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:clamp(13px,1.9vh,18px)}
+dl.facts dt{color:var(--muted)}
+dl.facts dd{margin:0;font-weight:700;text-align:right}
+
+.rxpair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rxtile{text-align:center;border:3px solid var(--c);border-radius:14px;background:var(--panel2);padding:8px 6px}
+.rxtile.a{--c:var(--e)} .rxtile.b{--c:var(--o)}
+.rxtile .rs{font-size:clamp(40px,7vh,72px);font-weight:800;line-height:1;color:var(--c)}
+.rxtile .rn{font-size:clamp(15px,2.2vh,22px);font-weight:600}
+.rxtile .rv{color:var(--muted);font-size:clamp(12px,1.8vh,16px)}
+.rxtile .rv b{color:var(--v);font-size:1.5em}
+.rxstruct{text-align:center;font-size:clamp(30px,5.4vh,56px);font-weight:800;letter-spacing:1px;padding:6px 0}
+.rxtext{margin:0;font-size:clamp(12px,1.7vh,15px);line-height:1.4;color:var(--muted)}
+
+#pt{margin-top:auto;padding-top:6px}
+#ptGrid{display:grid;grid-template-columns:repeat(18,1fr);grid-template-rows:repeat(4,auto);gap:2px}
+.cell{aspect-ratio:1;border:1.5px solid var(--line);border-radius:3px;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;position:relative;color:transparent;transition:transform .2s,box-shadow .2s,background .2s}
+#pt.build .cell{cursor:pointer}
+#pt.build .cell:hover{border-color:var(--ring)}
+.cell.dim{opacity:.3}
+.cell.cur,.cell.curA,.cell.curB{z-index:2;transform:scale(1.75);border-color:transparent}
+.cell.cur{background:var(--cur);color:var(--curtxt);box-shadow:0 0 0 2px var(--cur),0 0 14px 5px var(--cur)}
+.cell.curA{background:var(--e);color:#fff;box-shadow:0 0 0 2px var(--e),0 0 14px 5px var(--e)}
+.cell.curB{background:var(--o);color:#fff;box-shadow:0 0 0 2px var(--o),0 0 14px 5px var(--o)}
+.cell.curA.curB{background:linear-gradient(135deg,var(--e) 50%,var(--o) 50%)}
+#ptCap{text-align:center;color:var(--muted);font-size:clamp(12px,1.8vh,16px);margin-top:10px}
+
+.popmsg{position:absolute;left:14px;top:14px;width:min(340px,42%);background:var(--panel);background:color-mix(in srgb,var(--panel) 90%,transparent);
+  border:2px solid var(--line);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:4px;box-shadow:0 6px 24px rgba(0,0,0,.35);backdrop-filter:blur(4px)}
+.popmsg .prow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.popmsg .pbtns{display:flex;gap:6px}
+.popmsg .pbtns .chip{padding:4px 10px;font-size:14px;font-weight:700}
+.popmsg .pt{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
+.popmsg .pb{font-size:clamp(18px,2.8vh,28px);font-weight:800;line-height:1.15}
+.popmsg .ps{font-weight:700;font-size:15px}
+.popmsg .ps.ok{color:var(--good)} .popmsg .ps.warn{color:var(--o)} .popmsg .ps.info{color:var(--e)}
+.popmsg .pl{color:var(--muted);font-size:14px;line-height:1.35}
+.popmsg{max-height:calc(100% - 28px);overflow:auto}
+.popmsg.wide{width:min(420px,46%)}
+.popmsg .pk{font-size:13px;line-height:1.4;color:var(--text);white-space:pre-line;border-top:1px solid var(--line);padding-top:6px;margin-top:2px}
+.decaybtn{position:absolute;right:14px;top:14px;background:var(--o);color:#1d0f00;font-weight:800;font-size:clamp(18px,2.6vh,24px);
+  padding:10px 20px;border-radius:14px;border:2px solid rgba(255,255,255,.65);box-shadow:0 0 18px rgba(255,159,28,.55)}
+.decaybtn:hover:not(:disabled){filter:brightness(1.1)}
+.decaybtn:disabled{opacity:.5;cursor:default}
+dl.facts dd.ok{color:var(--good)} dl.facts dd.warn{color:var(--o)}
+@media (max-width:900px){
+  #app{height:auto;min-height:100vh;grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  header{grid-column:1}
+  #stage{min-height:62vw;flex:none;height:62vw}
+  header .hint{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hl">
+      <h1>Atom Builder 2.0</h1>
+      <div class="seg" role="tablist">
+        <button id="mBuild" class="on" type="button">Build an atom</button>
+        <button id="mReact" type="button">Reaction mode</button>
+      </div>
+      <span class="hint" id="hint">Click a particle to pop it out &middot; &larr; / &rarr; step elements</span>
+    </div>
+    <div class="hbtns">
+      <label class="chip"><input type="checkbox" id="hlV" checked> Highlight valence electrons</label>
+      <button class="chip" id="themeBtn" type="button">Light mode</button>
+      <button class="chip" id="fsBtn" type="button">Full screen</button>
+    </div>
+  </header>
+
+  <div id="left">
+    <div id="stage"><canvas id="cv" aria-label="Atom model"></canvas>
+      <div class="popmsg" id="popMsg" hidden>
+        <div class="prow"><span class="pt" id="popT"></span><span class="pbtns"><button class="chip" id="popUndo" type="button">Undo</button><button class="chip" id="popX" type="button" aria-label="Close">&times;</button></span></div>
+        <div class="pb" id="popB"></div>
+        <div class="ps" id="popS"></div>
+        <div class="pl" id="popL"></div>
+        <div class="pk" id="popK" hidden></div>
+      </div>
+      <button class="decaybtn" id="decayBtn" type="button" hidden>&#9762; Decay</button>
+    </div>
+    <div id="controls" class="card">
+      <div id="ctlBuild">
+        <div class="row">
+          <button class="big" id="prev" type="button">&#9664; Prev</button>
+          <div class="sl p">
+            <label class="t" for="pS"><span class="dot"></span>Protons <b id="pVal">1</b><span class="el" id="elLabel"></span></label>
+            <input id="pS" type="range" min="1" max="36" step="1" value="1">
+          </div>
+          <button class="big" id="next" type="button">Next &#9654;</button>
+        </div>
+        <div class="row sub">
+          <div class="sl small n">
+            <label class="t" for="nS"><span class="dot"></span>Neutrons <b id="nVal">0</b></label>
+            <input id="nS" type="range" min="0" max="60" step="1" value="0" disabled>
+          </div>
+          <div class="sl small e">
+            <label class="t" for="eS"><span class="dot"></span>Electrons <b id="eVal">1</b></label>
+            <input id="eS" type="range" min="0" max="36" step="1" value="1" disabled>
+          </div>
+          <label class="toggle"><input type="checkbox" id="auto" checked> Auto-fill neutrons and electrons</label>
+          <button id="snap" type="button" hidden>Snap to standard atom</button>
+        </div>
+      </div>
+
+      <div id="ctlReact" hidden>
+        <div class="row">
+          <div class="pick a"><label for="selA"><span class="dot"></span>Atom A</label><select id="selA"></select></div>
+          <div class="sl rx">
+            <label class="t" for="apS">Bring the atoms together <b id="apVal">0%</b></label>
+            <input id="apS" type="range" min="0" max="100" step="1" value="0">
+          </div>
+          <div class="pick b"><label for="selB"><span class="dot"></span>Atom B</label><select id="selB"></select></div>
+        </div>
+        <div class="row sub">
+          <button class="big" id="play" type="button">Bring together &#9654;</button>
+          <button class="chip" id="rxReset" type="button">Reset</button>
+          <div class="presets">Try:
+            <button class="chip pre" data-a="8" data-b="8" type="button">O + O</button>
+            <button class="chip pre" data-a="1" data-b="1" type="button">H + H</button>
+            <button class="chip pre" data-a="7" data-b="7" type="button">N + N</button>
+            <button class="chip pre" data-a="17" data-b="17" type="button">Cl + Cl</button>
+            <button class="chip pre" data-a="1" data-b="17" type="button">H + Cl</button>
+            <button class="chip pre" data-a="1" data-b="9" type="button">H + F</button>
+            <button class="chip pre" data-a="11" data-b="17" type="button">Na + Cl</button>
+            <button class="chip pre" data-a="12" data-b="8" type="button">Mg + O</button>
+            <button class="chip pre" data-a="2" data-b="2" type="button">He + He</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="info" class="card" aria-live="polite">
+    <div id="infoBuild">
+      <div class="tile">
+        <div class="corner l"><b id="tZ">1</b><small>atomic #</small></div>
+        <div class="corner r"><b id="tA">1</b><small>mass #</small></div>
+        <div class="ts" id="tSym">H</div>
+        <div class="tn" id="tName">Hydrogen</div>
+        <div class="ti" id="tIso">Hydrogen-1</div>
+      </div>
+      <div class="status ok" id="status">Neutral atom</div>
+      <div class="counts">
+        <div class="crow p"><span class="dot p"></span><span class="cl">Protons<small>(+)</small></span><span class="cv" id="cP">1</span></div>
+        <div class="crow n"><span class="dot n"></span><span class="cl">Neutrons<small>(0)</small></span><span class="cv" id="cN">0</span></div>
+        <div class="crow e"><span class="dot e"></span><span class="cl">Electrons<small>(&minus;)</small></span><span class="cv" id="cE">1</span></div>
+        <div class="crow v"><span class="dot v"></span><span class="cl">Valence e<sup>&minus;</sup><small id="vNote">(outer shell)</small></span><span class="cv" id="cV">1</span></div>
+      </div>
+      <dl class="facts">
+        <dt>Mass number (p + n)</dt><dd id="fA">1</dd>
+        <dt>Net charge</dt><dd id="fC">0</dd>
+        <dt>Electrons per shell</dt><dd id="fS">1</dd>
+        <dt>Nucleus</dt><dd id="fN" class="ok">Stable</dd>
+      </dl>
+    </div>
+
+    <div id="infoReact" hidden>
+      <div class="rxpair">
+        <div class="rxtile a"><div class="rs" id="rsA">O</div><div class="rn" id="rnA">Oxygen</div><div class="rv"><b id="rvA">6</b> valence e<sup>&minus;</sup></div></div>
+        <div class="rxtile b"><div class="rs" id="rsB">O</div><div class="rn" id="rnB">Oxygen</div><div class="rv"><b id="rvB">6</b> valence e<sup>&minus;</sup></div></div>
+      </div>
+      <div class="status" id="rxStatus">Atoms apart</div>
+      <div class="rxstruct" id="rxStruct">O=O</div>
+      <dl class="facts">
+        <dt>Bond type</dt><dd id="rxType"></dd>
+        <dt id="rxShareLbl">Electrons shared</dt><dd id="rxShare"></dd>
+        <dt>Electronegativity</dt><dd id="rxEN"></dd>
+        <dt>Polarity</dt><dd id="rxPol"></dd>
+        <dt id="rxOutA"></dt><dd id="rxOutAv"></dd>
+        <dt id="rxOutB"></dt><dd id="rxOutBv"></dd>
+      </dl>
+      <p class="rxtext" id="rxText"></p>
+    </div>
+
+    <div id="pt" class="build">
+      <div id="ptGrid"></div>
+      <div id="ptCap"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const TAU = Math.PI * 2;
+const MAXZ = 36;
+
+/* ---------- Element data (Z = 1..36) ---------- */
+const SYM  = [null,'H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr'];
+const NAME = [null,'Hydrogen','Helium','Lithium','Beryllium','Boron','Carbon','Nitrogen','Oxygen','Fluorine','Neon','Sodium','Magnesium','Aluminum','Silicon','Phosphorus','Sulfur','Chlorine','Argon','Potassium','Calcium','Scandium','Titanium','Vanadium','Chromium','Manganese','Iron','Cobalt','Nickel','Copper','Zinc','Gallium','Germanium','Arsenic','Selenium','Bromine','Krypton'];
+const MASS = [0,1,4,7,9,11,12,14,16,19,20,23,24,27,28,31,32,35,40,39,40,45,48,51,52,55,56,59,58,63,64,69,74,75,80,79,84];
+const CFG = [[],[1],[2],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,8,1],[2,8,2],[2,8,3],[2,8,4],[2,8,5],[2,8,6],[2,8,7],[2,8,8],
+  [2,8,8,1],[2,8,8,2],[2,8,9,2],[2,8,10,2],[2,8,11,2],[2,8,13,1],[2,8,13,2],[2,8,14,2],[2,8,15,2],[2,8,16,2],[2,8,18,1],[2,8,18,2],
+  [2,8,18,3],[2,8,18,4],[2,8,18,5],[2,8,18,6],[2,8,18,7],[2,8,18,8]];
+const EN = [null,2.20,null,0.98,1.57,2.04,2.55,3.04,3.44,3.98,null,0.93,1.31,1.61,1.90,2.19,2.58,3.16,null];
+const NSH = 4;
+/* stable (or practically stable) mass numbers for Z = 1..36 */
+const STABLE = {1:[1,2],2:[3,4],3:[6,7],4:[9],5:[10,11],6:[12,13],7:[14,15],8:[16,17,18],9:[19],10:[20,21,22],
+  11:[23],12:[24,25,26],13:[27],14:[28,29,30],15:[31],16:[32,33,34,36],17:[35,37],18:[36,38,40],19:[39,41],
+  20:[40,42,43,44,46,48],21:[45],22:[46,47,48,49,50],23:[50,51],24:[50,52,53,54],25:[55],26:[54,56,57,58],27:[59],
+  28:[58,60,61,62,64],29:[63,65],30:[64,66,67,68,70],31:[69,71],32:[70,72,73,74,76],33:[75],34:[74,76,77,78,80,82],
+  35:[79,81],36:[78,80,82,83,84,86]};
+const UNBOUND = ['2-2','3-4','3-5','4-8'];
+const SLOW = 'Decays so slowly (half-life far longer than the age of the universe) that it counts as stable.';
+const NOTES = {
+  '1-2':'Deuterium, or "heavy hydrogen".',
+  '1-3':'Tritium. Half-life about 12.3 years.',
+  '2-2':'Two protons with no neutron do not hold together at all.',
+  '2-3':'Stable, but very rare on Earth.',
+  '3-4':'Falls apart almost instantly.',
+  '3-5':'Falls apart almost instantly, in about 10⁻²² seconds.',
+  '4-8':'Splits into two helium-4 nuclei in about 10⁻¹⁶ seconds.',
+  '4-10':'Half-life about 1.4 million years.',
+  '6-11':'Half-life about 20 minutes. Used in PET scans.',
+  '6-14':'Half-life about 5,730 years. Used in radiocarbon dating.',
+  '7-13':'Half-life about 10 minutes. Used in PET scans.',
+  '8-15':'Half-life about 2 minutes. Used in PET scans.',
+  '9-18':'Half-life about 110 minutes. The most common PET scan isotope.',
+  '11-22':'Half-life about 2.6 years.',
+  '17-36':'Half-life about 301,000 years.',
+  '19-40':'Half-life about 1.25 billion years. Found in bananas, and in you.',
+  '27-60':'Half-life about 5.3 years. Used in cancer radiation therapy.',
+  '4-7':'Half-life about 53 days.',
+  '11-24':'Half-life about 15 hours.',
+  '13-26':'Half-life about 720,000 years.',
+  '15-32':'Half-life about 14 days. Used in biology labs to tag DNA.',
+  '16-35':'Half-life about 87 days.',
+  '20-41':'Half-life about 100,000 years.',
+  '26-55':'Half-life about 2.7 years.',
+  '26-59':'Half-life about 45 days.',
+  '28-63':'Half-life about 100 years.',
+  '36-85':'Half-life about 10.7 years.',
+  '20-48':SLOW, '23-50':SLOW, '32-76':SLOW, '34-82':SLOW, '36-78':SLOW
+};
+/* first ionization energy (eV), Z = 1..36 */
+const IE1 = [null,13.60,24.59,5.39,9.32,8.30,11.26,14.53,13.62,17.42,21.56,5.14,7.65,5.99,8.15,10.49,10.36,12.97,15.76,
+  4.34,6.11,6.56,6.83,6.75,6.77,7.43,7.90,7.88,7.64,7.73,9.39,6.00,7.90,9.79,9.75,11.81,14.00];
+function nucleusInfo(Z, N){
+  const A = Z + N, key = Z + '-' + A, st = STABLE[Z] || [];
+  const stable = st.includes(A), note = NOTES[key] || '';
+  if (UNBOUND.includes(key)) return { stable:false, label:'Unbound (falls apart)', text: note };
+  let text = note;
+  if (!stable && !note){
+    const ns = st.map(a => a - Z), minN = Math.min(...ns), maxN = Math.max(...ns);
+    text = (N < minN - 1 || N > maxN + 3)
+      ? 'Far from the stable range, so it likely decays within seconds or less.'
+      : 'It will decay into a more stable nucleus over time.';
+  }
+  return { stable, label: stable ? 'Stable' : 'Radioactive (unstable)', text };
+}
+const SUPD = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+function ionSym(Z, c){
+  if (!c) return SYM[Z];
+  const m = Math.abs(c);
+  return SYM[Z] + (m === 1 ? '' : String(m).split('').map(d => SUPD[+d]).join('')) + (c > 0 ? '⁺' : '⁻');
+}
+const SR = [0.40, 0.60, 0.80, 1.0];
+const SPEED = [1.15, 0.78, 0.56, 0.42];
+
+/* periodic table position (row 1-4, column 1-18) */
+function tpos(z){
+  if (z === 1) return [1, 1];
+  if (z === 2) return [1, 18];
+  if (z <= 4) return [2, z - 2];
+  if (z <= 10) return [2, z + 8];
+  if (z <= 12) return [3, z - 10];
+  if (z <= 18) return [3, z];
+  return [4, z - 18];
+}
+
+/* ---------- State ---------- */
+let mode = 'build';
+const state = { p:1, n:0, e:1, auto:true, cfg:null };
+const curCfg = () => state.cfg || CFG[state.e];
+const protons = [], neutrons = [], dying = [];
+const shells = [[],[],[],[]];
+const ringA = [0,0,0,0];
+let order = [];
+let nextId = 1;
+let now = 0;
+let hlOn = true;
+
+/* ---------- Canvas ---------- */
+const cv = $('cv'), ctx = cv.getContext('2d');
+let W = 300, H = 300, dpr = 1, Rm = 130, er = 10, rnCur = 0;
+let colRing = '#6f8bd0', colVal = '#ffd23f', colText = '#eef3ff';
+
+function resize(){
+  const r = $('stage').getBoundingClientRect();
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const half = Math.min(W, H) / 2;
+  er = Math.max(9, Math.min(24, half * 0.045));
+  Rm = half - er - 8;
+}
+new ResizeObserver(resize).observe($('stage'));
+
+function readTheme(){
+  const cs = getComputedStyle(document.documentElement);
+  colRing = cs.getPropertyValue('--ring').trim() || colRing;
+  colVal = cs.getPropertyValue('--v').trim() || colVal;
+  colText = cs.getPropertyValue('--text').trim() || colText;
+}
+
+/* ---------- Build-mode particles ---------- */
+function nucleusTypes(P, N){
+  const T = P + N, out = [];
+  for (let i = 0; i < T; i++) out.push(Math.floor((i+1)*P/T) > Math.floor(i*P/T) ? 'p' : 'n');
+  return out;
+}
+function layoutNucleus(){
+  const P = protons.length, N = neutrons.length, T = P + N;
+  order = [];
+  if (!T) return;
+  const c = 1.12, pts = [];
+  let sx = 0, sy = 0;
+  for (let i = 0; i < T; i++){
+    const r = c * Math.sqrt(i + 0.5), a = i * 2.399963;
+    const x = r * Math.cos(a), y = r * Math.sin(a);
+    pts.push([x, y]); sx += x; sy += y;
+  }
+  sx /= T; sy /= T;
+  const types = nucleusTypes(P, N);
+  let pi = 0, ni = 0;
+  for (let i = 0; i < T; i++){
+    const o = types[i] === 'p' ? protons[pi++] : neutrons[ni++];
+    o.tx = pts[i][0] - sx; o.ty = pts[i][1] - sy;
+    if (o.needInit){ o.x = o.tx; o.y = o.ty; o.needInit = false; }
+    order.push(o);
+  }
+}
+function nucR(T){ return Math.min(0.15 * Rm, 0.32 * Rm / (1.12 * Math.sqrt(T) + 1)); }
+
+function sync(initial){
+  const eNow = shells.reduce((s, a) => s + a.length, 0);
+  const total = Math.max(0, state.p - protons.length) + Math.max(0, state.n - neutrons.length) + Math.max(0, state.e - eNow);
+  const step = total > 0 ? Math.min(0.12, 0.9 / total) : 0;
+  let idx = 0;
+  const base = now + (initial ? 0.35 : 0);
+  const adjust = (arr, type, target) => {
+    while (arr.length < target){
+      arr.push({ type, id: nextId++, x:0, y:0, tx:0, ty:0, needInit:true, born: base + idx * step, ang: Math.random() * TAU, seed: Math.random() * 6.28 });
+      idx++;
+    }
+    while (arr.length > target){ const o = arr.pop(); o.dieAt = now; dying.push(o); }
+  };
+  adjust(protons, 'p', state.p);
+  adjust(neutrons, 'n', state.n);
+  const cfg = curCfg();
+  for (let k = 0; k < NSH; k++){
+    const want = cfg[k] || 0, arr = shells[k];
+    while (arr.length < want){ arr.push({ type:'e', k, off:undefined, born: base + idx * step, px:0, py:0 }); idx++; }
+    while (arr.length > want){ const o = arr.pop(); o.dieAt = now; dying.push(o); }
+  }
+  layoutNucleus();
+}
+
+/* ---------- Easing ---------- */
+const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+const easeOutBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const angDiff = (a, b) => { const d = b - a; return ((d + Math.PI) % TAU + TAU) % TAU - Math.PI; };
+
+/* ---------- Drawing helpers ---------- */
+const PAL = {
+  p: ['#ffc2c6', '#ef4a55', '#8f1621'],
+  n: ['#eef2fa', '#9aa6bd', '#4d5873'],
+  e: ['#c9e8ff', '#3ea6ff', '#0b4f96'],
+  o: ['#ffe3b3', '#ff9f1c', '#9a5400'],
+  pos: ['#ffd0f0', '#ff4fc3', '#8a1468'],
+  nu: ['#ffffff', '#d9dde8', '#8a93a8']
+};
+const GLOW = { e:'#3ea6ff', o:'#ff9f1c', pos:'#ff4fc3' };
+function sphere(x, y, r, type, alpha, opts){
+  if (r <= 0.3) return;
+  opts = opts || {};
+  const pal = PAL[type];
+  if (opts.hl){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = colVal; ctx.lineWidth = Math.max(2, r * 0.2);
+    ctx.shadowColor = colVal; ctx.shadowBlur = r * 1.1;
+    ctx.beginPath(); ctx.arc(x, y, r * 1.34, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (GLOW[type]){ ctx.shadowColor = GLOW[type]; ctx.shadowBlur = r * 1.2; }
+  const g = ctx.createRadialGradient(x - r*0.35, y - r*0.4, r*0.08, x, y, r);
+  g.addColorStop(0, pal[0]); g.addColorStop(0.55, pal[1]); g.addColorStop(1, pal[2]);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = Math.max(1, r * 0.06);
+  ctx.strokeStyle = 'rgba(0,0,0,.35)';
+  ctx.stroke();
+  if (r >= 8 && type !== 'n' && !opts.noSign){
+    ctx.strokeStyle = 'rgba(255,255,255,.95)';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(1.5, r * 0.2);
+    const h = r * 0.42;
+    ctx.beginPath(); ctx.moveTo(x - h, y); ctx.lineTo(x + h, y);
+    if (type === 'p' || type === 'pos'){ ctx.moveTo(x, y - h); ctx.lineTo(x, y + h); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function flash(x, y, r, type, f){
+  if (f <= 0 || f >= 1) return;
+  ctx.save();
+  ctx.globalAlpha = (1 - f) * 0.85;
+  ctx.strokeStyle = PAL[type][1];
+  ctx.lineWidth = Math.max(2, r * 0.18);
+  ctx.beginPath(); ctx.arc(x, y, r * (1.1 + f * 2.4), 0, TAU); ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- Reaction mode model ---------- */
+const rx = { a: 8, b: 8, approach: 0, playing: false, dir: 1, A: null, B: null, bond: null };
+const METALS = [3, 4, 11, 12, 13], NOBLE = [2, 10, 18];
+function atomInfo(z){
+  const cfg = CFG[z], v = cfg[cfg.length - 1];
+  const noble = NOBLE.includes(z), metal = METALS.includes(z);
+  return { z, sym: SYM[z], name: NAME[z], cfg, v, nsh: cfg.length, noble, metal, en: EN[z],
+           need: noble ? 0 : (z === 1 ? 1 : Math.min(8 - v, v)) };
+}
+const sup = n => ({1:'', 2:'²', 3:'³'}[n] || '');
+const chargeStr = (n, s) => sup(n) + (s > 0 ? '⁺' : '⁻');
+
+function rxCompute(){
+  const A = atomInfo(rx.a), B = atomInfo(rx.b);
+  let bd;
+  if (A.noble && B.noble){
+    bd = { type:'disp', k:0 };
+  } else if (A.noble || B.noble){
+    const nb = A.noble ? A : B;
+    bd = { type:'none', k:0, msg: nb.name + ' is a noble gas. Its outer shell is already full, so it has no reason to bond.' };
+  } else if (A.metal && B.metal){
+    bd = { type:'none', k:0, msg:'Two metals do not bond by sharing or swapping like this. Metal atoms pool their outer electrons into a shared "sea" (metallic bonding), which this view does not show.' };
+  } else if (A.metal || B.metal){
+    const M = A.metal ? A : B, N = A.metal ? B : A;
+    bd = { type:'ionic', k: Math.min(M.v, N.need), M: A.metal ? 'A' : 'B' };
+  } else {
+    bd = { type:'covalent', k: Math.min(A.need, B.need, 3) };
+  }
+  if (bd.type === 'covalent' || bd.type === 'ionic'){
+    bd.dEN = Math.abs(A.en - B.en);
+    bd.hi = A.en >= B.en ? 'A' : 'B';
+    bd.polar = bd.type === 'covalent' && bd.dEN >= 0.4;
+  }
+  const fin = (X, side) => {
+    let f = X.v, outerFirst = X.nsh === 1;
+    if (bd.type === 'covalent') f = X.v + bd.k;
+    else if (bd.type === 'ionic'){
+      if (bd.M === side){
+        if (X.v - bd.k > 0) f = X.v - bd.k;
+        else { f = X.cfg[X.nsh - 2]; outerFirst = (X.nsh - 1 === 1); }
+      } else f = X.v + bd.k;
+    }
+    X.fin = f; X.target = outerFirst ? 2 : 8; X.full = f === X.target;
+  };
+  fin(A, 'A'); fin(B, 'B');
+  rx.A = A; rx.B = B; rx.bond = bd;
+}
+
+function rxStatusText(){
+  const ap = rx.approach, bd = rx.bond;
+  if (bd.type === 'none') return ap < 0.6 ? 'Atoms apart' : 'These two do not bond';
+  if (bd.type === 'disp') return ap < 0.5 ? 'Atoms apart' : 'Temporary dipoles flicker: a weak attraction';
+  if (ap < 0.62) return 'Atoms apart: each keeps its own electrons';
+  if (ap < 0.95) return bd.type === 'covalent' ? 'Sharing electrons...' : 'Transferring electrons...';
+  return bd.type === 'covalent' ? 'Bonded: electrons are shared' : 'Bonded: electrons transferred';
+}
+
+function rxUpdateInfo(){
+  const A = rx.A, B = rx.B, bd = rx.bond, k = bd.k;
+  $('rsA').textContent = A.sym; $('rnA').textContent = A.name; $('rvA').textContent = A.v;
+  $('rsB').textContent = B.sym; $('rnB').textContent = B.name; $('rvB').textContent = B.v;
+  const bondName = ['', 'single', 'double', 'triple'][k];
+  const bch = ['', '–', '=', '≡'][k];
+  let struct = '', type = '', share = '', shareLbl = 'Electrons shared', text = '', pol = '\u2013';
+  const done = X => X.fin + (X.full ? ' ✓' : '') ;
+  if (bd.type === 'covalent'){
+    struct = A.sym + bch + B.sym + (A.z === B.z ? '   (' + A.sym + '₂)' : '');
+    type = bondName.charAt(0).toUpperCase() + bondName.slice(1) + (bd.polar ? ' polar' : ' nonpolar') + ' covalent bond';
+    share = (2 * k) + ' (' + k + ' pair' + (k > 1 ? 's' : '') + ')';
+    text = A.sym + ' and ' + B.sym + ' each put ' + k + ' electron' + (k > 1 ? 's' : '') + ' into the overlap, so each one counts ' + k * 2 + ' shared electrons toward a ' + bondName + ' bond.';
+    const notFull = [A, B].filter(X => !X.full);
+    text += notFull.length === 0
+      ? ' Both atoms now count a full outer shell.'
+      : ' ' + notFull.map(X => X.sym + ' reaches ' + X.fin + ' of ' + X.target).join(' and ') + ', so it could still bond with more atoms.';
+    const hi = bd.hi === 'A' ? A : B, lo = bd.hi === 'A' ? B : A;
+    if (bd.polar){
+      const strong = bd.dEN >= 1.0;
+      pol = (strong ? 'Very polar' : 'Polar') + ': \u03b4\u207b on ' + hi.sym + ', \u03b4\u207a on ' + lo.sym;
+      text += ' ' + hi.sym + ' is more electronegative (' + hi.en.toFixed(2) + ' vs ' + lo.en.toFixed(2) + ', a stronger pull on shared electrons), so the pair sits closer to ' + hi.sym + '. ' + hi.sym + ' ends up slightly negative (\u03b4\u207b) and ' + lo.sym + ' slightly positive (\u03b4\u207a): a ' + (strong ? 'very ' : '') + 'polar bond. The arrow points toward \u03b4\u207b.';
+    } else {
+      pol = 'None (equal sharing)';
+      text += A.z === B.z
+        ? ' Both atoms pull equally, so the electrons are shared evenly (nonpolar).'
+        : ' Their electronegativities are close (' + A.en.toFixed(2) + ' and ' + B.en.toFixed(2) + '), so the electrons are shared nearly evenly (nonpolar).';
+    }
+  } else if (bd.type === 'disp'){
+    struct = A.sym + ' \u00b7\u00b7\u00b7 ' + B.sym;
+    type = 'London dispersion (not a bond)';
+    share = '0'; pol = 'Temporary, flickering';
+    text = 'Even a noble gas atom has moving electrons. For a moment they bunch up on one side, making a temporary \u03b4\u207b side and \u03b4\u207a side. That nudges the neighbor\u2019s electrons into a matching lopsided pattern, so opposite charges face each other and the atoms attract weakly. This is why helium only liquefies near 4 K. Atoms with more electrons (like Ar) are easier to distort, so the force is stronger.';
+  } else if (bd.type === 'ionic'){
+    const M = bd.M === 'A' ? A : B, N = bd.M === 'A' ? B : A;
+    struct = A.sym + (bd.M === 'A' ? chargeStr(k, 1) : chargeStr(k, -1)) + '  ' + B.sym + (bd.M === 'A' ? chargeStr(k, -1) : chargeStr(k, 1));
+    type = 'Ionic bond'; pol = 'Full charges (ions)';
+    shareLbl = 'Electrons transferred';
+    share = k + ' (' + M.sym + ' → ' + N.sym + ')';
+    text = M.sym + ' gives ' + k + ' electron' + (k > 1 ? 's' : '') + ' to ' + N.sym + '. ' + M.sym + ' becomes ' + M.sym + chargeStr(k, 1) + ' and ' + N.sym + ' becomes ' + N.sym + chargeStr(k, -1) + '. Opposite charges attract, and that attraction is the ionic bond.';
+    if (M.v - k > 0) text += ' ' + M.sym + ' still has ' + (M.v - k) + ' outer electron' + (M.v - k > 1 ? 's' : '') + ', so it could give away more.';
+    if (!N.full) text += ' ' + N.sym + ' reaches only ' + N.fin + ' of ' + N.target + '.';
+  } else {
+    struct = A.sym + '   ' + B.sym; type = 'No bond'; share = '0'; text = bd.msg;
+  }
+  $('rxStruct').textContent = struct;
+  const enf = X => X.en ? X.en.toFixed(2) : 'n/a';
+  $('rxEN').textContent = A.sym + ' ' + enf(A) + ' \u00b7 ' + B.sym + ' ' + enf(B) + (A.en && B.en ? '  (\u0394 ' + Math.abs(A.en - B.en).toFixed(2) + ')' : '');
+  $('rxPol').textContent = pol;
+  $('rxType').textContent = type;
+  $('rxShareLbl').textContent = shareLbl;
+  $('rxShare').textContent = share;
+  $('rxOutA').textContent = A.sym + ' (A) outer shell';
+  $('rxOutAv').textContent = A.v + ' → ' + done(A);
+  $('rxOutB').textContent = B.sym + ' (B) outer shell';
+  $('rxOutBv').textContent = B.v + ' → ' + done(B);
+  $('rxText').textContent = text;
+  $('rxStatus').textContent = rxStatusText();
+  $('apS').value = Math.round(rx.approach * 100);
+  $('apVal').textContent = Math.round(rx.approach * 100) + '%';
+  $('play').innerHTML = rx.approach >= 0.999 && !rx.playing ? '&#9664; Pull apart' : (rx.playing ? 'Pause' : 'Bring together &#9654;');
+  updateTable();
+}
+
+function rxSet(a, b, autoplay){
+  rx.a = a; rx.b = b; rx.approach = 0; rx.dir = 1; rx.playing = !!autoplay;
+  $('selA').value = a; $('selB').value = b;
+  rxCompute(); rxUpdateInfo();
+}
+
+/* ---------- Update ---------- */
+let lastStatus = '';
+function update(dt){
+  const lk = 1 - Math.exp(-dt * 9);
+  const T = Math.max(1, protons.length + neutrons.length);
+  const target = nucR(T);
+  rnCur = rnCur ? rnCur + (target - rnCur) * (1 - Math.exp(-dt * 6)) : target;
+  for (const o of order){ o.x += (o.tx - o.x) * lk; o.y += (o.ty - o.y) * lk; }
+  const le = 1 - Math.exp(-dt * 5);
+  for (let k = 0; k < NSH; k++){
+    const arr = shells[k], m = arr.length;
+    ringA[k] += ((m > 0 ? 1 : 0) - ringA[k]) * le;
+    for (let i = 0; i < m; i++){
+      const o = arr[i], t = i * TAU / m;
+      if (o.off === undefined) o.off = t;
+      else o.off += angDiff(o.off, t) * le;
+    }
+  }
+  for (let i = dying.length - 1; i >= 0; i--) if (now - dying[i].dieAt > (dying[i].eject ? (dying[i].ejLife || 1.0) : 0.3)) dying.splice(i, 1);
+  if (decayPend && now >= decayPend.trig){ const d = decayPend.d; decayPend = null; applyDecay(d); }
+  for (const f of fx){
+    if (f.kind !== 'pos' || f.dead || now < f.t0 + f.dur) continue;
+    f.dead = true;
+    const x = f.x0 + Math.cos(f.ang) * f.dist, y = f.y0 + Math.sin(f.ang) * f.dist, pa = pairAng(x, y);
+    fxAdd('boom', { x0:x, y0:y, dur:0.6 });
+    fxAdd('g', { x0:x, y0:y, ang:pa, dist:edgeDist(x, y, pa, 120), dur:1.4, hold:HOLD, label:'γ 511 keV' });
+    fxAdd('g', { x0:x, y0:y, ang:pa + Math.PI, dist:edgeDist(x, y, pa + Math.PI, 120), dur:1.4, hold:HOLD, label:'γ 511 keV' });
+  }
+  for (let i = fx.length - 1; i >= 0; i--) if (fx[i].dead || now > fx[i].t0 + fx[i].dur + (fx[i].hold ? fx[i].hold + FADE : 0) + 0.8) fx.splice(i, 1);
+
+  if (mode === 'react'){
+    if (rx.playing){
+      rx.approach += rx.dir * dt * 0.28;
+      if (rx.approach >= 1){ rx.approach = 1; rx.playing = false; rx.dir = -1; rxUpdateInfo(); }
+      else if (rx.approach <= 0){ rx.approach = 0; rx.playing = false; rx.dir = 1; rxUpdateInfo(); }
+      else { $('apS').value = Math.round(rx.approach * 100); $('apVal').textContent = Math.round(rx.approach * 100) + '%'; }
+    }
+    const s = rxStatusText();
+    if (s !== lastStatus){ lastStatus = s; $('rxStatus').textContent = s; }
+  }
+}
+
+/* ---------- Draw: build mode ---------- */
+function drawBuild(){
+  const cx = W / 2, cy = H / 2;
+  for (let k = 0; k < NSH; k++){
+    if (ringA[k] < 0.02) continue;
+    ctx.save();
+    ctx.globalAlpha = ringA[k] * 0.6;
+    ctx.strokeStyle = colRing;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, SR[k] * Rm, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
+  const T = protons.length + neutrons.length;
+  if (T){
+    const gr = rnCur * (1.12 * Math.sqrt(T) + 1) * 1.7;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, gr);
+    g.addColorStop(0, 'rgba(239,74,85,0.28)'); g.addColorStop(1, 'rgba(239,74,85,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, gr, 0, TAU); ctx.fill();
+  }
+  const far = Rm * 0.95;
+  const nucPos = (o, fly) => {
+    const [jx, jy] = jit(o);
+    return [cx + (o.x + jx) * rnCur + Math.cos(o.ang) * far * fly, cy + (o.y + jy) * rnCur + Math.sin(o.ang) * far * fly];
+  };
+  for (const o of dying){
+    if (o.type === 'e' || o.eject) continue;
+    const s = 1 - (now - o.dieAt) / 0.3;
+    const [x, y] = nucPos(o, 0);
+    sphere(x, y, rnCur * Math.max(0, s), o.type, Math.max(0, s));
+  }
+  const flying = [];
+  for (const o of order){
+    const u = (now - o.born) / 0.8;
+    if (u < 0) continue;
+    if (u < 1){ flying.push(o); continue; }
+    const [x, y] = nucPos(o, 0);
+    sphere(x, y, rnCur, o.type, 1);
+    flash(x, y, rnCur, o.type, (u - 1) / 0.5);
+    if (o.morphAt !== undefined && now - o.morphAt < 0.9){
+      const mu = (now - o.morphAt) / 0.9;
+      sphere(x, y, rnCur, o.morphFrom, mu < 0 ? 1 : 1 - mu);
+      if (mu >= 0) flash(x, y, rnCur, o.type, mu);
+    }
+  }
+  for (const o of flying){
+    const u = (now - o.born) / 0.8;
+    const [x, y] = nucPos(o, 1 - easeOutCubic(u));
+    sphere(x, y, rnCur * clamp(easeOutBack(clamp(u * 1.4)), 0, 1.2), o.type, clamp(u * 4));
+  }
+  // popped nucleons fly out
+  for (const o of dying){
+    if (!o.eject || o.type === 'e') continue;
+    const T = o.ejDur || 1.0, el = now - o.dieAt, u = el / T, life = o.ejLife || T;
+    const [x0, y0] = o.ex0 !== undefined ? [o.ex0, o.ey0] : nucXY(o);
+    const dist = (o.ejDist || Rm * 1.25) * easeOutCubic(clamp(u));
+    flash(x0, y0, rnCur, o.type, el / 0.4);
+    const rr = o.ejLife ? Math.max(rnCur, er * 1.1) : rnCur * (1 + 0.3 * Math.sin(clamp(u) * Math.PI));
+    const al = o.ejLife ? 1 - smooth(life - FADE, life, el) : 1 - smooth(0.6, 1, u);
+    sphere(x0 + Math.cos(o.ejAng) * dist, y0 + Math.sin(o.ejAng) * dist, rr, o.type, al);
+  }
+  let outerK = -1;
+  for (let k = 0; k < NSH; k++) if (shells[k].length) outerK = k;
+  for (let k = 0; k < NSH; k++){
+    const arr = shells[k], R = SR[k] * Rm;
+    for (const o of arr){
+      const u = (now - o.born) / 0.9;
+      if (u < 0) continue;
+      const ang = k * 0.7 + now * SPEED[k] + (o.off || 0);
+      const rr = R + (1 - easeOutCubic(clamp(u))) * Rm * 0.5;
+      const x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr;
+      o.px = x; o.py = y;
+      sphere(x, y, er * clamp(easeOutBack(clamp(u * 1.4)), 0, 1.2), 'e', clamp(u * 4), { hl: hlOn && k === outerK });
+      flash(x, y, er, 'e', (u - 1) / 0.5);
+    }
+  }
+  for (const o of dying){
+    if (o.type !== 'e') continue;
+    if (o.eject){
+      const u = (now - o.dieAt) / 1.0;
+      const dist = Rm * 0.9 * easeOutCubic(clamp(u));
+      flash(o.px, o.py, er, 'e', u / 0.4);
+      sphere(o.px + Math.cos(o.ejAng) * dist, o.py + Math.sin(o.ejAng) * dist, er, 'e', 1 - smooth(0.6, 1, u));
+      continue;
+    }
+    const s = 1 - (now - o.dieAt) / 0.3;
+    sphere(o.px, o.py, er * Math.max(0, s), 'e', Math.max(0, s));
+  }
+  drawFx();
+  // hover highlight for click-to-pop
+  const hv = mouse ? hitTest(mouse[0], mouse[1]) : null;
+  const curs = hv ? 'pointer' : 'default';
+  if (cv.style.cursor !== curs) cv.style.cursor = curs;
+  if (hv){
+    let hx, hy, hr;
+    if (hv.type === 'e'){ hx = hv.px; hy = hv.py; hr = er * 1.55; }
+    else { [hx, hy] = nucXY(hv); hr = rnCur * 1.3; }
+    ctx.save(); ctx.strokeStyle = colText; ctx.lineWidth = 3; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.arc(hx, hy, hr, 0, TAU); ctx.stroke(); ctx.restore();
+  }
+}
+
+/* ---------- Draw: reaction mode ---------- */
+function drawReact(){
+  const cx = W / 2, cy = H / 2;
+  const A = rx.A, B = rx.B, bd = rx.bond, kk = bd.k;
+  const R = Math.min(H * 0.36, W * 0.2);
+  const erR = clamp(R * 0.055, 9, 17);
+  const dBond = bd.type === 'covalent' ? R * (1.75 - 0.12 * kk) : bd.type === 'ionic' ? R * 2.06 : bd.type === 'disp' ? R * 2.12 : R * 2.25;
+  const dFar = Math.max(dBond, Math.min(W * 0.94 - 2 * R, 3.0 * R));
+  const ap = rx.approach, ee = ap * ap * (3 - 2 * ap);
+  const d = dFar + (dBond - dFar) * ee;
+  const b = (bd.type === 'none' || bd.type === 'disp') ? 0 : smooth(0.62, 0.95, ap);
+  const pf = bd.polar ? clamp(bd.dEN / 1.8, 0, 1) * (bd.hi === 'A' ? -1 : 1) : 0;
+  const disp = bd.type === 'disp' ? smooth(0.5, 0.95, ap) : 0;
+  const pdisp = Math.sin(now * 1.3);
+  const sides = [
+    { X: A, s: 'A', cx: cx - d / 2, type: 'e', col: '#3ea6ff', rot: now * 0.55 },
+    { X: B, s: 'B', cx: cx + d / 2, type: 'o', col: '#ff9f1c', rot: now * 0.55 + 1.3 }
+  ];
+  const mSide = bd.type === 'ionic' ? bd.M : null;
+
+  // rings
+  for (const sd of sides){
+    const nsh = sd.X.nsh;
+    for (let i = 0; i < nsh; i++){
+      let a = 0.55;
+      if (i === nsh - 1 && mSide === sd.s && sd.X.v - kk === 0) a *= (1 - b);
+      if (a < 0.02) continue;
+      ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = sd.col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sd.cx, cy, R * (i + 1) / nsh, 0, TAU); ctx.stroke(); ctx.restore();
+    }
+  }
+  // lens
+  if (bd.type === 'covalent' && b > 0.02 && d < 2 * R){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(sides[0].cx, cy, R, 0, TAU); ctx.clip();
+    ctx.beginPath(); ctx.arc(sides[1].cx, cy, R, 0, TAU);
+    const lcx = cx + pf * (R - d / 2) * 0.9;
+    const g = ctx.createRadialGradient(lcx, cy, 0, lcx, cy, R * 0.6);
+    g.addColorStop(0, 'rgba(255,210,63,' + (0.32 * b) + ')'); g.addColorStop(1, 'rgba(255,210,63,' + (0.10 * b) + ')');
+    ctx.fillStyle = g; ctx.fill();
+    ctx.restore();
+  }
+  // nuclei + inner electrons
+  for (const sd of sides){
+    const X = sd.X;
+    sphere(sd.cx, cy, R * 0.15, 'p', 1, { noSign: true });
+    ctx.save();
+    ctx.fillStyle = '#fff'; ctx.font = '800 ' + Math.max(12, R * 0.1) + 'px system-ui,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('+' + X.z, sd.cx, cy + 1);
+    ctx.restore();
+    for (let i = 0; i < X.nsh - 1; i++){
+      const cnt = X.cfg[i], r = R * (i + 1) / X.nsh;
+      for (let j = 0; j < cnt; j++){
+        const a = i * 0.7 + now * SPEED[i] + j * TAU / cnt + (sd.s === 'B' ? 0.5 : 0);
+        sphere(sd.cx + r * Math.cos(a), cy + r * Math.sin(a), erR, sd.type, 1);
+      }
+    }
+  }
+  // London dispersion halos
+  if (bd.type === 'disp' && disp > 0.05){
+    const al = Math.abs(pdisp) * disp;
+    for (const sd of sides){
+      const axis = sd.s === 'A' ? 0 : Math.PI;
+      const nearSign = sd.s === 'A' ? (pdisp > 0 ? 1 : -1) : (pdisp > 0 ? -1 : 1);
+      for (const [ang, sg] of [[axis, nearSign], [axis + Math.PI, -nearSign]]){
+        const c = sg > 0 ? '#ef4a55' : '#2f8fff';
+        ctx.save(); ctx.globalAlpha = al * 0.6; ctx.strokeStyle = c; ctx.lineWidth = Math.max(8, R * 0.04); ctx.lineCap = 'round';
+        ctx.shadowColor = c; ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.arc(sd.cx, cy, R, ang - 0.75, ang + 0.75); ctx.stroke(); ctx.restore();
+        ctx.save(); ctx.globalAlpha = al; ctx.fillStyle = c;
+        ctx.font = '800 ' + Math.max(18, R * 0.17) + 'px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(sg > 0 ? '\u03b4\u207a' : '\u03b4\u207b', sd.cx + Math.cos(ang) * R * 0.72, cy + Math.sin(ang) * R * 0.72); ctx.restore();
+      }
+    }
+  }
+  // outer electrons
+  const lensH = d < 2 * R ? Math.sqrt(R * R - (d / 2) * (d / 2)) : 0;
+  const th0 = Math.acos(clamp(d / (2 * R), 0, 1)) + 0.3;
+  for (const sd of sides){
+    const X = sd.X, v = X.v, axis = sd.s === 'A' ? 0 : Math.PI, other = sd.s === 'A' ? sides[1] : sides[0];
+    const isM = mSide === sd.s, isN = bd.type === 'ionic' && !isM;
+    for (let j = 0; j < v; j++){
+      const a0 = sd.rot + j * TAU / v;
+      const fx = sd.cx + R * Math.cos(a0), fy = cy + R * Math.sin(a0);
+      let x = fx, y = fy;
+      if (bd.type === 'covalent'){
+        const u = v - kk;
+        if (j < u){
+          const a1 = axis + th0 + (j + 0.5) * (TAU - 2 * th0) / u;
+          const a = a0 + angDiff(a0, a1) * b + Math.sin(now * 1.7 + j) * 0.05 * b;
+          x = sd.cx + R * Math.cos(a); y = cy + R * Math.sin(a);
+        } else {
+          const s = j - u;
+          const ys = kk === 1 ? 0 : (s - (kk - 1) / 2) * (kk === 2 ? 0.9 : 0.6) * lensH;
+          const hw = Math.max(0, Math.sqrt(R * R - ys * ys) - d / 2);
+          const lx = cx + pf * hw * 0.9 + (sd.s === 'A' ? -1 : 1) * (erR + 3);
+          const ly = cy + ys + Math.sin(now * 2.5 + s * 2 + (sd.s === 'A' ? 0 : 1)) * 3;
+          x = fx + (lx - fx) * b; y = fy + (ly - fy) * b;
+        }
+      } else if (bd.type === 'disp'){
+        const w = Math.abs(pdisp) * disp * 0.9;
+        const far = sd.s === 'A' ? pdisp > 0 : pdisp <= 0;
+        const tj = axis + (far ? Math.PI : 0) + (j - (v - 1) / 2) * 0.42;
+        const a = a0 + angDiff(a0, tj) * w;
+        x = sd.cx + R * Math.cos(a); y = cy + R * Math.sin(a);
+      } else if (isM){
+        const keep = v - kk;
+        if (j < keep){
+          const a1 = sd.rot + j * TAU / keep;
+          const a = a0 + angDiff(a0, a1) * b;
+          x = sd.cx + R * Math.cos(a); y = cy + R * Math.sin(a);
+        } else {
+          const t = j - keep, ov = other.X.v;
+          const aT = other.rot + (ov + t) * TAU / (ov + kk);
+          const tx = other.cx + R * Math.cos(aT), ty = cy + R * Math.sin(aT);
+          x = fx + (tx - fx) * b; y = fy + (ty - fy) * b;
+        }
+      } else if (isN){
+        const a1 = sd.rot + j * TAU / (v + kk);
+        const a = a0 + angDiff(a0, a1) * b;
+        x = sd.cx + R * Math.cos(a); y = cy + R * Math.sin(a);
+      }
+      sphere(x, y, erR, sd.type, 1, { hl: hlOn });
+    }
+  }
+  // dipole arrow for polar bonds
+  if (bd.type === 'covalent' && bd.polar && b > 0.5){
+    const y0 = cy - R - Math.max(30, R * 0.15);
+    const loX = bd.hi === 'A' ? sides[1].cx : sides[0].cx, hiX = bd.hi === 'A' ? sides[0].cx : sides[1].cx;
+    const dir = Math.sign(hiX - loX), x1 = loX + dir * R * 0.12, x2 = hiX - dir * R * 0.12;
+    ctx.save();
+    ctx.globalAlpha = clamp((b - 0.5) * 2);
+    ctx.strokeStyle = colText; ctx.fillStyle = colText; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y0); ctx.lineTo(x2 - dir * 14, y0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x1, y0 - 10); ctx.lineTo(x1, y0 + 10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, y0); ctx.lineTo(x2 - dir * 20, y0 - 11); ctx.lineTo(x2 - dir * 20, y0 + 11); ctx.closePath(); ctx.fill();
+    ctx.font = '600 ' + Math.max(13, R * 0.075) + 'px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('shared electrons pulled this way', (x1 + x2) / 2, y0 - 12);
+    ctx.restore();
+  }
+  // labels
+  ctx.save();
+  ctx.fillStyle = colText; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '800 ' + Math.max(20, R * 0.15) + 'px system-ui,sans-serif';
+  for (const sd of sides){
+    let label = sd.X.sym;
+    if (bd.type === 'ionic' && b > 0.5) label += (mSide === sd.s) ? chargeStr(kk, 1) : chargeStr(kk, -1);
+    const ly = cy + R + Math.max(40, R * 0.2);
+    let dl = null;
+    if (bd.type === 'covalent' && bd.polar && b > 0.5) dl = (bd.hi === sd.s) ? '\u03b4\u207b' : '\u03b4\u207a';
+    if (dl){
+      const f1 = ctx.font, f2 = '800 ' + Math.max(16, R * 0.11) + 'px system-ui,sans-serif';
+      const w1 = ctx.measureText(label).width;
+      ctx.font = f2; const w2 = ctx.measureText(dl).width;
+      const x0 = sd.cx - (w1 + 8 + w2) / 2;
+      ctx.textAlign = 'left'; ctx.font = f1; ctx.fillText(label, x0, ly);
+      ctx.font = f2; ctx.fillStyle = dl === '\u03b4\u207a' ? '#ef4a55' : '#2f8fff';
+      ctx.fillText(dl, x0 + w1 + 8, ly - 4);
+      ctx.fillStyle = colText; ctx.font = f1; ctx.textAlign = 'center';
+    } else ctx.fillText(label, sd.cx, ly);
+  }
+  ctx.restore();
+}
+
+function draw(){
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (mode === 'build') drawBuild(); else drawReact();
+}
+
+let last = performance.now();
+function frame(ts){
+  const dt = Math.min(0.05, (ts - last) / 1000);
+  last = ts; now += dt;
+  update(dt); draw();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Periodic table ---------- */
+const cells = [];
+(function buildTable(){
+  const grid = $('ptGrid');
+  for (let z = 1; z <= MAXZ; z++){
+    const [r, c] = tpos(z);
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.style.gridRow = r; d.style.gridColumn = c;
+    d.title = z + ' ' + NAME[z];
+    d.addEventListener('click', () => { if (mode === 'build') snapStd(z); });
+    grid.appendChild(d);
+    cells[z] = d;
+  }
+})();
+function updateTable(){
+  const pt = $('pt');
+  pt.classList.toggle('build', mode === 'build');
+  for (let z = 1; z <= MAXZ; z++){
+    const c = cells[z];
+    c.className = 'cell';
+    c.textContent = '';
+    if (mode === 'react' && z > 18) c.classList.add('dim');
+  }
+  let cap = '';
+  const g = z => { const [r, c] = tpos(z); return 'Period ' + r + ' · Group ' + c; };
+  if (mode === 'build'){
+    const z = state.p;
+    cells[z].classList.add('cur'); cells[z].textContent = SYM[z];
+    cap = SYM[z] + ': ' + g(z);
+  } else {
+    const a = rx.a, b = rx.b;
+    cells[a].classList.add('curA'); cells[a].textContent = SYM[a];
+    cells[b].classList.add('curB'); cells[b].textContent = SYM[b];
+    if (a === b) cells[a].textContent = SYM[a];
+    cap = a === b ? SYM[a] + ': ' + g(a) : SYM[a] + ' (' + g(a).replace('Period ', 'P').replace(' · Group ', ', G') + ')  +  ' + SYM[b] + ' (' + g(b).replace('Period ', 'P').replace(' · Group ', ', G') + ')';
+  }
+  $('ptCap').textContent = cap;
+}
+
+/* ---------- Build UI ---------- */
+const pS = $('pS'), nS = $('nS'), eS = $('eS');
+function fmtCharge(c){ return c === 0 ? '0' : (c > 0 ? '+' + c : '−' + (-c)); }
+
+function updateUI(){
+  const { p, n, e } = state;
+  const A = p + n, charge = p - e, stdN = MASS[p] - p;
+  pS.value = p; nS.value = n; eS.value = e;
+  $('pVal').textContent = p; $('nVal').textContent = n; $('eVal').textContent = e;
+  $('elLabel').textContent = SYM[p] + ' · ' + NAME[p];
+  $('tZ').textContent = p; $('tA').textContent = A;
+  $('tSym').textContent = SYM[p]; $('tName').textContent = NAME[p];
+  $('tIso').textContent = NAME[p] + '-' + A;
+  $('cP').textContent = p; $('cN').textContent = n; $('cE').textContent = e;
+  $('fA').textContent = A; $('fC').textContent = fmtCharge(charge);
+  const cfg = curCfg();
+  $('fS').textContent = cfg.length ? cfg.join(' · ') : 'none';
+  const ni = nucleusInfo(p, n);
+  $('fN').textContent = ni.label;
+  $('fN').className = ni.stable ? 'ok' : 'warn';
+  $('cV').textContent = cfg.length ? cfg[cfg.length - 1] : 0;
+  $('vNote').textContent = (e >= 21 && e <= 30) ? '(outer shell, varies)' : '(outer shell)';
+
+  const parts = [];
+  if (charge > 0) parts.push('Positive ion (' + fmtCharge(charge) + ')');
+  if (charge < 0) parts.push('Negative ion (' + fmtCharge(charge) + ')');
+  if (n !== stdN) parts.push('Isotope: ' + NAME[p] + '-' + A);
+  const std = parts.length === 0;
+  const st = $('status');
+  st.textContent = std ? 'Neutral atom' : parts.join(' · ');
+  st.classList.toggle('ok', std);
+
+  $('prev').disabled = p <= 1;
+  $('next').disabled = p >= MAXZ;
+  nS.disabled = eS.disabled = state.auto;
+  $('snap').hidden = state.auto || (n === stdN && e === p);
+  shakeAmp = ni.stable ? 0 : (ni.label.startsWith('Unbound') ? 0.13 : 0.07);
+  updateDecayBtn();
+  updateTable();
+}
+
+function snapStd(p){
+  clearPop(); restoreAuto();
+  state.p = clamp(p, 1, MAXZ);
+  state.n = MASS[state.p] - state.p;
+  state.e = state.p;
+  state.cfg = null;
+  sync(); updateUI();
+}
+pS.addEventListener('input', () => {
+  clearPop(); restoreAuto();
+  state.p = +pS.value;
+  if (state.auto){ state.n = MASS[state.p] - state.p; state.e = state.p; state.cfg = null; }
+  sync(); updateUI();
+});
+nS.addEventListener('input', () => { clearPop(); popAutoOff = false; state.n = +nS.value; sync(); updateUI(); });
+eS.addEventListener('input', () => { clearPop(); popAutoOff = false; state.e = +eS.value; state.cfg = null; sync(); updateUI(); });
+$('auto').addEventListener('change', ev => {
+  popAutoOff = false;
+  state.auto = ev.target.checked;
+  if (state.auto) snapStd(state.p); else updateUI();
+});
+$('next').addEventListener('click', () => snapStd(state.p + 1));
+$('prev').addEventListener('click', () => snapStd(state.p - 1));
+$('snap').addEventListener('click', () => snapStd(state.p));
+
+/* ---------- Click to pop ---------- */
+let mouse = null;
+const popStack = [];
+const snapState = () => ({ p: state.p, n: state.n, e: state.e, cfg: state.cfg ? state.cfg.slice() : null, auto: state.auto });
+let popAutoOff = false;
+function setManual(){ if (state.auto){ state.auto = false; $('auto').checked = false; popAutoOff = true; } }
+function restoreAuto(){ if (popAutoOff){ state.auto = true; $('auto').checked = true; } popAutoOff = false; }
+function nucXY(o){
+  const [jx, jy] = jit(o);
+  return [W / 2 + (o.x + jx) * rnCur, H / 2 + (o.y + jy) * rnCur];
+}
+function hitTest(x, y){
+  if (mode !== 'build') return null;
+  const eh = Math.max(er * 1.7, 16);
+  for (let k = NSH - 1; k >= 0; k--){
+    for (const o of shells[k]){
+      if (now - o.born < 0.9) continue;
+      if (Math.hypot(o.px - x, o.py - y) <= eh) return o;
+    }
+  }
+  const nh = Math.max(rnCur * 1.1, 9);
+  for (let i = order.length - 1; i >= 0; i--){
+    const o = order[i];
+    if (now - o.born < 0.8) continue;
+    const [nx, ny] = nucXY(o);
+    if (Math.hypot(nx - x, ny - y) <= nh) return o;
+  }
+  return null;
+}
+function showPop(m){
+  $('popT').textContent = m.title || '';
+  $('popB').textContent = m.big || '';
+  const ps = $('popS');
+  ps.textContent = m.status || ''; ps.className = 'ps ' + (m.cls || ''); ps.hidden = !m.status;
+  $('popL').textContent = (m.text || '').trim();
+  const pk = $('popK'); pk.textContent = m.key || ''; pk.hidden = !m.key;
+  $('popMsg').classList.toggle('wide', !!m.wide);
+  $('popUndo').hidden = popStack.length === 0 || !!decayPend;
+  $('popMsg').hidden = false;
+}
+function hidePop(){ $('popMsg').hidden = true; }
+function clearPop(){ popStack.length = 0; hidePop(); decayPend = null; fx.length = 0; }
+const isoName = (Z, N) => NAME[Z] + '-' + (Z + N);
+
+function popNucleon(o){
+  const isP = o.type === 'p';
+  if (isP && state.p <= 1){
+    showPop({ title:'Can’t pop that proton', big: isoName(state.p, state.n),
+              text:'Hydrogen has only one proton. Removing it would leave no element at all.' });
+    return;
+  }
+  const arr = isP ? protons : neutrons, i = arr.indexOf(o);
+  if (i < 0) return;
+  const b = snapState();
+  arr.splice(i, 1);
+  o.eject = true; o.dieAt = now;
+  o.ejAng = Math.hypot(o.x, o.y) < 0.3 ? Math.random() * TAU : Math.atan2(o.y, o.x);
+  dying.push(o);
+  if (isP) state.p--; else state.n--;
+  setManual(); popStack.push(b);
+  sync(); updateUI();
+  const ni = nucleusInfo(state.p, state.n);
+  const big = isoName(b.p, b.n) + ' → ' + isoName(state.p, state.n);
+  const cls = ni.stable ? 'ok' : 'warn';
+  if (!isP){
+    showPop({ title:'Popped a neutron', big, status: ni.label, cls,
+              text: 'Same element, new isotope. ' + ni.text });
+  } else {
+    const c = state.p - state.e;
+    const ion = c === 0 ? 'a neutral atom' : (c < 0 ? 'a negative ion (' : 'a positive ion (') + ionSym(state.p, c) + (c === 0 ? '' : ')');
+    showPop({ title:'Popped a proton', big, status: ni.label, cls,
+              text: 'New element: ' + NAME[b.p] + ' became ' + NAME[state.p] + '. Its electrons stayed, so it is now ' + ion +
+                    '. In nature this takes a nuclear reaction, not chemistry. ' + ni.text });
+  }
+}
+
+function popElectron(clicked){
+  if (state.e <= 0) return;
+  const cur = curCfg().slice();
+  let k = cur.length - 1;
+  while (k >= 0 && !cur[k]) k--;
+  if (k < 0) return;
+  const arr = shells[k];
+  let o = arr.includes(clicked) ? clicked : null;
+  if (!o){
+    let best = Infinity;
+    for (const c of arr){ const d = Math.hypot(c.px - clicked.px, c.py - clicked.py); if (d < best){ best = d; o = c; } }
+  }
+  if (!o) return;
+  const b = snapState();
+  arr.splice(arr.indexOf(o), 1);
+  o.eject = true; o.dieAt = now; o.ejAng = Math.atan2(o.py - H / 2, o.px - W / 2);
+  dying.push(o);
+  cur[k]--;
+  while (cur.length && cur[cur.length - 1] === 0) cur.pop();
+  state.e--; state.cfg = cur;
+  setManual(); popStack.push(b);
+  sync(); updateUI();
+  const bc = b.p - b.e, c = state.p - state.e;
+  let text = '';
+  if (bc === 0) text = 'Removing this first electron takes ' + IE1[state.p].toFixed(2) + ' eV (the first ionization energy).';
+  else if (bc > 0) text = 'Each further electron is harder to remove, because the positive ion holds the rest more tightly.';
+  else text = 'That took an extra electron back off the negative ion.';
+  if (clicked.k !== k) text += ' Outer electrons leave first, so an outer-shell electron popped instead.';
+  if (state.e === 0) text += state.p === 1 ? ' H⁺ is a bare proton, the particle acids hand off in reactions. It is not beta radiation: beta particles are electrons (\u03b2\u207b) or positrons (\u03b2\u207a) thrown out of a nucleus. A fast-moving bare proton is called proton radiation.' : ' Nothing is left but the bare nucleus.';
+  const status = c > 0 ? 'Positive ion (' + fmtCharge(c) + ')' : c < 0 ? 'Negative ion (' + fmtCharge(c) + ')' : 'Neutral atom';
+  showPop({ title:'Popped an electron', big: ionSym(state.p, bc) + ' → ' + ionSym(state.p, c), status, cls:'info', text });
+}
+
+function undoPop(){
+  const s0 = popStack.pop();
+  if (!s0) return;
+  Object.assign(state, s0);
+  $('auto').checked = state.auto;
+  if (!popStack.length) popAutoOff = false;
+  sync(); updateUI();
+  if (popStack.length){
+    const ni = nucleusInfo(state.p, state.n);
+    showPop({ title:'Undid the last pop', big: isoName(state.p, state.n) + '  ' + ionSym(state.p, state.p - state.e),
+              status: ni.label, cls: ni.stable ? 'ok' : 'warn', text: ni.text });
+  } else hidePop();
+}
+
+function canvasXY(ev){ const r = cv.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; }
+cv.addEventListener('pointermove', ev => { mouse = mode === 'build' ? canvasXY(ev) : null; });
+cv.addEventListener('pointerleave', () => { mouse = null; cv.style.cursor = 'default'; });
+cv.addEventListener('click', ev => {
+  if (mode !== 'build' || ev.button !== 0 || decayPend) return;
+  const [x, y] = canvasXY(ev);
+  const o = hitTest(x, y);
+  if (!o) return;
+  if (o.type === 'e') popElectron(o); else popNucleon(o);
+});
+$('popUndo').addEventListener('click', undoPop);
+$('popX').addEventListener('click', hidePop);
+if (location.protocol === 'file:') window.atomDebug = () => ({
+  state: JSON.parse(JSON.stringify(state)),
+  nuc: order.filter(o => now - o.born >= 0.8).map(o => { const [x, y] = nucXY(o); return { type: o.type, x, y }; }),
+  el: shells.flatMap((a, k) => a.filter(o => now - o.born >= 0.9).map(o => ({ k, x: o.px, y: o.py }))),
+  ie: IE1.length
+});
+
+/* ---------- Radioactive decay ---------- */
+const NEM = ['1-4','1-5','1-6','1-7','2-5','2-7','2-9','2-10','3-10','4-13','5-16'];
+const PEM = ['3-4','3-5','4-6','5-9','6-8','7-11','9-16','10-16'];
+const ECO = ['4-7','18-37','20-41','22-44','23-49','24-51','25-54','26-55','27-57','28-59','30-65','31-67','32-68','32-71','34-75','36-81'];
+const OVR = {
+  '17-36': { m:'b-', note:'This happens about 98% of the time; the other 2% capture an electron and become sulfur-36.' },
+  '19-40': { m:'b-', note:'This happens about 89% of the time. The other 11% capture an electron and become argon-40, which is where most of the argon in Earth’s air came from.' },
+  '29-64': { m:'ec', note:'This happens about 61% of the time (some of those by β⁺ instead); the other 39% beta-minus decay to zinc-64.' },
+  '35-80': { m:'b-', note:'This happens about 92% of the time; the rest become selenium-80.' }
+};
+const GAM = { '27-60':['1.17 MeV','1.33 MeV'], '11-24':['1.37 MeV','2.75 MeV'], '11-22':['1.27 MeV'],
+  '26-59':['1.10 MeV','1.29 MeV'], '25-54':['0.83 MeV'], '30-65':['1.12 MeV'], '27-57':['122 keV'] };
+const RKEY = {
+  a:'α (alpha) = a helium-4 nucleus: 2 protons + 2 neutrons, no electrons',
+  bm:'β⁻ (beta-minus) = a fast electron made inside the nucleus',
+  bp:'β⁺ (beta-plus) = a positron, the antimatter twin of the electron',
+  g:'γ (gamma) = a burst of very high-energy light',
+  nu:'ν = neutrino, ν̄ = antineutrino: almost massless, they pass through nearly everything',
+  p:'p = a single fast proton (proton radiation)',
+  n:'n = a free neutron (neutron radiation)'
+};
+function decayMode(Z, N){
+  if (nucleusInfo(Z, N).stable) return null;
+  const A = Z + N, key = Z + '-' + A;
+  const ns = (STABLE[Z] || []).map(a => a - Z), minN = Math.min(...ns), maxN = Math.max(...ns);
+  let m, est = false, note = '';
+  if (OVR[key]){ m = OVR[key].m; note = OVR[key].note; }
+  else if (key === '4-8') m = '2a';
+  else if (PEM.includes(key)) m = 'p';
+  else if (NEM.includes(key)) m = 'n';
+  else if ((N === 0 && Z >= 2) || N < Z - 4){ m = 'p'; est = !(N === 0 && Z === 2); }
+  else if (N > Math.max(maxN + 4, 2 * Z + 4)){ m = 'n'; est = true; }
+  else {
+    let best = null;
+    for (let z = 1; z <= MAXZ; z++)
+      if (z !== Z && (STABLE[z] || []).includes(A) && (best === null || Math.abs(z - Z) < Math.abs(best - Z))) best = z;
+    m = best !== null ? (best > Z ? 'b-' : 'b+') : (N > (minN + maxN) / 2 ? 'b-' : 'b+');
+    if (m === 'b+' && ECO.includes(key)) m = 'ec';
+  }
+  const dz = { 'b-':1, 'b+':-1, ec:-1, '2a':-2, p:-1, n:0 }[m];
+  const dn = { 'b-':-1, 'b+':1, ec:1, '2a':-2, p:0, n:-1 }[m];
+  return { m, Zd: Z + dz, Nd: N + dn, est, note, g: GAM[key] || [] };
+}
+let shakeAmp = 0, decayPend = null;
+const fx = [];
+function shakeNow(){
+  let a = shakeAmp;
+  if (decayPend) a = Math.max(a, 0.06) + 0.3 * smooth(decayPend.t0, decayPend.trig, now);
+  return a * (0.75 + 0.25 * Math.sin(now * 1.9));
+}
+function jit(o){
+  let jx = Math.sin(now * 2.3 + o.seed * 5) * 0.05, jy = Math.cos(now * 2.1 + o.seed * 7) * 0.05;
+  const a = mode === 'build' ? shakeNow() : 0;
+  if (a > 0){
+    jx += (Math.sin(now * 47 + o.seed * 31) + 0.6 * Math.sin(now * 29 + o.seed * 11)) * a;
+    jy += (Math.cos(now * 43 + o.seed * 23) + 0.6 * Math.cos(now * 31 + o.seed * 17)) * a;
+  }
+  return [jx, jy];
+}
+const HOLD = 3.0, FADE = 0.8;
+/* keep products out of the upper-left, where the info card sits */
+const okAng = a => { const d = ((a * 180 / Math.PI) % 360 + 360) % 360; return !(d > 150 && d < 290); };
+function randOk(){ return (-70 + Math.random() * 220) * Math.PI / 180; }
+function side(a){ for (const k of [2.5, -2.5, 1.8, -1.8]) if (okAng(a + k)) return a + k; return a + Math.PI; }
+function pairAng(x, y){
+  let best = 0, bv = -1;
+  for (let i = 0; i < 16; i++){
+    const a = (i % 2 ? 110 + Math.random() * 40 : 290 + Math.random() * 40) * Math.PI / 180;
+    const v = Math.min(edgeDist(x, y, a, 120), edgeDist(x, y, a + Math.PI, 120));
+    if (v > bv){ bv = v; best = a; }
+  }
+  return best;
+}
+function edgeDist(x, y, a, m){
+  const c = Math.cos(a), sn = Math.sin(a); let t = Infinity;
+  if (c > 1e-6) t = Math.min(t, (W - m - x) / c); if (c < -1e-6) t = Math.min(t, (m - x) / c);
+  if (sn > 1e-6) t = Math.min(t, (H - m - y) / sn); if (sn < -1e-6) t = Math.min(t, (m - y) / sn);
+  return Math.max(30, t);
+}
+function fxAdd(kind, props){ fx.push(Object.assign({ kind, t0: now, dur: 1, dist: 0, ang: 0, x0: W / 2, y0: H / 2 }, props)); }
+
+function drawFx(){
+  const Lf = Math.max(16, Rm * 0.08);
+  const label = (t, x, y) => {
+    ctx.save(); ctx.fillStyle = colText; ctx.font = '800 ' + Lf + 'px system-ui,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 6;
+    ctx.fillText(t, x, y); ctx.restore();
+  };
+  for (const f of fx){
+    if (f.dead) continue;
+    const u = (now - f.t0) / f.dur;
+    if (u < 0) continue;
+    const el = now - f.t0, ca = Math.cos(f.ang), sa = Math.sin(f.ang);
+    const fade = f.hold ? 1 - smooth(f.dur + f.hold, f.dur + f.hold + FADE, el) : 1 - smooth(0.8, 1, u);
+    if (f.hold && el > f.dur + f.hold + FADE) continue;
+    if (f.kind === 'boom'){
+      if (u < 1){
+        flash(f.x0, f.y0, er * 1.4, 'pos', u);
+        ctx.save(); ctx.globalAlpha = (1 - u) * 0.85; ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(f.x0, f.y0, er * (1 + u * 1.5), 0, TAU); ctx.fill(); ctx.restore();
+      }
+      continue;
+    }
+    if (f.kind === 'ein'){
+      if (u < 1){
+        const k = u * u * u, x = f.x0 + (f.x1 - f.x0) * k, y = f.y0 + (f.y1 - f.y0) * k;
+        sphere(x, y, er, 'e', 1); label(f.label, x, y - er * 1.6);
+      } else flash(f.x1, f.y1, rnCur * 1.3, 'e', (u - 1) / 0.8);
+      continue;
+    }
+    if (u > 1 && !f.hold && f.kind !== 'pos') continue;
+    if (f.kind === 'tag'){
+      const d = (f.dist || Rm * 1.25) * easeOutCubic(clamp(u));
+      ctx.save(); ctx.globalAlpha = fade; label(f.label, f.x0 + ca * d, f.y0 + sa * d - rnCur * 1.9); ctx.restore();
+      continue;
+    }
+    const d = f.dist * (f.hold ? easeOutCubic(clamp(u)) : clamp(u)), x = f.x0 + ca * d, y = f.y0 + sa * d;
+    if (f.kind === 'e' || f.kind === 'pos'){
+      const al = f.kind === 'pos' ? 1 : fade;
+      sphere(x, y, er, f.kind, al);
+      ctx.save(); ctx.globalAlpha = al; label(f.label, x, y - er * 1.6); ctx.restore();
+    } else if (f.kind === 'nu'){
+      const t0 = Math.max(0, d - Rm * 0.3);
+      ctx.save(); ctx.globalAlpha = fade * 0.7; ctx.strokeStyle = colText; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.moveTo(f.x0 + ca * t0, f.y0 + sa * t0); ctx.lineTo(x, y); ctx.stroke(); ctx.restore();
+      sphere(x, y, Math.max(5, er * 0.45), 'nu', fade, { noSign: true });
+      ctx.save(); ctx.globalAlpha = fade; label(f.label, x, y - er * 1.1); ctx.restore();
+    } else if (f.kind === 'g'){
+      const tt = Math.max(0, d - Rm * 0.4), A = Math.max(5, er * 0.55), k = TAU / (Rm * 0.07);
+      ctx.save(); ctx.globalAlpha = fade; ctx.strokeStyle = '#c58bff'; ctx.lineWidth = 3.5;
+      ctx.shadowColor = '#c58bff'; ctx.shadowBlur = 12; ctx.beginPath();
+      for (let i = 0; i <= 40; i++){
+        const t = tt + (d - tt) * i / 40, w = Math.sin(k * t - now * 20) * A;
+        const px = f.x0 + ca * t - sa * w, py = f.y0 + sa * t + ca * w;
+        if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+      }
+      ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.globalAlpha = fade; label(f.label, x, y - A - 6); ctx.restore();
+    }
+  }
+}
+
+function applyDecay(d){
+  const b = snapState(), Z0 = state.p, N0 = state.n, e0 = state.e;
+  const cx = W / 2, cy = H / 2, ang = d.m === 'b+' ? (-35 + Math.random() * 70) * Math.PI / 180 : randOk();
+  const proj = (o, dir) => o.x * Math.cos(dir) + o.y * Math.sin(dir);
+  const pick = (arr, n, dir) => arr.slice().sort((p, q) => proj(q, dir) - proj(p, dir)).slice(0, n);
+  const eject = (o, dir, dist) => {
+    const arr = o.type === 'p' ? protons : neutrons;
+    [o.ex0, o.ey0] = nucXY(o); o.ejDur = 1.8; o.ejLife = 1.8 + HOLD + FADE; o.ejDist = dist;
+    arr.splice(arr.indexOf(o), 1); o.eject = true; o.dieAt = now; o.ejAng = dir; dying.push(o);
+  };
+  const convert = (from, dir, delay) => {
+    const src = from === 'n' ? neutrons : protons, dst = from === 'n' ? protons : neutrons;
+    const o = pick(src, 1, dir)[0];
+    src.splice(src.indexOf(o), 1); o.type = from === 'n' ? 'p' : 'n'; dst.push(o);
+    o.morphFrom = from; o.morphAt = now + (delay || 0);
+    return o;
+  };
+  if (d.m === 'b-'){
+    const [x, y] = nucXY(convert('n', ang));
+    const a2 = side(ang);
+    fxAdd('e', { x0:x, y0:y, ang, dist:edgeDist(x, y, ang, 80), dur:1.8, hold:HOLD, label:'β⁻' });
+    fxAdd('nu', { x0:x, y0:y, ang:a2, dist:edgeDist(x, y, a2, 70), dur:1.5, hold:HOLD, label:'ν̄' });
+    state.p++; state.n--;
+  } else if (d.m === 'b+'){
+    const [x, y] = nucXY(convert('p', ang));
+    const a2 = side(ang);
+    fxAdd('pos', { x0:x, y0:y, ang, dist:Rm * 0.55, dur:1.3, label:'β⁺' });
+    fxAdd('nu', { x0:x, y0:y, ang:a2, dist:edgeDist(x, y, a2, 70), dur:1.5, hold:HOLD, label:'ν' });
+    state.p--; state.n++;
+  } else if (d.m === 'ec'){
+    const [x, y] = nucXY(convert('p', ang, 0.55));
+    fxAdd('ein', { x0:cx + Math.cos(ang) * SR[0] * Rm, y0:cy + Math.sin(ang) * SR[0] * Rm, x1:x, y1:y, dur:0.55, label:'e⁻' });
+    const a2 = side(ang);
+    fxAdd('nu', { x0:x, y0:y, ang:a2, dist:edgeDist(x, y, a2, 70), dur:1.5, hold:HOLD, label:'ν', t0:now + 0.55 });
+    state.p--; state.n++;
+  } else if (d.m === '2a'){
+    const os = pick(protons, 2, ang).concat(pick(neutrons, 2, ang));
+    let x = 0, y = 0;
+    for (const o of os){ const [a1, b1] = nucXY(o); x += a1 / 4; y += b1 / 4; }
+    const dd = edgeDist(x, y, ang, 120);
+    os.forEach(o => eject(o, ang, dd));
+    fxAdd('tag', { x0:x, y0:y, ang, dur:1.8, hold:HOLD, dist:dd, label:'α' });
+    state.p -= 2; state.n -= 2;
+  } else {
+    const o = pick(d.m === 'p' ? protons : neutrons, 1, ang)[0];
+    const [x, y] = nucXY(o);
+    const dd = edgeDist(x, y, ang, 120);
+    eject(o, ang, dd);
+    fxAdd('tag', { x0:x, y0:y, ang, dur:1.8, hold:HOLD, dist:dd, label:d.m });
+    if (d.m === 'p') state.p--; else state.n--;
+  }
+  d.g.forEach((en, i) => { const a = randOk(); fxAdd('g', { ang:a, dist:edgeDist(cx, cy, a, 120), dur:1.4, hold:HOLD, t0:now + 0.6 + i * 0.5, label:'γ ' + en }); });
+
+  const tB = now;
+  state.e = Math.max(0, Math.min(MAXZ, d.m === 'ec' ? e0 - 1 : e0 + (state.p - Z0)));
+  state.cfg = null;
+  setManual(); popStack.push(b);
+  sync();
+  for (const arr of shells) for (const o of arr) if (o.born >= tB) o.born += 0.9;
+  for (const o of dying){
+    if (o.type !== 'e' || o.dieAt !== tB || o.eject) continue;
+    if (d.m === 'ec') o.dieAt = tB - 1;
+    else { o.eject = true; o.ejAng = Math.atan2(o.py - cy, o.px - cx); }
+  }
+  updateUI();
+  showDecay(d, Z0, N0, e0);
+}
+
+function showDecay(d, Z0, N0, e0){
+  const Z = state.p, N = state.n, ni = nucleusInfo(Z, N), par = nucleusInfo(Z0, N0);
+  const T = { 'b-':'Beta-minus (β⁻) decay', 'b+':'Beta-plus (β⁺) decay', ec:'Electron capture',
+              '2a':'Alpha (α) breakup', p:'Proton emission', n:'Neutron emission' }[d.m];
+  let txt = '', key = [];
+  if (d.m === 'b-'){
+    txt = 'Inside the nucleus, a neutron turned into a proton. It shot out a fast electron (the beta particle) and an antineutrino. One more proton means a new element: ' + NAME[Z0] + ' became ' + NAME[Z] + '. The mass number stays ' + (Z + N) + '.';
+    key = ['bm', 'nu'];
+  } else if (d.m === 'b+'){
+    txt = 'Inside the nucleus, a proton turned into a neutron. It shot out a positron (an antimatter electron) and a neutrino. One fewer proton means ' + NAME[Z0] + ' became ' + NAME[Z] + '. The positron soon meets an ordinary electron, and both are annihilated into two 511 keV gamma rays flying off in opposite directions. PET scanners detect exactly these pairs.';
+    key = ['bp', 'g', 'nu'];
+  } else if (d.m === 'ec'){
+    txt = 'The nucleus pulled in one of its own inner-shell electrons. That electron and a proton combined into a neutron, releasing a neutrino. ' + NAME[Z0] + ' became ' + NAME[Z] + ' with the same mass number. An outer electron drops down to fill the gap and gives off an X-ray. No beta particle comes out.';
+    key = ['nu'];
+  } else if (d.m === '2a'){
+    txt = 'Beryllium-8 cannot hold together, so it splits into two alpha particles. One flies off and the other stays here, so beryllium became helium. Everyday alpha decay happens mostly in heavy elements like uranium and radium, which are past the end of this app.';
+    key = ['a'];
+  } else if (d.m === 'p'){
+    txt = (Z0 === 2 && N0 === 0 ? 'Two protons with no neutron (a "diproton") fall apart into two separate protons.'
+          : 'This nucleus has too many protons for its neutrons to hold, so it throws out a single proton almost instantly.') + ' ' + NAME[Z0] + ' became ' + NAME[Z] + '.';
+    key = ['p'];
+  } else {
+    txt = 'This nucleus has more neutrons than it can hold, so one neutron simply drips out, almost instantly. It stays ' + NAME[Z] + ', one mass number lighter. A free neutron is itself radioactive: with a half-life of about 10 minutes it beta-decays into a proton.';
+    key = ['n'];
+  }
+  if (d.g.length){
+    txt += ' The new nucleus is left with extra energy, which it releases as gamma ray' + (d.g.length > 1 ? 's' : '') + ' (' + d.g.join(' and ') + ').';
+    if (!key.includes('g')) key.push('g');
+  }
+  if (d.note) txt += ' ' + d.note;
+  if (par.text && !/^(Far from|It will)/.test(par.text)) txt += ' ' + NAME[Z0] + '-' + (Z0 + N0) + ': ' + par.text;
+  const dz = Z - Z0;
+  if (d.m === 'b-') txt += ' For a moment the atom is a +1 ion, then it grabs a free electron from its surroundings.';
+  else if (d.m !== 'ec' && dz < 0 && e0 > 0) txt += ' The ' + (dz === -1 ? 'extra electron drifts' : (-dz) + ' extra electrons drift') + ' away.';
+  if (d.est) txt += ' (Rough estimate: this nucleus is so far from stability that the app approximates how it decays.)';
+  const status = ni.stable ? 'Now stable' : (ni.label.startsWith('Unbound') ? 'Unbound: press Decay again' : 'Still radioactive: press Decay again');
+  showPop({ title: T, big: isoName(Z0, N0) + ' → ' + isoName(Z, N) + ({ '2a':' + α', p:' + p', n:' + n' }[d.m] || ''),
+            status, cls: ni.stable ? 'ok' : 'warn', text: txt, key: key.map(k => RKEY[k]).join('\n'), wide: true });
+}
+
+function updateDecayBtn(){
+  const btn = $('decayBtn');
+  btn.hidden = mode !== 'build' || nucleusInfo(state.p, state.n).stable;
+  btn.disabled = !!decayPend;
+}
+$('decayBtn').addEventListener('click', () => {
+  if (mode !== 'build' || decayPend) return;
+  const d = decayMode(state.p, state.n);
+  if (!d) return;
+  if (d.Zd > MAXZ){
+    showPop({ title:'Beta-minus (β⁻) decay', big: isoName(state.p, state.n) + ' → element 37', status:'Past the end of this app', cls:'info', wide:true,
+              text:'A neutron would turn into a proton, giving rubidium-' + (state.p + state.n) + ' (element 37). This app stops at krypton (element 36), so it cannot show the result.', key: RKEY.bm });
+    return;
+  }
+  if (d.m === 'ec' && state.e === 0){
+    showPop({ title:'Electron capture blocked', big: isoName(state.p, state.n), status:'No electron to capture', cls:'info', wide:true,
+              text:'This nucleus decays by grabbing one of its own inner electrons, but they have all been popped. A fully stripped nucleus cannot decay this way. Undo or add an electron back.' });
+    return;
+  }
+  hidePop();
+  decayPend = { t0: now, trig: now + 0.7, d };
+  updateDecayBtn();
+});
+if (location.protocol === 'file:') window.decayDebug = (Z, N) => decayMode(Z, N);
+if (location.protocol === 'file:') window.fxDebug = () => fx.map(f => ({ k: f.kind, a: Math.round(f.ang * 180 / Math.PI), d: Math.round(f.dist), t: +(now - f.t0).toFixed(2), x: Math.round(f.x0), y: Math.round(f.y0), dead: !!f.dead }));
+
+/* ---------- Reaction UI ---------- */
+for (const sel of [$('selA'), $('selB')]){
+  for (let z = 1; z <= 18; z++){
+    const o = document.createElement('option');
+    o.value = z; o.textContent = z + ' · ' + SYM[z] + ' · ' + NAME[z];
+    sel.appendChild(o);
+  }
+}
+$('selA').value = 8; $('selB').value = 8;
+$('selA').addEventListener('change', () => rxSet(+$('selA').value, rx.b, true));
+$('selB').addEventListener('change', () => rxSet(rx.a, +$('selB').value, true));
+$('apS').addEventListener('input', () => {
+  rx.playing = false;
+  rx.approach = +$('apS').value / 100;
+  rx.dir = rx.approach >= 1 ? -1 : 1;
+  rxUpdateInfo();
+});
+$('play').addEventListener('click', () => {
+  if (rx.playing){ rx.playing = false; rxUpdateInfo(); return; }
+  if (rx.approach >= 0.999) rx.dir = -1;
+  else if (rx.approach <= 0.001) rx.dir = 1;
+  rx.playing = true; rxUpdateInfo();
+});
+$('rxReset').addEventListener('click', () => { rx.approach = 0; rx.dir = 1; rx.playing = false; rxUpdateInfo(); });
+document.querySelectorAll('.pre').forEach(btn => btn.addEventListener('click', () => rxSet(+btn.dataset.a, +btn.dataset.b, true)));
+
+/* ---------- Mode, theme, misc ---------- */
+function setMode(m){
+  mode = m;
+  $('mBuild').classList.toggle('on', m === 'build');
+  $('mReact').classList.toggle('on', m === 'react');
+  $('ctlBuild').hidden = m !== 'build'; $('ctlReact').hidden = m !== 'react';
+  $('infoBuild').hidden = m !== 'build'; $('infoReact').hidden = m !== 'react';
+  $('hint').hidden = m !== 'build';
+  if (m === 'react'){ clearPop(); mouse = null; cv.style.cursor = 'default'; rxCompute(); rxUpdateInfo(); updateDecayBtn(); }
+  else updateUI();
+}
+$('mBuild').addEventListener('click', () => setMode('build'));
+$('mReact').addEventListener('click', () => { setMode('react'); if (rx.approach === 0) rx.playing = false; });
+$('hlV').addEventListener('change', ev => { hlOn = ev.target.checked; });
+
+document.addEventListener('keydown', ev => {
+  if (mode !== 'build') return;
+  const t = ev.target;
+  if (t && (t.tagName === 'SELECT' || (t.tagName === 'INPUT' && t.type === 'range'))) return;
+  if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp'){ ev.preventDefault(); snapStd(state.p + 1); }
+  else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown'){ ev.preventDefault(); snapStd(state.p - 1); }
+});
+
+$('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const light = root.getAttribute('data-theme') !== 'light';
+  root.setAttribute('data-theme', light ? 'light' : 'dark');
+  $('themeBtn').textContent = light ? 'Dark mode' : 'Light mode';
+  readTheme();
+});
+const fsBtn = $('fsBtn');
+if (!document.documentElement.requestFullscreen) fsBtn.hidden = true;
+fsBtn.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+});
+document.addEventListener('fullscreenchange', () => {
+  fsBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+});
+
+/* ---------- Go ---------- */
+readTheme(); resize();
+rxCompute();
+sync(true); updateUI();
+requestAnimationFrame(ts => { last = ts; frame(ts); });
+})();
+</script>
+</body>
+</html>
