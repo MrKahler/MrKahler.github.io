@@ -40,8 +40,7 @@ h1{font-family:var(--display);font-weight:700;font-size:clamp(40px,6vw,68px);lin
 h1 .c1{color:var(--pink)} h1 .c2{color:var(--grape)} h1 .c3{color:var(--coral)}
 h1 .lab{display:inline-block;background:var(--sun);border:3px solid var(--ink);border-radius:18px;padding:0 14px 4px;transform:rotate(-2deg);box-shadow:4px 4px 0 var(--ink);margin-left:6px}
 .bubble{position:relative;display:inline-block;margin-top:20px;background:#fff;border:3px solid var(--ink);border-radius:20px;padding:12px 18px;font-weight:700;font-size:17px;max-width:560px;box-shadow:4px 4px 0 var(--ink);min-height:52px}
-.bubble::before{content:"";position:absolute;left:-17px;bottom:14px;border:9px solid transparent;border-right:14px solid var(--ink)}
-.bubble::after{content:"";position:absolute;left:-10px;bottom:17px;border:6px solid transparent;border-right:10px solid #fff}
+.bubble::before{content:"";position:absolute;left:-11px;top:50%;width:16px;height:16px;margin-top:-8px;background:#fff;border-left:3px solid var(--ink);border-bottom:3px solid var(--ink);border-bottom-left-radius:3px;transform:rotate(45deg)}
 .bubble small{display:block;font-weight:600;color:var(--ink-soft);font-size:13px;margin-top:4px}
 
 /* ---------- filters ---------- */
@@ -95,7 +94,7 @@ footer em{font-style:normal;color:var(--ink)}
 <header class="wrap">
   <div class="hero">
     <div class="tony" id="tony" role="button" tabindex="0" aria-label="Click Tony for a joke">
-      <img src="assets/tony.svg" alt="Tony Bony, a friendly cartoon skeleton in a chef hat">
+      <img src="assets/tony.svg" alt="Tony Bony, a friendly cartoon skeleton">
     </div>
     <div class="hero-text">
       <p class="kicker">Mr. Kahler's science demos</p>

@@ -146,6 +146,19 @@
       "about": "Stack a video's frames into a 3D block so that time becomes a direction you can see. Moving objects trace out tubes and curves through the block, which turns motion into a shape."
     },
     {
+      "id": "cross-section-viz",
+      "title": "Slice: 3D & 4D Cross-Sections",
+      "file": "demos/cross-section-viz.html",
+      "category": "physics",
+      "grades": "6-9",
+      "blurb": "Slice shapes with a plane to see their cross-sections, then try it on 4D shapes.",
+      "about": "Drop in spheres, cubes, cones, a torus (even a hand), then tilt and slide a cutting plane to watch the 2D slice change. Then step up a dimension: slide a 3D 'hyperplane' through a tesseract, hypersphere, 5-cell, or 24-cell and see the 3D shapes that appear, grow, and morph.",
+      "source": {
+        "type": "local",
+        "path": "Downloads/3d4dcross-section-viz.html"
+      }
+    },
+    {
       "id": "ml-pixel-trainer",
       "title": "How Machines Learn: Pixel Trainer",
       "file": "demos/ml-pixel-trainer.html",

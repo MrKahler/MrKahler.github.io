@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 -50 160 302" style="overflow:visible">
-<g id="tb-tony" class="hatted">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 8 160 246" style="overflow:visible">
+<g id="tb-tony" >
     <!-- LEGS (behind the torso) -->
     <g id="tb-coatBack" class="tbCoat" style="display:none"><path d="M80 146 H120 Q130 149 131 162 L132 214 Q100 220 68 214 L69 162 Q70 149 80 146 Z" fill="#e2e4f1" stroke="#2d2452" stroke-width="2.3" stroke-linejoin="round"/><path d="M100 150 V214" stroke="#d2d5e6" stroke-width="2"/></g>
     <g id="tb-legs">
@@ -172,9 +172,6 @@
           <g id="tb-browR" data-pivot="119 62">
 <path d="M125 62.5 L113 61.5" stroke="#2d2452" stroke-width="3" fill="none" stroke-linecap="round"/>
           </g>
-        </g>
-        <!-- HAT SLOT: drawn in front of the skull, moves with the head -->
-        <g id="tb-hatSlot" data-pivot="100 40"><g transform="translate(100 40) scale(1.4) translate(-60 -39)"><path d="M41 33 L35 -2 C30 -24 90 -24 85 -2 L79 33Z" fill="#fff" stroke="#2d2452" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 31 L47 -6 M60 31 V-10 M70 31 L73 -6" stroke="#e3dcf2" stroke-width="3" stroke-linecap="round"/><path d="M40 -12 C46 -18 54 -19 60 -18" stroke="#fff" stroke-width="3" fill="none" opacity=".9"/><rect x="38" y="28" width="44" height="11" rx="3" fill="#e9e2f7" stroke="#2d2452" stroke-width="2"/></g>
         </g>
     </g>
   </g>
