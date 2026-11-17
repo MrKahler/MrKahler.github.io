@@ -94,6 +94,19 @@
       "about": "A step-by-step walkthrough of beta decay. Students advance through each moment as a neutron becomes a proton, and the lab tracks charge and particle counts so they can check that everything balances."
     },
     {
+      "id": "bomb-squad",
+      "title": "Tony Bony's Bomb Squad",
+      "file": "demos/bomb-squad.html",
+      "category": "atoms",
+      "grades": "4-9",
+      "blurb": "Balance the chemical equation before the timer hits zero to disarm the bomb!",
+      "source": {
+        "type": "artifact",
+        "slug": "2661223b-d0e3-4e1f-8835-b64531d8f91c"
+      },
+      "about": "Drag number and element tiles into the equation until the atoms match on both sides. Ten levels build from counting atoms (big number × little number) to real class demos: electrolysis, rust, elephant toothpaste, burning methane, lampblack, baking soda and vinegar, and untarnishing silver. Tony walks students through the first two levels, and a Practice mode turns the timer off."
+    },
+    {
       "id": "pane-fracture-lab",
       "title": "Pane Fracture Lab",
       "file": "demos/pane-fracture-lab.html",

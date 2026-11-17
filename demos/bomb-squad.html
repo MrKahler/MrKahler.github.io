@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tony Bony's Bomb Squad</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Bungee&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#2d2452;--bone:#fff6e4;--scr:#0c2a24;--glow:#b9ffb0;--amber:#ffcf3d}
+html,body{min-height:100%}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);user-select:none;-webkit-user-select:none;
+  background-color:#2b2f5e;background-image:radial-gradient(circle at 20% 10%,#4a3f8f 0,transparent 50%),radial-gradient(circle at 90% 90%,#7a2f5f 0,transparent 45%);
+  background-attachment:fixed;overflow-x:hidden}
+.dots{position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.07) 3px,transparent 3px);background-size:44px 44px}
+header{position:relative;z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 18px;color:#fff}
+.logo{font-family:'Bungee',cursive;font-size:clamp(18px,2.2vw,28px);text-shadow:3px 3px 0 #e5232f;margin-right:auto;white-space:nowrap}
+.hbtn{font:inherit;font-weight:600;font-size:15px;background:rgba(0,0,0,.28);color:#fff;border:2px solid rgba(255,255,255,.85);border-radius:999px;padding:5px 13px;cursor:pointer}
+.hbtn:hover{background:rgba(255,255,255,.15)}
+#lvTag{font-weight:700;background:#ffcf3d;color:var(--ink);border-radius:999px;padding:5px 14px;font-size:15px}
+
+/* ---------- play layout ---------- */
+#play{position:relative;z-index:2;display:grid;grid-template-columns:250px 1fr;gap:6px;max-width:1350px;margin:0 auto;padding:0 14px 18px}
+#tonyCol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;min-height:470px}
+#bubble{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:10px 14px;font-weight:600;font-size:17px;line-height:1.3;
+  box-shadow:0 5px 0 rgba(0,0,0,.25);position:relative;margin-bottom:12px;width:100%;min-height:60px;transition:transform .2s}
+#bubble:after{content:"";position:absolute;bottom:-16px;left:50%;margin-left:-10px;border:12px solid transparent;border-top:16px solid var(--ink)}
+#bubble.pop{transform:scale(1.04)}
+#bubble b{color:#c2185b}
+#tony{width:220px;height:auto}
+#stage{display:flex;flex-direction:column;align-items:center;min-width:0}
+
+/* ---------- bomb ---------- */
+#bombWrap{position:relative;padding:190px 74px 26px;width:100%;max-width:1060px}
+#bombArt{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1;pointer-events:none;transition:filter .3s}
+#bombArt.charred{filter:brightness(.38) saturate(.35)}
+#smoke{position:absolute;inset:0;z-index:6;pointer-events:none}
+.puff{position:absolute;border-radius:50%;background:radial-gradient(circle at 40% 35%,#d9d6e0,#8a8698 60%,#5b5768);opacity:0;animation:puff 4.2s ease-out forwards}
+@keyframes puff{0%{transform:scale(.1);opacity:0}12%{opacity:.95}60%{opacity:.85}100%{transform:scale(1.35) translateY(-60px);opacity:0}}
+.kapoof{position:absolute;left:50%;top:35%;transform:translate(-50%,-50%) rotate(-5deg);font-family:'Bungee',cursive;font-size:clamp(50px,8vw,100px);color:#ffcf3d;
+  text-shadow:5px 5px 0 #e5232f,10px 10px 0 var(--ink);animation:kp 4.2s forwards;white-space:nowrap}
+@keyframes kp{0%{transform:translate(-50%,-50%) scale(.2) rotate(-20deg)}10%{transform:translate(-50%,-50%) scale(1.1) rotate(-5deg)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.05) rotate(-5deg)}}
+#tutBar{background:#ffcf3d;border:3px solid var(--ink);border-radius:999px;padding:6px 8px 6px 18px;font-size:17px;display:flex;gap:12px;align-items:center;margin:4px 0 -6px;position:relative;z-index:7;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+#tutBar .sbtn{background:#fff}
+.at{border-radius:8px;padding:0 2px;transition:background .2s,box-shadow .2s}
+.at.hl{background:rgba(255,207,61,.38);box-shadow:0 0 0 3px #ffcf3d,0 0 18px 4px rgba(255,207,61,.6);color:#fff}
+.coef.hlc,.slot.hlc{box-shadow:0 0 0 3px #ffcf3d,0 0 14px 3px rgba(255,207,61,.55);border-radius:8px}
+.sc b{display:inline-block;min-width:1em;text-align:center;border-radius:6px;transition:all .2s}
+.sc b.hl{background:#ffcf3d;color:var(--ink);transform:scale(1.45);box-shadow:0 0 12px 3px rgba(255,207,61,.7);padding:0 3px}
+.spot{outline:4px solid #ffcf3d!important;outline-offset:5px;border-radius:14px;animation:spotP 1s infinite}
+@keyframes spotP{50%{outline-color:#fff6b0;box-shadow:0 0 22px 6px rgba(255,207,61,.55)}}
+#disarm.pressing{transform:translateY(4px);box-shadow:0 2px 0 var(--ink);filter:brightness(1.3)}
+.pcb{position:absolute;left:26px;bottom:12px;width:150px;height:48px;border:3px solid var(--ink);border-radius:7px;
+  background:#1f7a3a repeating-linear-gradient(90deg,transparent 0 13px,rgba(255,214,102,.55) 13px 15px,transparent 15px 26px);box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+.ic{position:absolute;left:12px;top:9px;width:70px;height:24px;background:#18181f;border-radius:3px;box-shadow:0 2px 0 rgba(0,0,0,.4)}
+.ic:before,.ic:after{content:"";position:absolute;left:4px;right:4px;height:5px;background:repeating-linear-gradient(90deg,#d6dbe6 0 4px,transparent 4px 8px)}
+.ic:before{top:-5px}.ic:after{bottom:-5px}
+.ic span,.ic2 span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#d8d8e8;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:.5px}
+.ic span:before{content:"";position:absolute;left:4px;top:4px;width:4px;height:4px;border-radius:50%;background:#555}
+.res{position:absolute;width:24px;height:9px;border-radius:5px;background:linear-gradient(90deg,#e9d3a6 0 5px,#c0392b 5px 8px,#e9d3a6 8px 11px,#7a4a1a 11px 14px,#e9d3a6 14px 17px,#f1c40f 17px 19px,#e9d3a6 19px);border:1.5px solid var(--ink)}
+.res.r1{left:94px;top:8px}.res.r2{left:94px;top:27px}
+.pcb .cap{position:absolute;left:124px;top:10px;width:14px;height:20px;border-radius:5px;background:linear-gradient(90deg,#2f6fd6,#7fb0ff 40%,#2f6fd6);border:1.5px solid var(--ink)}
+.pled{position:absolute;left:126px;top:33px;width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 6px #ff3b3b;animation:blink .7s steps(2) infinite}
+.ic2{position:absolute;right:30px;bottom:18px;width:54px;height:30px;background:#18181f;border:2px solid var(--ink);border-radius:3px}
+.ic2:before,.ic2:after{content:"";position:absolute;top:4px;bottom:4px;width:5px;background:repeating-linear-gradient(#d6dbe6 0 3px,transparent 3px 6px)}
+.ic2:before{left:-7px}.ic2:after{right:-7px}
+.ov.side{background:rgba(20,14,48,.3);backdrop-filter:none;justify-content:flex-end;padding-left:280px}
+.ov.side .card{max-width:600px}
+.fact{background:#e8f4ff;border:3px dashed #3f6fe0;border-radius:16px;padding:10px 14px;margin-top:12px;font-size:17px}
+.fact .eqn{display:block;text-align:center;font-weight:700;font-size:20px;margin:6px 0}
+#bombWrap.shake{animation:shake .45s}
+@keyframes shake{0%,100%{transform:translate(0)}20%{transform:translate(-10px,3px) rotate(-1deg)}40%{transform:translate(9px,-3px) rotate(1deg)}60%{transform:translate(-6px,2px)}80%{transform:translate(4px,-1px)}}
+.sticks{position:absolute;left:0;right:0;top:70px;bottom:0;display:flex;flex-direction:column;gap:4px}
+.stick{flex:1;position:relative;border:3.5px solid var(--ink);border-radius:30px/50%;
+  background:linear-gradient(to bottom,#ff7a63 0,#e2402e 30%,#c9311f 70%,#9e2217 100%);box-shadow:inset 0 5px 0 rgba(255,255,255,.25)}
+.stick:before,.stick:after{content:"";position:absolute;top:-3.5px;bottom:-3.5px;width:30px;border:3.5px solid var(--ink);border-radius:50%;background:radial-gradient(circle at 50% 50%,#6b4a2a 0 3px,#f0d3a2 4px,#d9b27a 100%)}
+.stick:before{left:-3.5px}.stick:after{right:-3.5px}
+.stick span{position:absolute;top:50%;transform:translateY(-50%);font-family:'Bungee',cursive;color:#ffe9a8;font-size:15px;letter-spacing:1px;text-shadow:1px 1px 0 var(--ink)}
+.stick .tl{left:18%}.stick .tr{right:18%}
+.strap{position:absolute;top:62px;bottom:-6px;width:24px;background:linear-gradient(90deg,#4f8a33,#6fb04a 50%,#4f8a33);border:3px solid var(--ink);border-radius:6px;z-index:1}
+.strap:after{content:"";position:absolute;inset:3px 4px;border-left:2px dashed rgba(255,255,255,.55);border-right:2px dashed rgba(255,255,255,.55)}
+.strap.l{left:24px}.strap.r{right:24px}
+#wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible}
+.dangerTag{position:absolute;bottom:20px;left:50%;transform:translateX(-50%) rotate(-1.5deg);z-index:2;background:#ffe14d;border:3px solid var(--ink);border-radius:8px;padding:3px 14px;
+  font-family:'Bungee',cursive;font-size:13px;letter-spacing:1px;white-space:nowrap;box-shadow:0 3px 0 rgba(0,0,0,.3);
+  background-image:repeating-linear-gradient(45deg,transparent 0 10px,rgba(0,0,0,.07) 10px 20px)}
+
+.device{position:relative;z-index:3;background:linear-gradient(#a9b6d6,#8796bd);border:4px solid var(--ink);border-radius:26px;padding:14px 18px 14px;box-shadow:0 8px 0 rgba(0,0,0,.3),inset 0 4px 0 rgba(255,255,255,.4)}
+.screw{position:absolute;width:13px;height:13px;border-radius:50%;background:#dfe5f3;border:2.5px solid var(--ink)}
+.screw:after{content:"";position:absolute;left:1px;right:1px;top:3.5px;height:2px;background:var(--ink);transform:rotate(35deg)}
+.screw.a{left:8px;top:8px}.screw.b{right:8px;top:8px}.screw.c{left:8px;bottom:8px}.screw.d{right:8px;bottom:8px}
+.devTop{display:flex;align-items:center;gap:14px;margin:0 8px 10px}
+.ledBox{position:relative;background:#140c0c;border:4px solid var(--ink);border-radius:12px;padding:4px 14px 2px;box-shadow:inset 0 0 12px #000}
+.ledBox small{position:absolute;top:-13px;left:10px;font-size:11px;font-weight:700;background:var(--ink);color:#fff;border-radius:6px;padding:0 6px}
+.led{--on:#ff2d2d;line-height:0;padding:6px 0 4px}
+.led svg{display:block;height:clamp(40px,4.4vw,54px);width:auto}
+.led .sg{fill:rgba(255,45,45,.09)}
+.led .sg.on{fill:var(--on);filter:drop-shadow(0 0 4px var(--on))}
+.led.urgent svg{animation:blink .5s steps(2) infinite}
+.led.safe{--on:#3dff6b}
+.led.safe .sg:not(.on){fill:rgba(61,255,107,.08)}
+@keyframes blink{50%{opacity:.35}}
+.devLabel{font-family:'Bungee',cursive;font-size:clamp(13px,1.6vw,18px);color:var(--ink);line-height:1.05;margin-right:auto}
+.devLabel small{display:block;font-family:'Fredoka';font-size:12px;font-weight:600;opacity:.7}
+.lights{display:flex;gap:8px}
+.lt{width:20px;height:20px;border-radius:50%;border:3px solid var(--ink);display:block}
+.lt.r{background:#ff3b3b;animation:blink 1s steps(2) infinite}.lt.y{background:#ffd23f}.lt.g{background:#3a5a3a}
+.lt.g.on{background:#3dff6b;box-shadow:0 0 10px #3dff6b}
+.screen{position:relative;background:var(--scr);border:4px solid var(--ink);border-radius:18px;padding:12px 14px 12px;color:var(--glow);overflow:hidden;
+  box-shadow:inset 0 0 30px rgba(0,0,0,.7);min-height:200px}
+.screen:before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.035) 0 2px,transparent 2px 4px)}
+.scrTitle{font-family:'Orbitron',monospace;font-weight:700;font-size:12px;letter-spacing:2px;opacity:.75;text-align:center;margin-bottom:6px}
+#eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;padding:16px 0 12px;font-weight:600;font-size:clamp(24px,3vw,38px)}
+.term{display:inline-flex;align-items:center;gap:4px;position:relative;white-space:nowrap}
+.formula sub{font-size:.62em;vertical-align:-.25em}
+.coef{color:#fff;font-weight:700}
+.plus{opacity:.8}
+.arrow{position:relative;font-size:1.2em;padding:0 6px;color:#fff}
+.arrow small{position:absolute;top:-.9em;left:50%;transform:translateX(-50%);font-size:.42em;white-space:nowrap;color:var(--amber)}
+.catTag{position:absolute;top:-1.15em;left:50%;transform:translateX(-50%);font-size:.36em;color:var(--amber);letter-spacing:1px;white-space:nowrap}
+.slot{display:inline-flex;align-items:center;justify-content:center;min-width:1.45em;height:1.45em;padding:0 .12em;border:3px dashed var(--amber);border-radius:10px;
+  color:#fff;background:rgba(255,207,61,.08);cursor:pointer;font-weight:700;transition:background .15s,transform .15s;vertical-align:middle;line-height:1}
+.slot.el{min-width:1.35em;border-style:dashed;border-color:#7fe3ff;background:rgba(127,227,255,.08);border-radius:50%}
+.slot.full{border-style:solid;background:rgba(255,207,61,.22)}
+.slot.el.full{background:rgba(127,227,255,.22)}
+.slot.target{animation:pulse .8s infinite}
+.slot.hover{transform:scale(1.15);background:rgba(255,255,255,.3)}
+.slot.wrong{border-color:#ff5050;background:rgba(255,60,60,.3)}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(255,207,61,.35)}}
+#scanner{border-top:2px dashed rgba(185,255,176,.3);padding-top:8px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;font-size:17px}
+.scLbl{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;opacity:.75;width:100%;text-align:center}
+.sc{display:flex;align-items:center;gap:6px;border:2px solid rgba(185,255,176,.35);border-radius:999px;padding:3px 12px 3px 5px;font-weight:600}
+.sc.ok{border-color:#3dff6b;color:#d8ffd2}.sc.bad{border-color:#ff6b6b;color:#ffd0d0}
+.sc .side{font-size:11px;opacity:.6}
+.dot{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);color:var(--ink);font-size:12px;font-weight:700}
+.broken{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap;color:#ffb3b3;font-weight:600}
+.broken .static{font-family:'Orbitron';letter-spacing:2px;animation:blink 1.2s steps(2) infinite}
+.sbtn{font:inherit;font-weight:700;font-size:14px;border:3px solid var(--ink);border-radius:999px;padding:4px 12px;background:#ffcf3d;color:var(--ink);cursor:pointer}
+/* counting drill */
+.cRow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;padding:8px 0;border-bottom:1px dashed rgba(185,255,176,.18)}
+.cRow:last-child{border-bottom:0}
+.cMol{font-size:clamp(24px,2.8vw,34px);font-weight:700;min-width:4.5em;text-align:right;color:#fff}
+.cMol .bigc{color:var(--amber)}
+.mols{display:flex;gap:8px;flex-wrap:wrap;max-width:330px}
+.mol{display:flex;gap:2px;padding:4px 6px;background:rgba(255,255,255,.07);border-radius:12px}
+.atom{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(0,0,0,.6)}
+.cAns{display:flex;gap:12px;font-size:clamp(22px,2.6vw,30px);font-weight:600;align-items:center}
+.devBottom{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:12px;flex-wrap:wrap}
+#disarm{font-family:'Bungee',cursive;font-size:clamp(18px,2.2vw,26px);color:#fff;background:radial-gradient(circle at 40% 30%,#ff6b6b,#d61f1f 60%,#a51010);
+  border:4px solid var(--ink);border-radius:999px;padding:8px 30px;cursor:pointer;box-shadow:0 6px 0 var(--ink);text-shadow:2px 2px 0 var(--ink);transition:transform .08s}
+#disarm:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.gbtn{font:inherit;font-weight:700;font-size:15px;border:3px solid var(--ink);border-radius:999px;padding:6px 14px;background:#e9edf7;color:var(--ink);cursor:pointer;box-shadow:0 4px 0 var(--ink)}
+.gbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+
+/* ---------- tiles ---------- */
+.tray{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.1);border:3px solid rgba(255,255,255,.35);border-radius:22px;padding:10px 18px;margin-top:2px;color:#fff}
+.tgroup{display:flex;flex-direction:column;align-items:center;gap:6px}
+.trayLbl{font-weight:600;font-size:14px;opacity:.85}
+.tiles{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tile{touch-action:none;cursor:grab;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--ink);
+  background:linear-gradient(#fff3a8,#ffcf3d);border:3.5px solid var(--ink);border-radius:12px;box-shadow:0 5px 0 var(--ink);transition:transform .1s}
+.tile:hover{transform:translateY(-3px)}
+.tile.sel{outline:4px solid #fff;outline-offset:3px;transform:translateY(-3px)}
+.tile.elt{border-radius:50%;font-size:22px}
+.ghost{position:fixed;z-index:50;pointer-events:none;transform:translate(-50%,-50%) scale(1.15) rotate(-6deg);box-shadow:0 10px 20px rgba(0,0,0,.4)}
+
+/* ---------- overlay styles ---------- */
+.ov{position:fixed;inset:0;z-index:20;background:rgba(20,14,48,.72);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.card{background:var(--bone);border:5px solid var(--ink);border-radius:30px;padding:26px 30px;max-width:720px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 12px 0 rgba(0,0,0,.35);position:relative}
+.card h2{font-family:'Bungee',cursive;font-size:clamp(24px,3.4vw,38px);line-height:1.1;color:#c2185b;margin-bottom:6px}
+.card h3{font-size:19px;margin:14px 0 6px}
+.card p,.card li{font-size:18px;line-height:1.4}
+.card ol,.card ul{padding-left:24px}
+.card li{margin:6px 0}
+.demo{display:inline-block;background:#7a1fff;color:#fff;font-weight:600;font-size:14px;border-radius:999px;padding:3px 12px;margin-bottom:10px}
+.trick{background:#fff3c4;border:3px dashed #e0a800;border-radius:16px;padding:10px 14px;margin-top:12px}
+.trick b{color:#b35c00}
+.btnRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.big{font-family:'Bungee',cursive;font-size:20px;color:#fff;background:#e5232f;border:4px solid var(--ink);border-radius:999px;padding:8px 24px;cursor:pointer;box-shadow:0 5px 0 var(--ink)}
+.big.g{background:#2fb35a}.big.b{background:#3f6fe0}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.finalEq{background:var(--scr);color:var(--glow);border:4px solid var(--ink);border-radius:14px;padding:10px;text-align:center;font-size:clamp(20px,2.6vw,30px);font-weight:600;margin:10px 0}
+.finalEq sub{font-size:.62em}
+.finalEq .fc{color:var(--amber)}
+.stars{font-size:44px;text-align:center;letter-spacing:6px}
+.stars .off{filter:grayscale(1) opacity(.3)}
+.boomTxt{font-family:'Bungee',cursive;font-size:clamp(50px,9vw,96px);color:#ffcf3d;text-shadow:5px 5px 0 #e5232f,9px 9px 0 var(--ink);text-align:center;transform:rotate(-4deg);animation:boomIn .6s cubic-bezier(.3,1.8,.5,1)}
+@keyframes boomIn{from{transform:scale(.2) rotate(-20deg)}}
+#flash{position:fixed;inset:0;z-index:30;background:#fff;pointer-events:none;opacity:0}
+#flash.go{animation:flash .7s}
+@keyframes flash{0%{opacity:1}100%{opacity:0}}
+.confetti{position:fixed;top:-20px;width:12px;height:18px;z-index:40;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---------- menu ---------- */
+#menu{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:10px 20px 40px;color:#fff;text-align:center}
+#menu h1{font-family:'Bungee',cursive;font-size:clamp(38px,6.5vw,84px);line-height:1;text-shadow:5px 5px 0 #e5232f,9px 9px 0 var(--ink)}
+#menu .sub{font-size:clamp(18px,2vw,26px);margin:10px 0 20px}
+.lvGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-top:10px}
+.lvCard{background:var(--bone);color:var(--ink);border:4px solid var(--ink);border-radius:22px;padding:12px 10px 10px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.35);transition:transform .12s;position:relative;text-align:center}
+.lvCard:hover{transform:translateY(-4px) rotate(-1deg)}
+.lvCard.locked{filter:grayscale(1);opacity:.55;cursor:not-allowed}
+.lvCard .num{font-family:'Bungee',cursive;font-size:30px;color:#e5232f}
+.lvCard .nm{font-weight:700;font-size:17px;line-height:1.15;min-height:2.3em}
+.lvCard .kind{font-size:13px;opacity:.7}
+.lvCard .st{font-size:20px;letter-spacing:2px}
+.lvCard .tm{position:absolute;top:8px;right:10px;font-family:'Orbitron';font-size:12px;background:#140c0c;color:#ff4d4d;border-radius:6px;padding:1px 6px}
+.menuBtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.credit{margin-top:26px;font-size:14px;opacity:.75}
+.hidden{display:none!important}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.seg button{font:inherit;font-weight:600;font-size:16px;border:3px solid var(--ink);border-radius:999px;padding:5px 14px;background:#fff;cursor:pointer}
+.seg button.on{background:#ffcf3d}
+
+@media (max-width:900px){
+  #play{grid-template-columns:1fr}
+  #tonyCol{flex-direction:row;min-height:0;gap:10px;align-items:flex-end}
+  #tony{width:120px}
+  #bubble{margin-bottom:30px}
+  #bubble:after{left:auto;right:-22px;bottom:14px;border:10px solid transparent;border-left:16px solid var(--ink);margin:0}
+  #tonyCol{flex-direction:row}
+  #bombWrap{padding:150px 40px 20px}
+  .pcb,.ic2{display:none}
+  .ov.side{padding-left:20px;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="dots"></div>
+<div id="flash"></div>
+<header>
+  <div class="logo">🦴 Tony Bony's Bomb Squad</div>
+  <span id="lvTag" class="hidden"></span>
+  <button class="hbtn" id="hLevels">🗺 Levels</button>
+  <button class="hbtn" id="hManual">📖 Field Manual</button>
+  <button class="hbtn" id="hSettings">⚙ Settings</button>
+</header>
+
+<!-- MENU -->
+<section id="menu">
+  <h1>BOMB SQUAD</h1>
+  <div class="sub">Balance the chemical equation to disarm the bomb before the timer hits zero!</div>
+  <div class="lvGrid" id="lvGrid"></div>
+  <div class="menuBtns">
+    <button class="gbtn" id="mManual">📖 Read the Field Manual</button>
+    <button class="gbtn" id="mUnlock">🔓 Unlock all levels (teacher)</button>
+    <button class="gbtn" id="mReset">↺ Reset progress</button>
+  </div>
+  <div class="credit">Created by Scott Kahler (Mr. Kahler) · © 2026 S. Kahler Teaching</div>
+</section>
+
+<!-- PLAY -->
+<section id="play" class="hidden">
+  <div id="tonyCol">
+    <div id="bubble">Hi! I'm Tony!</div>
+    <canvas id="tony" width="300" height="420"></canvas>
+  </div>
+  <div id="stage">
+    <div id="tutBar" class="hidden">🎓 <b>TONY'S LESSON:</b> watch how a bomb tech solves it <button class="sbtn" id="skipTut">Skip ▶</button></div>
+    <div id="bombWrap">
+      <svg id="bombArt"></svg>
+      <div id="smoke"></div>
+      <div class="device" id="device">
+        <i class="screw a"></i><i class="screw b"></i><i class="screw c"></i><i class="screw d"></i>
+        <div class="devTop">
+          <div class="ledBox"><small>TIME</small><div class="led" id="led"><svg id="ledSvg" viewBox="0 0 196 72"></svg></div></div>
+          <div class="devLabel">EQUATION LOCK<small>Model TB-206 · atoms in = atoms out</small></div>
+          <div class="lights"><i class="lt r" id="ltR"></i><i class="lt y"></i><i class="lt g" id="ltG"></i></div>
+        </div>
+        <div class="screen">
+          <div class="scrTitle" id="scrTitle">BALANCE TO DISARM</div>
+          <div id="eq"></div>
+          <div id="scanner"></div>
+        </div>
+        <div class="pcb"><div class="ic"><span>CYBD-T800</span></div><i class="res r1"></i><i class="res r2"></i><i class="cap"></i><i class="pled"></i></div>
+        <div class="ic2"><span>TK421</span></div>
+        <div class="devBottom">
+          <button class="gbtn" id="tutBtn">🎓 Show me</button>
+          <button class="gbtn" id="tipBtn">💡 Tip</button>
+          <button id="disarm">✂ DISARM</button>
+          <button class="gbtn" id="clearBtn">⟲ Clear</button>
+        </div>
+      </div>
+    </div>
+    <div class="tray">
+      <div class="tgroup"><div class="trayLbl">Number tiles: drag into the yellow boxes</div><div class="tiles" id="numTiles"></div></div>
+      <div class="tgroup" id="elGroup"><div class="trayLbl">Element tiles: drag into the blue circles</div><div class="tiles" id="elTiles"></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="ov hidden" id="ov"><div class="card" id="ovCard"></div></div>
+
+<script>
+/* =========================================================
+   LEVELS: edit freely.
+   time: seconds on the clock (Normal mode).
+   type 'balance': lhs / rhs terms.
+     term.f   formula; "_" marks a missing element (blank circle)
+     term.c   fixed coefficient (shown, not editable)
+     term.ans correct coefficient for a blank yellow box
+     term.el  answers for "_" element blanks, in order
+     term.cat true = catalyst label
+   type 'count': items [{c, f}] = how many atoms in c × formula
+   scanner: false = atom scanner is "damaged" (kids count it themselves)
+   ========================================================= */
+const PENALTY = 10;      // seconds lost for a wrong DISARM
+const REPAIR_COST = 15;  // seconds to repair a damaged scanner
+
+const LEVELS = [
+{name:"Make Some Water", demo:"Starter level", type:'balance', time:90, scanner:true, nums:[1,2,3,4],
+ lhs:[{f:'H2',c:2},{f:'O2',c:1}], rhs:[{f:'H2O',ans:2}],
+ brief:"Welcome to the Bomb Squad! This bomb is locked by a chemical equation. Hydrogen and oxygen join to make water. To disarm it, the atoms on both sides must match. Drag ONE number tile into the empty yellow box!",
+ tip:"The BIG number in front tells how many molecules there are. 2 H₂ means two H₂ molecules: that's 4 hydrogen atoms. Watch the scanner at the bottom of the screen!",
+ tutorial:[
+  {say:"Watch me disarm this one! The <b>atom scanner</b> counts every atom on the LEFT side and the RIGHT side. Let's start with hydrogen, <b>H</b>.",spot:'#scanner',mood:'point'},
+  {say:"LEFT side: 2 H₂ means 2 × 2 = <b>4 H</b>. See? The scanner's LEFT number for H says <b>4</b>.",hl:{el:'H',side:'l'},mood:'point'},
+  {say:"And oxygen on the LEFT: O₂ is <b>2 O</b>. The scanner says 2.",hl:{el:'O',side:'l'},mood:'talk'},
+  {say:"Each H₂O has 2 H and 1 O. Let me try <b>1</b> water...",fill:['c-r-0',1],mood:'talk'},
+  {say:"Now the RIGHT side: 1 H₂O has only <b>2 H</b>. Left says 4, right says 2. Not enough!",hl:{el:'H',side:'r'},mood:'think'},
+  {say:"Okay, a bigger number. Let's try <b>3</b>!",fill:['c-r-0',3],mood:'talk'},
+  {say:"WAIT! Now the RIGHT side has <b>6 H</b>! That's too MANY. See the red X?",hl:{el:'H',side:'r'},mood:'surprise'},
+  {say:"Oxygen is off too: <b>3 O</b> on the right, but only 2 on the left.",hl:{el:'O',side:'r'},mood:'surprise'},
+  {say:"1 was too few, 3 was too many... so let's try <b>2</b>.",fill:['c-r-0',2],mood:'think'},
+  {say:"Hydrogen: <b>4</b> on the left, <b>4</b> on the right. Match! ✓",hl:{el:'H',side:'both'},mood:'point'},
+  {say:"Oxygen: <b>2</b> on the left, <b>2</b> on the right. Match! ✓ Now I press <b>DISARM</b>...",hl:{el:'O',side:'both'},mood:'point'},
+  {press:true,say:"YES! Disarmed! The bomb-tech loop: try a number, check BOTH sides on the scanner, adjust. Your turn!",mood:'cheer'}],
+ debrief:["Left side: 2 H₂ = 2 × 2 = 4 H atoms. O₂ = 2 O atoms.","Each H₂O has 2 H and 1 O. Two of them make 4 H and 2 O.","4 = 4 and 2 = 2. Balanced! In a reaction, atoms are never made or destroyed, just rearranged."]},
+
+{name:"Atom Counting Academy", demo:"Counting drill", type:'count', time:90, nums:[1,2,3,4,5,6,7,8],
+ items:[{c:3,f:'H2O'},{c:2,f:'O2'},{c:2,f:'CO2'}],
+ brief:"Bomb techs count atoms FAST. Each element's count = BIG number in front × little number after the element. No little number means 1. Look at the atom pictures to check yourself!",
+ tip:"3 H₂O means three water molecules. Each one has 2 H, so H = 3 × 2. Each one has 1 O, so O = 3 × 1.",
+ tutorial:[
+  {say:"Counting time! <b>3 H₂O</b> means THREE water molecules. See the three little groups of atoms?",spot:'.cRow:nth-child(1) .mols',mood:'point'},
+  {say:"Each water has <b>2 H</b>. Three waters... I'll guess <b>5</b>.",fill:['n-0-H',5],mood:'talk'},
+  {say:"Wait! Let me COUNT the white H dots: 2, 4, 6. There are <b>6</b>, not 5! That's 3 × 2.",spot:'.cRow:nth-child(1) .mols',mood:'surprise'},
+  {say:"Fixed it: <b>6 H</b>.",fill:['n-0-H',6],mood:'talk'},
+  {say:"Each water has only <b>1 O</b> (no little number means 1). 3 × 1 = <b>3</b>.",fill:['n-0-O',3],spot:'.cRow:nth-child(1)',mood:'point'},
+  {say:"<b>2 O₂</b>: two molecules with 2 O each. 2 × 2 = <b>4</b>.",fill:['n-1-O',4],spot:'.cRow:nth-child(2)',mood:'talk'},
+  {say:"<b>2 CO₂</b>: carbon is 2 × 1 = <b>2</b>...",fill:['n-2-C',2],spot:'.cRow:nth-child(3)',mood:'think'},
+  {say:"...and oxygen is 2 × 2 = <b>4</b>. BIG number × little number, every time!",fill:['n-2-O',4],spot:'.cRow:nth-child(3)',mood:'point'},
+  {press:true,say:"Disarmed! Now YOU try it!",mood:'cheer'}],
+ debrief:["3 H₂O → H: 3 × 2 = 6, O: 3 × 1 = 3","2 O₂ → O: 2 × 2 = 4","2 CO₂ → C: 2 × 1 = 2, O: 2 × 2 = 4","Brain twister: 3 H₂O has the same atoms as H₆O₃, but H₆O₃ is NOT water! That's why bomb techs only change the BIG numbers, never the little ones."]},
+
+{name:"Zap the Water", demo:"Electrolysis demo", type:'balance', time:75, scanner:true, nums:[1,2,3,4], arrow:'⚡ electricity',
+ lhs:[{f:'H2O',ans:2}], rhs:[{f:'H2',ans:2},{f:'O2',ans:1}],
+ brief:"Electricity splits water into hydrogen gas and oxygen gas. Oxygen gas comes in pairs (O₂), but each water molecule has only ONE oxygen. Every box needs a tile, even if the answer is 1.",
+ tip:"Fix one element at a time, then check the others again. Changing one number can un-balance something else!",
+ debrief:["O₂ has 2 O atoms, but H₂O has only 1. So we need 2 H₂O.","Now the left has 2 × 2 = 4 H atoms, so we need 2 H₂.","Answer: 2 H₂O → 2 H₂ + 1 O₂. Chemists usually leave off the 1: 2 H₂O → 2 H₂ + O₂."]},
+
+{name:"Rust Bucket", demo:"Rusting iron", type:'balance', time:90, scanner:true, nums:[1,2,3,4,5,6],
+ lhs:[{f:'Fe',ans:4},{f:'O2',ans:3}], rhs:[{f:'Fe2O3',ans:2}],
+ brief:"Iron + oxygen makes rust. Time for a bomb-tech trick: START WITH THE BIGGEST MOLECULE. Here that's the product, Fe₂O₃, so work BACKWARD from the right side to the left.",
+ tip:"Oxygen on the left comes in 2s (O₂). Oxygen on the right comes in 3s (Fe₂O₃). What's the smallest number that both 2 and 3 go into? Save the lone Fe for LAST.",
+ debrief:["Start with the biggest molecule: Fe₂O₃ (product side).","Oxygen comes in 2s on the left and 3s on the right. Both can make 6: 3 O₂ and 2 Fe₂O₃.","2 Fe₂O₃ has 2 × 2 = 4 Fe, so 4 Fe on the left.","Lone elements like Fe go last: changing them only changes ONE atom count, so they're easiest to fix."]},
+
+{name:"Counting Boot Camp", demo:"Counting drill", type:'count', time:90, nums:[1,2,3,4,5,6,7,8,9,10,11,12],
+ items:[{c:2,f:'Fe2O3'},{c:2,f:'H2O2'},{c:3,f:'CH4'}],
+ brief:"Harder counting! Same rule: BIG number × little number, for every element. These answers can get big.",
+ tip:"3 CH₄: each methane has 1 C and 4 H. Three of them: C = 3 × 1, H = 3 × 4.",
+ debrief:["2 Fe₂O₃ → Fe: 2 × 2 = 4, O: 2 × 3 = 6","2 H₂O₂ → H: 2 × 2 = 4, O: 2 × 2 = 4","3 CH₄ → C: 3 × 1 = 3, H: 3 × 4 = 12"]},
+
+{name:"Elephant Toothpaste", demo:"H₂O₂ + MnO₂ demo", type:'balance', time:90, scanner:true, nums:[1,2,3,4],
+ lhs:[{f:'MnO2',c:1,cat:true},{f:'H2O2',ans:2}], rhs:[{f:'MnO2',c:1,cat:true},{f:'H2O',ans:2},{f:'O2',ans:1}],
+ brief:"Hydrogen peroxide breaks down into water and oxygen gas: FOAM! MnO₂ is a CATALYST: a helper that speeds the reaction up but comes out unchanged. It's on both sides, already balanced, so ignore it.",
+ tip:"Try 1 H₂O₂ → 1 H₂O first. Hydrogen works, but count the oxygen... if you'd need HALF an O₂, double everything!",
+ debrief:["MnO₂ is the same on both sides. It's the catalyst, so it doesn't change.","1 H₂O₂ → 1 H₂O balances H, but leaves one lonely O. You'd need ½ O₂, and there's no such thing as half a molecule!","So double everything: 2 H₂O₂ → 2 H₂O + O₂. Now H: 4 = 4 and O: 4 = 4."]},
+
+{name:"Gas Stove Flame", demo:"Burning methane", type:'balance', time:120, scanner:true, nums:[1,2,3,4,5],
+ lhs:[{f:'CH4',ans:1},{f:'O2',ans:2}], rhs:[{f:'CO2',ans:1},{f:'H2O',ans:2}],
+ brief:"Methane (natural gas) burns in oxygen to make carbon dioxide and water. For anything that burns, bomb techs use the C-H-O order: balance Carbon first, then Hydrogen, and Oxygen LAST.",
+ tip:"Start with the biggest molecule, CH₄. Give it a 1. Then C, then H, then count up ALL the oxygen on the right.",
+ debrief:["Biggest molecule: CH₄. Give it 1.","Carbon: 1 C → 1 CO₂.","Hydrogen: 4 H → 2 H₂O.","Oxygen last: CO₂ has 2 O, 2 H₂O have 2 O. Total 4 O, so 2 O₂."]},
+
+{name:"Lampblack", demo:"Olive-oil lamp soot", type:'balance', time:150, scanner:false, nums:[1,2,3,4], els:['C','H','O','Fe'],
+ lhs:[{f:'CH4',ans:1},{f:'O2',ans:1}], rhs:[{f:'_',el:['C'],ans:1},{f:'H2O',ans:2}],
+ brief:"When a flame doesn't get enough air, it can't finish burning. Some carbon is left over as black soot called LAMPBLACK, like our olive-oil lamp! A mystery atom is missing (blue circle). And uh-oh... the scanner is damaged. Count it yourself!",
+ tip:"Which element is on the LEFT side but missing from the right? Atoms can't vanish!",
+ debrief:["Carbon was on the left (CH₄) but nowhere on the right, so the soot is C.","C: 1 = 1. H: 4 H needs 2 H₂O.","O: 2 H₂O has 2 O, so just 1 O₂.","Compare Level 7: with plenty of air we needed 2 O₂ and got CO₂. With less air, we get soot!"]},
+
+{name:"Volcano Fizz", demo:"Baking soda + vinegar", type:'balance', time:180, scanner:false, nums:[1,2,3], els:['Na','C','H','O','Fe'],
+ lhs:[{f:'NaHCO3',ans:1},{f:'CH3COOH',ans:1}], rhs:[{f:'CH3COO_',el:['Na'],ans:1},{f:'H2O',ans:1},{f:'_O2',el:['C'],ans:1}],
+ brief:"Baking soda + vinegar makes fizzy CO₂ bubbles and a salt called sodium acetate. TWO mystery atoms are missing. Every atom on the left must show up somewhere on the right!",
+ tip:"Fill in the mystery atoms first, then COUNT before you change anything. Sometimes an equation is already balanced!",
+ debrief:["Na (sodium) was on the left, so it ends up in the sodium acetate: CH₃COONa.","The gas that fizzes is carbon dioxide: CO₂.","Count: Na 1 = 1, C 3 = 3, H 5 = 5, O 5 = 5. It was already balanced: all 1s!"]},
+
+{name:"Silver Rescue", demo:"Untarnishing silver", type:'balance', time:240, scanner:false, nums:[1,2,3,4,5,6,7,8], els:['S','Ag','Al','O','Na'],
+ lhs:[{f:'Ag2S',ans:3},{f:'Al',ans:2}], rhs:[{f:'Al2_3',el:['S'],ans:1},{f:'Ag',ans:6}],
+ brief:"FINAL BOMB! Tarnish is silver sulfide (Ag₂S). Aluminum foil steals the sulfur and leaves shiny silver behind, just like our class demo. Find the mystery atom, then work BACKWARD from the biggest product.",
+ tip:"The sulfur moves from the silver to the aluminum. Al₂S₃ needs 3 S atoms: how many Ag₂S does it take to supply them? Lone elements (Al, Ag) go LAST.",
+ debrief:["Mystery atom: the sulfur moved from the silver to the aluminum, making Al₂S₃.","Start with the biggest molecule, Al₂S₃ (a product!). It needs 3 S, so 3 Ag₂S.","3 Ag₂S has 3 × 2 = 6 Ag, so 6 Ag on the right.","Al₂S₃ has 2 Al, so 2 Al on the left. Balanced: 3 Ag₂S + 2 Al → Al₂S₃ + 6 Ag"]}
+];
+
+const EL={H:['Hydrogen','#ffffff'],O:['Oxygen','#ff5a5a'],C:['Carbon','#5a5a5a'],Na:['Sodium','#b07dff'],Fe:['Iron','#e0782f'],Cl:['Chlorine','#4cd964'],
+  Ag:['Silver','#cfd6e0'],S:['Sulfur','#ffd23f'],Al:['Aluminum','#8fd3ff'],Mn:['Manganese','#d39be6'],N:['Nitrogen','#4d7cff']};
+const elCol=e=>(EL[e]||['', '#ccc'])[1], elName=e=>(EL[e]||[e])[0];
+
+const WIN_QUIPS=["That was dyna-MITE!","Bone-afide bomb tech!","I was rattled, but you weren't!","Ex-PLO-sively smart!","You've got nerves of steel. I've got no nerves at all!","Phew! That tickled my funny bone!","Marrow-velous work!","Tibia honest, I was sweating... and I don't even have skin!"];
+const WRONG_QUIPS=["Hmm, that doesn't add up!","Close! But my bones say no.","Bzzt! The bomb didn't like that.","Not quite! Count again."];
+const BOOM_QUIPS=["KA-POOF! Fun fact: TNT exploding is a chemical reaction too. It just happens super FAST, in a tiny fraction of a second!",
+ "See the soot on my skull? TNT has lots of carbon, and some of it ends up as black soot... like lampblack!","TNT breaks apart into gases so fast they shove everything out of the way. That's a FAST reaction. Rusting is the same idea, just super slow!","Well... that was a BLAST. Let's try again!","I'm a little burnt-out, but I'm fine. Skeletons are tough!","KA-POOF! My skull is all sooty. One more try?","I think I lost a rib. Found it! Let's go again!"];
+
+/* ---------- storage ---------- */
+let SAVE={stars:{},mode:'normal',sound:true,unlockAll:false};
+try{const s=JSON.parse(localStorage.getItem('tbBombSquad')||'null');if(s)SAVE=Object.assign(SAVE,s);}catch(e){}
+function persist(){try{localStorage.setItem('tbBombSquad',JSON.stringify(SAVE));}catch(e){}}
+
+/* ---------- sound ---------- */
+let AC=null;
+function ac(){if(!SAVE.sound)return null;try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){return null}return AC}
+function beep(f,d,type,vol,delay){const a=ac();if(!a)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'square';o.frequency.value=f;
+  g.gain.setValueAtTime(vol||.06,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02);}
+function noise(d){const a=ac();if(!a)return;const n=a.sampleRate*d,b=a.createBuffer(1,n,a.sampleRate),c=b.getChannelData(0);
+  for(let i=0;i<n;i++)c[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=900;
+  const g=a.createGain();g.gain.value=.5;s.connect(f).connect(g).connect(a.destination);s.start();}
+const sfx={drop:()=>beep(660,.07,'triangle',.08),clear:()=>beep(300,.06,'triangle',.06),tick:()=>beep(1200,.05,'square',.04),
+  wrong:()=>{beep(180,.25,'sawtooth',.07);beep(140,.3,'sawtooth',.07,.12)},win:()=>[523,659,784,1047].forEach((f,i)=>beep(f,.18,'triangle',.08,i*.1)),boom:()=>noise(1.4)};
+
+/* ---------- Tony rig (canvas, from Tony's Science Trivia) ---------- */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const TAU=Math.PI*2;
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+const Tony=(function(){
+  const INK='#2d2452',BONE='#fff6e4',BONE2='#e9dcc3';
+  const L1=Math.hypot(11,10.5),L2=Math.hypot(15,14.5),R1=Math.hypot(10,11.5),R2=Math.hypot(14,15.5);
+  const B={L1:Math.atan2(-10.5,-11),L2:Math.atan2(-14.5,-15),R1:Math.atan2(11.5,10),R2:Math.atan2(15.5,14)};
+  const wrap=a=>{while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;return a;};
+  function reach(side,tx,ty){
+    const Ls=side==='L',S=Ls?[74,153]:[126,153],l1=Ls?L1:R1,l2=Ls?L2:R2,b1=Ls?B.L1:B.R1,b2=Ls?B.L2:B.R2;
+    let dx=tx-S[0],dy=ty-S[1],d=Math.hypot(dx,dy)||1;const dd=clamp(d,Math.abs(l1-l2)+.1,l1+l2-.05);dx*=dd/d;dy*=dd/d;
+    const base=Math.atan2(dy,dx),al=Math.acos(clamp((l1*l1+dd*dd-l2*l2)/(2*l1*dd),-1,1));
+    const c=[base+al,base-al],e1=Math.sin(c[0]),e2=Math.sin(c[1]),a=e1>e2?c[0]:c[1];
+    const ex=S[0]+Math.cos(a)*l1,ey=S[1]+Math.sin(a)*l1,d2=Math.atan2(S[1]+dy-ey,S[0]+dx-ex);
+    const a1=wrap(a-b1);return [a1,wrap(d2-b2-a1),0];
+  }
+  const RIBS=['M95 152 C88 149 76 149 73 158 C72 161 72.5 164 74.5 166','M95 165 C88 162 76 162 73 171 C72 174 72.5 177 74.5 179','M95 178 C88 175 76 175 73 184 C72 187 72.5 190 74.5 192'].map(d=>new Path2D(d));
+  const RIB4=new Path2D('M91 189 C86 187 81 188 79 192');
+  const CRANIUM=new Path2D('M100 28 C126 28 142 42 142 64 C142 84 134 104 124 120 L76 120 C66 104 58 84 58 64 C58 42 74 28 100 28 Z');
+  const NOSE=new Path2D('M100 97 L94 107 C92 111 97 113 100 109 C103 113 108 111 106 107 Z');
+  const PELVIS=new Path2D('M72 194 Q80 187 92 193 L108 193 Q120 187 128 194 Q132 204 122 208 Q112 206 106 200 L94 200 Q88 206 78 208 Q68 204 72 194Z');
+  const JAW=new Path2D('M76 124 L124 124 C123 132 119 140 111 142 L89 142 C81 140 77 132 76 124 Z');
+  const TINT=new Path2D('M74 150 Q100 140 126 150 Q132 172 124 194 Q100 200 76 194 Q68 172 74 150 Z');
+  function smudge(ctx,x,y,r,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(28,22,24,${a})`);g.addColorStop(.6,`rgba(28,22,24,${a*.55})`);g.addColorStop(1,'rgba(28,22,24,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();}
+  function ln(ctx,a,b,c,d,col,w){ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();}
+  function bone(ctx,a,b,c,d,w){ln(ctx,a,b,c,d,INK,w);ln(ctx,a,b,c,d,BONE,w/2);}
+  function joint(ctx,x,y){ctx.beginPath();ctx.arc(x,y,3.4,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.2;ctx.strokeStyle=INK;ctx.stroke();}
+  function rot(ctx,p,a){ctx.translate(p[0],p[1]);ctx.rotate(a);ctx.translate(-p[0],-p[1]);}
+  function handG(ctx,w,tips){tips.forEach(t=>ln(ctx,w[0],w[1],t[0],t[1],INK,5.6));tips.forEach(t=>ln(ctx,w[0],w[1],t[0],t[1],BONE,2.2));
+    ctx.beginPath();ctx.arc(w[0],w[1],5,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.4;ctx.strokeStyle=INK;ctx.stroke();}
+  function leg(ctx,side,a1,a2){
+    const L=side==='L',hip=L?[88,204]:[112,204],kn=L?[87,222]:[113,222],an=L?[86,240]:[114,240],ft=L?82:118;
+    ctx.save();rot(ctx,hip,a1);bone(ctx,hip[0],hip[1],kn[0],kn[1],9);
+    ctx.save();rot(ctx,kn,a2);bone(ctx,kn[0],kn[1],an[0],an[1],9);
+    ctx.beginPath();ctx.ellipse(ft,243.5,8.5,4.2,0,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.6;ctx.strokeStyle=INK;ctx.stroke();joint(ctx,kn[0],kn[1]);
+    ctx.restore();ctx.restore();
+  }
+  function arm(ctx,side,A){
+    const L=side==='L',sh=L?[74,153]:[126,153],el=L?[63,142.5]:[136,164.5],wr=L?[48,128]:[150,180];
+    const tips=L?[[38.2,125.9],[40.8,121.1],[45.5,118.3]]:[[159.6,182.9],[156.6,187.5],[151.8,189.8]];
+    ctx.save();rot(ctx,sh,A[0]);bone(ctx,sh[0],sh[1],el[0],el[1],9);
+    ctx.save();rot(ctx,el,A[1]);bone(ctx,el[0],el[1],wr[0],wr[1],9);
+    ctx.save();rot(ctx,wr,A[2]);handG(ctx,wr,tips);ctx.restore();
+    joint(ctx,el[0],el[1]);ctx.restore();ctx.restore();
+  }
+  function torso(ctx){
+    for(let i=0;i<6;i++){rr(ctx,95,147+8*i,10,6.5,3);ctx.fillStyle=BONE2;ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle=INK;ctx.stroke();}
+    ctx.globalAlpha=.28;ctx.fillStyle=BONE;ctx.fill(TINT);ctx.globalAlpha=1;
+    ctx.fillStyle=BONE;ctx.fill(PELVIS);ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.strokeStyle=INK;ctx.stroke(PELVIS);
+    ctx.lineCap='round';
+    for(const flip of [0,1]){
+      ctx.save();if(flip){ctx.translate(200,0);ctx.scale(-1,1);}
+      RIBS.forEach(p=>{ctx.strokeStyle=INK;ctx.lineWidth=7.6;ctx.stroke(p);ctx.strokeStyle=BONE;ctx.lineWidth=3.6;ctx.stroke(p);});
+      ctx.strokeStyle=INK;ctx.lineWidth=7.2;ctx.stroke(RIB4);ctx.strokeStyle=BONE;ctx.lineWidth=3.2;ctx.stroke(RIB4);ctx.restore();
+    }
+    rr(ctx,95.5,147,9,26,4.5);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.2;ctx.strokeStyle=INK;ctx.stroke();
+  }
+  function neck(ctx){
+    for(let i=0;i<3;i++){rr(ctx,94,126+8*i,12,7,3);ctx.fillStyle=BONE2;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();}
+    ctx.lineCap='round';ln(ctx,98,147,73,151,INK,10.5);ln(ctx,98,147,73,151,BONE,4.5);ln(ctx,102,147,127,151,INK,10.5);ln(ctx,102,147,127,151,BONE,4.5);
+  }
+  // bomb-squad harness (red straps + gold buckle)
+  function harness(ctx){ctx.lineCap='round';
+    for(const p of [[[80,150],[120,198]],[[120,150],[80,198]]]){ln(ctx,p[0][0],p[0][1],p[1][0],p[1][1],INK,7.5);ln(ctx,p[0][0],p[0][1],p[1][0],p[1][1],'#e5232f',4.2);}
+    ctx.beginPath();ctx.arc(100,174,4.4,0,TAU);ctx.fillStyle='#ffd166';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();}
+  function head(ctx,P){
+    ctx.save();rot(ctx,[100,140],P.head||0);
+    const jd=(P.jaw||0)*26;ctx.fillStyle=INK;ctx.fillRect(76,118,48,7+jd);
+    ctx.fillStyle=BONE;ctx.fill(CRANIUM);
+    if(P.soot){ctx.save();ctx.clip(CRANIUM);[[66,60,24,.85],[88,42,18,.6],[133,76,20,.8],[108,34,15,.5],[124,104,15,.7],[72,102,13,.55],[100,92,10,.4],[140,52,12,.5]].forEach(b=>smudge(ctx,b[0],b[1],b[2],b[3]));ctx.restore();}
+    ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeStyle=INK;ctx.stroke(CRANIUM);
+    ctx.lineCap='round';ctx.strokeStyle='#cdb994';ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(59,52);ctx.quadraticCurveTo(100,37,141,52);ctx.stroke();
+    ctx.strokeStyle='#d9c9ac';ctx.lineWidth=2;ctx.beginPath();[82.5,89.5,96.5,103.5,110.5,117.5].forEach(x=>{ctx.moveTo(x,113);ctx.lineTo(x,119);});ctx.stroke();
+    ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(81,84,14,15,0,0,TAU);ctx.ellipse(119,84,14,15,0,0,TAU);ctx.fill();
+    ctx.fillStyle=INK;ctx.fill(NOSE);ctx.lineWidth=1.5;ctx.strokeStyle=INK;ctx.stroke(NOSE);
+    ctx.strokeStyle=BONE;ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(100,104.8);ctx.lineTo(100,111);ctx.stroke();
+    ctx.fillStyle=BONE;ctx.beginPath();ctx.moveTo(98.9,111.4);ctx.lineTo(101.1,111.4);ctx.lineTo(100,109.6);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=.75;ctx.fillStyle='#ff8fb5';ctx.beginPath();ctx.ellipse(77,105,4.5,2.8,0,0,TAU);ctx.ellipse(123,105,4.5,2.8,0,0,TAU);ctx.fill();ctx.globalAlpha=1;
+    ctx.save();ctx.translate(0,jd);ctx.fillStyle=BONE;ctx.fill(JAW);ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke(JAW);
+    ctx.strokeStyle='#d9c9ac';ctx.lineWidth=2;ctx.beginPath();[[82.5,5],[89.5,7],[96.5,7],[103.5,7],[110.5,7],[117.5,5]].forEach(a=>{ctx.moveTo(a[0],125);ctx.lineTo(a[0],125+a[1]);});ctx.stroke();ctx.restore();
+    ln(ctx,100,33,100,25,INK,6);ctx.beginPath();ctx.arc(100,20,5,0,TAU);ctx.lineWidth=6;ctx.strokeStyle=INK;ctx.stroke();
+    ln(ctx,100,33,100,25,'#a9b1c4',2.8);ctx.beginPath();ctx.arc(100,20,5,0,TAU);ctx.lineWidth=2.8;ctx.strokeStyle='#a9b1c4';ctx.stroke();
+    const pu=P.pupil||[0,0],ps=P.pupilScale||1;
+    [[81,83,78.8,82.5],[119,83,116.8,117.5]].forEach(e=>{
+      ctx.beginPath();ctx.arc(e[0],e[1],12.5,0,TAU);ctx.fillStyle='#d3d8ec';ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle=INK;ctx.stroke();
+      ctx.beginPath();ctx.arc(e[2],80.5,9.8,0,TAU);ctx.fillStyle='#fff';ctx.fill();
+      ctx.save();ctx.translate(e[3]+pu[0],85+pu[1]);ctx.rotate(-.26);ctx.beginPath();ctx.ellipse(0,0,4.2*ps,3.86*ps,0,0,TAU);ctx.fillStyle='#1b1730';ctx.fill();ctx.restore();
+    });
+    ctx.lineCap='round';ctx.strokeStyle=INK;ctx.lineWidth=3;
+    ctx.save();rot(ctx,[81,62],P.browL||0);ctx.beginPath();ctx.moveTo(75,62.5);ctx.lineTo(87,61.5);ctx.stroke();ctx.restore();
+    ctx.save();rot(ctx,[119,62],P.browR||0);ctx.beginPath();ctx.moveTo(125,62.5);ctx.lineTo(113,61.5);ctx.stroke();ctx.restore();
+    ctx.restore();
+  }
+  function blank(){return {lean:0,head:0,jaw:0,pupil:[0,0],pupilScale:1,browL:0,browR:0,legL:[0,0],legR:[0,0],armL:[0,0,0],armR:[0,0,0],harness:true};}
+  function idle(t){const P=blank();P.armL=[Math.sin(t*1.4)*.08+.1,.5,0];P.head=Math.sin(t*1.7)*.05;P.lean=Math.sin(t*1.3)*.015;
+    P.jaw=.04+Math.max(0,Math.sin(t*2.1))*.05;P.pupil=[Math.sin(t*.8)*2,Math.cos(t*.6)];return P;}
+  function talk(t){const P=idle(t);P.jaw=.1+Math.abs(Math.sin(t*11))*.22;P.armR=[-.35+Math.sin(t*3)*.15,-.5,0];return P;}
+  function wave(t){const P=blank();P.armL=[Math.sin(t*3.4)*.1,Math.sin(t*7)*.55,Math.sin(t*7)*.3];P.head=Math.sin(t*1.7)*.05;P.jaw=.08;P.pupil=[Math.sin(t*.8)*2,0];return P;}
+  function cheer(t){const P=blank(),w=Math.sin(t*13);
+    P.armL=[w*.15,w*.45,w*.3];P.armR=[-1.62-w*.15,-w*.45,-w*.3];P.head=Math.sin(t*6)*.08;P.jaw=.4+.12*Math.sin(t*14);P.browL=-.2;P.browR=.2;P.pupil=[0,-2];return P;}
+  function nervous(t){const P=blank();P.jaw=.12+Math.abs(Math.sin(t*38))*.1;P.pupil=[Math.sin(t*41)*1.2,1+Math.cos(t*37)];P.pupilScale=.8;P.browL=-.3;P.browR=.3;
+    P.legL=[.12+Math.sin(t*30)*.06,0];P.legR=[-.12-Math.sin(t*30)*.06,0];P.armL=[.3,.9,.2];P.armR=[-.3,-.9,-.2];P.head=Math.sin(t*25)*.02;return P;}
+  function sooty(t){const P=blank();P.soot=true;P.jaw=.45;P.pupilScale=.55;P.pupil=[Math.cos(t*4)*2.5,Math.sin(t*4)*2.5];P.head=Math.sin(t*1.5)*.12;
+    P.armL=[.6,.3,0];P.armR=[-.6,-.3,0];P.browL=.25;P.browR=-.25;return P;}
+  function draw(ctx,o){
+    const P=o.pose;
+    ctx.save();ctx.translate(o.x,o.y);ctx.scale(o.s,o.s);ctx.translate(-100,-247);
+    ctx.lineCap='round';ctx.lineJoin='round';
+    leg(ctx,'L',P.legL[0],P.legL[1]);leg(ctx,'R',P.legR[0],P.legR[1]);
+    ctx.save();rot(ctx,[100,200],P.lean||0);
+    arm(ctx,'L',P.armL);arm(ctx,'R',P.armR);
+    torso(ctx);if(P.harness)harness(ctx);neck(ctx);head(ctx,P);
+    if(P.soot){[[84,168,12,.4],[117,184,11,.35],[100,200,9,.3]].forEach(b=>smudge(ctx,b[0],b[1],b[2],b[3]));}
+    ctx.restore();ctx.restore();
+  }
+  function think(t){const P=idle(t);P.armR=reach('R',110,141);P.head=-.08+Math.sin(t*1.2)*.03;P.pupil=[-2.5,-2.5];P.browL=-.18;P.browR=.05;return P;}
+  function point(t){const P=idle(t);P.armR=reach('R',176+Math.sin(t*4)*2,128);P.head=.05;P.pupil=[2.5,0];return P;}
+  function surprise(t){const P=blank();P.jaw=.5+Math.sin(t*9)*.05;P.browL=-.4;P.browR=.4;P.pupilScale=.6;P.armL=reach('L',58,112);P.armR=reach('R',142,112);P.head=Math.sin(t*20)*.02;return P;}
+  return {draw,idle,talk,wave,cheer,nervous,sooty,think,point,surprise};
+})();
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+function tok(f){const r=[],re=/([A-Z][a-z]?|_)(\d*)/g;let m;while((m=re.exec(f)))r.push({el:m[1],n:m[2]?+m[2]:1,sub:m[2]});return r;}
+const SUBS='₀₁₂₃₄₅₆₇₈₉';const uni=f=>f.replace(/\d/g,d=>SUBS[d]);
+function gcd(a,b){return b?gcd(b,a%b):a}
+function fmtHTML(f,side,i,mode,term){ // mode: 'play' | 'final'
+  let j=0;return tok(f).map(k=>{let s;
+    if(k.el==='_'){const key=`e-${side}-${i}-${j}`;s=mode==='play'?slotHTML(key,'el'):`<span style="color:#7fe3ff">${term.el[j]}</span>`;j++;}
+    else return `<span class="at" data-el="${k.el}" data-side="${side}">${k.el}${k.sub?`<sub>${k.sub}</sub>`:''}</span>`;
+    return s+(k.sub?`<sub>${k.sub}</sub>`:'');}).join('');}
+function slotHTML(key,kind){const v=G.V[key];const full=v!=null;
+  const style=full&&kind==='el'?` style="color:${elCol(v)==='#5a5a5a'?'#ddd':elCol(v)}"`:'';
+  return `<span class="slot ${kind} ${full?'full':''}" data-key="${key}" data-kind="${kind}"${style}>${full?v:''}</span>`;}
+
+/* ---------- game state ---------- */
+const G={tutRun:0,tut:false,tutMood:'talk',tutAbort:false,spot:null,lv:0,V:{},timeLeft:0,running:false,mistakes:0,repaired:false,sel:null,tony:'wave',tonyUntil:0,talkUntil:0,lastSec:-1,done:false};
+const L=()=>LEVELS[G.lv];
+function timeFor(lv){return SAVE.mode==='relaxed'?lv.time*2:lv.time;}
+function unlocked(i){return SAVE.unlockAll||i===0||SAVE.stars[i-1]>0||SAVE.stars[i]>0;}
+
+/* ---------- menu ---------- */
+function showMenu(){
+  G.running=false;$('play').classList.add('hidden');$('menu').classList.remove('hidden');$('lvTag').classList.add('hidden');hideOv();
+  const g=$('lvGrid');g.innerHTML='';
+  LEVELS.forEach((lv,i)=>{const d=document.createElement('div');const ok=unlocked(i),st=SAVE.stars[i]||0;
+    d.className='lvCard'+(ok?'':' locked');
+    d.innerHTML=`<span class="tm">${SAVE.mode==='practice'?'∞':fmtTime(timeFor(lv))}</span><div class="num">${ok?(i+1):'🔒'}</div><div class="nm">${lv.name}</div><div class="kind">${lv.demo}</div>
+      <div class="st">${[1,2,3].map(n=>n<=st?'⭐':'<span style="opacity:.25">⭐</span>').join('')}</div>`;
+    if(ok)d.onclick=()=>startLevel(i);g.appendChild(d);});
+}
+function fmtTime(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+
+/* ---------- level start ---------- */
+function startLevel(i){
+  G.lv=i;G.V={};G.mistakes=0;G.repaired=false;G.sel=null;G.running=false;G.done=false;G.timeLeft=timeFor(L());G.lastSec=-1;G.tony='wave';
+  $('menu').classList.add('hidden');$('play').classList.remove('hidden');
+  $('lvTag').classList.remove('hidden');$('lvTag').textContent=`Level ${i+1}: ${L().name}`;
+  $('ltG').classList.remove('on');$('led').classList.remove('safe','urgent');
+  $('bombArt').classList.remove('charred');$('smoke').innerHTML='';G.tut=false;G.tutRun++;G.spot=null;G.hl=null;$('tutBar').classList.add('hidden');
+  buildSticks();renderAll();updateLED();say("Read the mission brief, then start the clock!");
+  showBrief();
+}
+function showBrief(){
+  const lv=L();
+  showOv(`<div class="demo">Level ${G.lv+1} · ${lv.demo}</div><h2>${lv.name}</h2>
+    <p>${lv.brief}</p><div class="trick"><b>💡 Bomb-tech tip:</b> ${lv.tip}</div>
+    <p style="margin-top:12px;opacity:.8">⏱ Clock: <b>${SAVE.mode==='practice'?'Practice mode (no timer)':fmtTime(timeFor(lv))}</b>${SAVE.mode==='practice'?'':` · Wrong DISARM costs ${PENALTY} seconds`}</p>
+    <div class="btnRow">${lv.tutorial?'<button class="big" id="teachBtn" style="background:#ff8a1f">🎓 Teach me how first</button>':''}<button class="big g" id="goBtn">▶ Start the clock!</button><button class="big b" id="backBtn">🗺 Levels</button></div>`);
+  if(lv.tutorial)$('teachBtn').onclick=()=>{ac();runTutorial();};
+  $('goBtn').onclick=()=>{hideOv();G.running=true;G.last=performance.now();ac();say(lv.type==='count'?"Count the atoms: BIG number × little number!":"Drag tiles into the boxes. Then hit DISARM!");};
+  $('backBtn').onclick=showMenu;
+}
+
+/* ---------- rendering ---------- */
+function renderAll(){$('tutBtn').classList.toggle('hidden',!L().tutorial);renderScreen();renderTiles();requestAnimationFrame(drawWires);}
+function renderScreen(){
+  const lv=L();const eq=$('eq');
+  if(lv.type==='count'){
+    $('scrTitle').textContent='ATOM COUNT CHECK · COUNT TO DISARM';
+    eq.style.display='block';
+    eq.innerHTML=lv.items.map((it,idx)=>{
+      const tk=tok(it.f),els=[];tk.forEach(k=>{if(!els.includes(k.el))els.push(k.el)});
+      const mol=`<div class="mol">${tk.map(k=>Array(k.n).fill(`<span class="atom" style="background:${elCol(k.el)}" title="${k.el}"></span>`).join('')).join('')}</div>`;
+      return `<div class="cRow"><div class="cMol"><span class="bigc">${it.c}</span> ${fmtHTML(it.f)}</div>
+        <div class="mols">${Array(it.c).fill(mol).join('')}</div>
+        <div class="cAns">${els.map(e=>`<span><span class="dot" style="background:${elCol(e)}">${e}</span> ${slotHTML(`n-${idx}-${e}`,'num')}</span>`).join('')}</div></div>`;
+    }).join('');
+    $('scanner').innerHTML='';$('scanner').style.display='none';applySpot();return;
+  }
+  $('scrTitle').textContent='BALANCE THE EQUATION TO DISARM';
+  eq.style.display='flex';$('scanner').style.display='flex';
+  const side=(terms,s)=>terms.map((t,i)=>`<span class="term">${t.cat?'<span class="catTag">CATALYST</span>':''}${t.c==null?slotHTML(`c-${s}-${i}`,'num'):(t.c>1?`<span class="coef">${t.c}</span>`:'')}<span class="formula">${fmtHTML(t.f,s,i,'play',t)}</span></span>`).join('<span class="plus">+</span>');
+  const arrow=`<span class="arrow">${lv.arrow?`<small>${lv.arrow}</small>`:''}→</span>`;
+  eq.innerHTML=side(lv.lhs,'l')+arrow+side(lv.rhs,'r');
+  renderScanner();applySpot();
+}
+function tally(useAns){
+  const lv=L(),res={l:{},r:{},ul:new Set(),ur:new Set(),order:[]};
+  [['l',lv.lhs],['r',lv.rhs]].forEach(([s,terms])=>terms.forEach((t,i)=>{
+    const c=t.c!=null?t.c:(useAns?t.ans:G.V[`c-${s}-${i}`]);let j=0;
+    tok(t.f).forEach(k=>{let el=k.el;
+      if(el==='_'){el=useAns?t.el[j]:G.V[`e-${s}-${i}-${j}`];j++;if(!el)return;}
+      if(!res.order.includes(el))res.order.push(el);
+      res[s][el]=res[s][el]||0;
+      if(c==null)res['u'+s].add(el);else res[s][el]+=c*k.n;});
+  }));
+  return res;
+}
+function renderScanner(){
+  const lv=L(),sc=$('scanner');
+  if(!lv.scanner&&!G.repaired){
+    sc.innerHTML=`<div class="broken"><span class="static">▒▒ ATOM SCANNER DAMAGED ▒▒</span> Count the atoms yourself! <button class="sbtn" id="repBtn">🔧 Repair scanner ${SAVE.mode==='practice'?'':`(−${REPAIR_COST}s)`}</button></div>`;
+    $('repBtn').onclick=()=>{G.repaired=true;if(SAVE.mode!=='practice'&&G.running)G.timeLeft-=REPAIR_COST;sfx.drop();say("Scanner fixed! Now you can see the atom counts. Next time, try counting on your own!");renderScanner();};
+    return;
+  }
+  const t=tally(false);
+  sc.innerHTML=`<div class="scLbl">ATOM SCANNER · LEFT | RIGHT</div>`+t.order.map(e=>{
+    const lu=t.ul.has(e),ru=t.ur.has(e),l=lu?'?':t.l[e]||0,r=ru?'?':t.r[e]||0,ok=!lu&&!ru&&l===r;
+    return `<div class="sc ${ok?'ok':(lu||ru?'':'bad')}" data-el="${e}"><span class="dot" style="background:${elCol(e)}">${e}</span><b class="scL">${l}</b><span class="side">|</span><b class="scR">${r}</b> ${ok?'✓':(lu||ru?'…':'✗')}</div>`;}).join('');
+}
+function renderTiles(){
+  const lv=L(),nt=$('numTiles'),et=$('elTiles');
+  nt.innerHTML=lv.nums.map(n=>`<div class="tile" data-v="${n}" data-kind="num">${n}</div>`).join('');
+  if(lv.els){$('elGroup').classList.remove('hidden');et.innerHTML=lv.els.map(e=>`<div class="tile elt" data-v="${e}" data-kind="el" style="background:radial-gradient(circle at 35% 30%,#fff,${elCol(e)} 70%)">${e}</div>`).join('');}
+  else{$('elGroup').classList.add('hidden');et.innerHTML='';}
+}
+
+/* ---------- bomb art ---------- */
+function buildSticks(){}
+function drawWires(){drawBomb();}
+function drawBomb(){
+  const w=$('bombWrap'),svg=$('bombArt'),wr=w.getBoundingClientRect(),dv=$('device').getBoundingClientRect();
+  const W=wr.width,H=wr.height,dT=dv.top-wr.top,dB=dv.bottom-wr.top,dL=dv.left-wr.left,dR=dv.right-wr.left,dH=dB-dT;
+  if(!W)return;
+  const INK='#2d2452',top=8,bot=dT+dH*.6,n=clamp(Math.round((bot-top)/62),4,10),sh=(bot-top)/n,rx=sh*.24,x0=10+rx,x1=W-10-rx;
+  let o=`<defs><linearGradient id="gS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a1a12"/><stop offset=".14" stop-color="#ffa48a"/><stop offset=".3" stop-color="#f05a43"/><stop offset=".68" stop-color="#c3311f"/><stop offset="1" stop-color="#55100a"/></linearGradient>
+   <radialGradient id="gF" cx=".42" cy=".38" r=".75"><stop offset="0" stop-color="#fdebc6"/><stop offset=".65" stop-color="#e4bf86"/><stop offset="1" stop-color="#a87a40"/></radialGradient>
+   <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d869c"/><stop offset=".3" stop-color="#f7f9fd"/><stop offset="1" stop-color="#5f6880"/></linearGradient>
+   <linearGradient id="gT" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#355f20"/><stop offset=".5" stop-color="#79bb4f"/><stop offset="1" stop-color="#355f20"/></linearGradient></defs>`;
+  const caps=[];
+  for(let i=0;i<n;i++){
+    const y=top+i*sh,h=sh+1.5,cy=y+h/2;
+    o+=`<path d="M${x0} ${y}L${x1} ${y}A${rx} ${h/2} 0 0 1 ${x1} ${y+h}L${x0} ${y+h}Z" fill="url(#gS)" stroke="${INK}" stroke-width="3.2" stroke-linejoin="round"/>`;
+    o+=`<path d="M${x0+rx+12} ${y+h*.2}L${x1-6} ${y+h*.2}" stroke="rgba(255,255,255,.4)" stroke-width="${h*.07}" stroke-linecap="round"/>`;
+    [x0+sh*.7,x1-sh*.45].forEach(xs=>o+=`<path d="M${xs} ${y+2.5}A${rx*.85} ${h/2-2} 0 0 1 ${xs} ${y+h-2.5}" fill="none" stroke="rgba(60,0,0,.35)" stroke-width="2.4"/>`);
+    const lx=(i%2?.36:.62)*W;
+    o+=`<text x="${lx}" y="${cy+h*.16}" text-anchor="middle" font-family="Bungee,Impact,sans-serif" font-size="${h*.4}" fill="#ffe7a1" stroke="${INK}" stroke-width="1.6" paint-order="stroke">TNT</text>`;
+    o+=`<ellipse cx="${x0}" cy="${cy}" rx="${rx}" ry="${h/2}" fill="url(#gF)" stroke="${INK}" stroke-width="3.2"/>`;
+    o+=`<ellipse cx="${x0}" cy="${cy}" rx="${rx*.62}" ry="${h*.31}" fill="none" stroke="rgba(120,80,30,.45)" stroke-width="1.6"/>`;
+    for(let k=0;k<6;k++){const a=k/6*TAU;o+=`<path d="M${x0+Math.cos(a)*rx*.12} ${cy+Math.sin(a)*h*.06}L${x0+Math.cos(a)*rx*.42} ${cy+Math.sin(a)*h*.22}" stroke="rgba(110,70,30,.55)" stroke-width="1.5"/>`;}
+    if(i%2===0&&i<n-1)caps.push({x:x0,y:cy,side:-1,h});
+    if(i%2===1&&i<n-1)caps.push({x:x1+rx-3,y:cy,side:1,h});
+  }
+  [W*.22,W*.78].forEach((sx,k)=>{o+=`<rect x="${sx-14}" y="${top-6}" width="28" height="${bot-top+12}" rx="5" fill="url(#gT)" stroke="${INK}" stroke-width="3"/>`+
+    `<path d="M${sx-8} ${top}V${bot+2}M${sx+8} ${top}V${bot+2}" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-dasharray="6 5"/>`+
+    `<rect x="${sx-18}" y="${top+sh*(k?1.6:.6)}" width="36" height="${sh*.5}" rx="4" fill="#cfd5e3" stroke="${INK}" stroke-width="3"/><rect x="${sx-10}" y="${top+sh*(k?1.6:.6)+sh*.14}" width="20" height="${sh*.22}" rx="2" fill="#7d86a0"/>`;});
+  const nT=caps.length+2,tx0=dL+(dR-dL)*.12,tx1=dR-(dR-dL)*.12,ty=dT-9,terms=[];
+  o+=`<rect x="${tx0-18}" y="${ty-11}" width="${tx1-tx0+36}" height="22" rx="5" fill="#33313f" stroke="${INK}" stroke-width="3"/>`;
+  for(let k=0;k<nT;k++){terms.push([tx0+(tx1-tx0)*k/(nT-1),ty]);}
+  const cols=['#e5232f','#3f6fe0','#ffd23f','#2fb35a','#f6f6f6','#ff8a1f','#9b59ff','#1d1d25','#e5232f','#3f6fe0'];
+  const leftC=caps.filter(c=>c.side<0),rightC=caps.filter(c=>c.side>0),wires=[];
+  leftC.forEach((c,k)=>wires.push([c,terms[k]]));rightC.forEach((c,k)=>wires.push([c,terms[nT-1-k]]));
+  // two extra loose wires between terminals for looks
+  const ex=[[terms[leftC.length],terms[leftC.length+1]]];
+  wires.forEach(([c,tm],k)=>{
+    const cl=26,ce=[c.x+c.side*cl,c.y];
+    o+=`<rect x="${c.side<0?c.x-cl:c.x}" y="${c.y-c.h*.11}" width="${cl}" height="${c.h*.22}" rx="3" fill="url(#gC)" stroke="${INK}" stroke-width="2.4"/>`;
+    const out=c.side*(50+k*8);
+    const d=`M${ce[0]} ${ce[1]}C${ce[0]+out} ${ce[1]+30},${tm[0]+c.side*40} ${tm[1]-110-k*10},${tm[0]} ${tm[1]}`;
+    const cut=G.done&&G.won&&k===1?' data-cut="1"':'';
+    o+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="7.5" stroke-linecap="round"${cut}/><path d="${d}" fill="none" stroke="${cols[k%cols.length]}" stroke-width="4" stroke-linecap="round"${cut}/>`;
+  });
+  ex.forEach(([a,b],k)=>{const d=`M${a[0]} ${a[1]}C${a[0]-20} ${a[1]-60},${b[0]+20} ${b[1]-60},${b[0]} ${b[1]}`;
+    o+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="7.5" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#2fb35a" stroke-width="4" stroke-linecap="round"/>`;});
+  terms.forEach(([x,y])=>o+=`<circle cx="${x}" cy="${y}" r="6.5" fill="#d6dbe6" stroke="${INK}" stroke-width="2.4"/><path d="M${x-3.5} ${y+2}L${x+3.5} ${y-2}" stroke="${INK}" stroke-width="2"/>`);
+  const ly=top+(n-1)*sh+sh/2;
+  o+=coilSVG([dL+3,dT+dH*.8],[-60,dT+dH*.6],[x0-rx*.2,ly],'#e5232f');
+  o+=coilSVG([dR-3,dT+dH*.8],[W+60,dT+dH*.6],[x1+rx-4,ly],'#3a3a46');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML=o;
+  svg.querySelectorAll('path[data-cut]').forEach(p=>{const L=p.getTotalLength();p.style.strokeDasharray=`${L*.5-12} 26 ${L}`;});
+}
+function coilSVG(p0,p1,p2,col){const L=Math.hypot(p2[0]-p0[0],p2[1]-p0[1])+Math.hypot(p1[0]-p0[0],p1[1]-p0[1])*.5;const d=coilPath(p0,p1,p2,Math.max(7,Math.round(L/15)),9);
+  return `<path d="${d}" fill="none" stroke="#2d2452" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`+
+   `<circle cx="${p0[0]}" cy="${p0[1]}" r="8" fill="#ffd23f" stroke="#2d2452" stroke-width="3"/><circle cx="${p2[0]}" cy="${p2[1]}" r="6" fill="#c9d1e6" stroke="#2d2452" stroke-width="3"/>`;}
+function coilPath(p0,p1,p2,loops,r){let d='';const N=Math.round(loops*28);
+  for(let i=0;i<=N;i++){const t=i/N,u=1-t;
+    const bx=u*u*p0[0]+2*u*t*p1[0]+t*t*p2[0],by=u*u*p0[1]+2*u*t*p1[1]+t*t*p2[1];
+    let dx=2*u*(p1[0]-p0[0])+2*t*(p2[0]-p1[0]),dy=2*u*(p1[1]-p0[1])+2*t*(p2[1]-p1[1]);const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;
+    const taper=Math.pow(Math.sin(Math.PI*t),.35),a=TAU*loops*t,q=r*taper;
+    const x=bx+(-dy)*q*Math.sin(a)+dx*q*.9*Math.cos(a)-dx*q*.9*taper,y=by+dx*q*Math.sin(a)+dy*q*.9*Math.cos(a)-dy*q*.9*taper;
+    d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+  return d;}
+window.addEventListener('resize',()=>{if(!$('play').classList.contains('hidden'))drawWires();});
+
+/* ---------- Tony talk ---------- */
+const tc=$('tony').getContext('2d');
+function say(txt,mood){const b=$('bubble');b.innerHTML=txt;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');G.talkUntil=performance.now()+Math.min(4000,600+txt.length*35);
+  if(mood){G.tony=mood;G.tonyUntil=performance.now()+2600;}}
+function tonyPose(t,now){
+  if(G.tut){const P=Tony[G.tutMood]?Tony[G.tutMood](t):Tony.talk(t);if(now<G.talkUntil&&G.tutMood!=='cheer'&&G.tutMood!=='surprise')P.jaw=.1+Math.abs(Math.sin(t*11))*.22;return P;}
+  if(G.done&&!G.won)return Tony.sooty(t);
+  if(now<G.tonyUntil&&G.tony==='cheer')return Tony.cheer(t);
+  if(G.running&&SAVE.mode!=='practice'&&G.timeLeft<=10)return Tony.nervous(t);
+  if(now<G.talkUntil)return Tony.talk(t);
+  if(!G.running&&!G.done)return Tony.wave(t);
+  return Tony.idle(t);}
+
+/* ---------- main loop ---------- */
+function loop(now){
+  const t=now/1000;
+  if(G.running){const dt=Math.min(.25,(now-(G.last||now))/1000);G.last=now;
+    if(SAVE.mode!=='practice'){G.timeLeft-=dt;
+      const s=Math.ceil(G.timeLeft);if(s!==G.lastSec){G.lastSec=s;if(s<=10&&s>0){sfx.tick();if(s===10)say("Uh-oh, 10 seconds! My knees are knocking!");}}
+      if(G.timeLeft<=0){G.timeLeft=0;boom();}}
+    updateLED();}
+  if(!$('play').classList.contains('hidden')){
+    tc.clearRect(0,0,300,420);Tony.draw(tc,{x:150,y:412,s:1.65,pose:tonyPose(t,now)});
+    if(G.running&&SAVE.mode!=='practice'&&G.timeLeft<=10){ // sweat drops
+      tc.fillStyle='#7fd0ff';tc.strokeStyle='#2d2452';tc.lineWidth=2;[[60,90],[236,110]].forEach((p,k)=>{const yy=p[1]+((t*60+k*30)%40);
+        tc.beginPath();tc.moveTo(p[0],yy-9);tc.quadraticCurveTo(p[0]+7,yy+2,p[0],yy+4);tc.quadraticCurveTo(p[0]-7,yy+2,p[0],yy-9);tc.fill();tc.stroke();});}
+    if(G.done&&!G.won){tc.fillStyle='rgba(120,120,130,.5)';for(let k=0;k<3;k++){const yy=60-((t*30+k*25)%70),xx=150+Math.sin(t*2+k)*30;tc.beginPath();tc.arc(xx,yy+40,10+k*3,0,TAU);tc.fill();}}
+  }
+  requestAnimationFrame(loop);}
+/* ---------- 7-segment LED (fixed width, drawn in SVG) ---------- */
+const SEG={'0':'abcdef','1':'bc','2':'abdeg','3':'abcdg','4':'bcfg','5':'acdfg','6':'acdefg','7':'abc','8':'abcdefg','9':'abcdfg','-':'g',' ':'',
+  S:'acdfg',A:'abcefg',F:'aefg',E:'adefg'};
+const SEGPOLY=(()=>{const t=7,H=(x1,x2,y)=>`${x1+t/2},${y} ${x1+t},${y-t/2} ${x2-t},${y-t/2} ${x2-t/2},${y} ${x2-t},${y+t/2} ${x1+t},${y+t/2}`,
+  V=(x,y1,y2)=>`${x},${y1+t/2} ${x+t/2},${y1+t} ${x+t/2},${y2-t} ${x},${y2-t/2} ${x-t/2},${y2-t} ${x-t/2},${y1+t}`;
+  return {a:H(6,36,6),g:H(6,36,36),d:H(6,36,66),f:V(6,6,36),b:V(36,6,36),e:V(6,36,66),c:V(36,36,66)};})();
+let ledLast='';
+function setLED(str){ // str: 4 chars, colon shown between 2nd and 3rd unless str is a word
+  if(str===ledLast)return;ledLast=str;const colon=/^[\d -]{4}$/.test(str);
+  const X=[0,44,108,152];let o='<g transform="skewX(-6) translate(6 0)">';
+  [...str.padEnd(4)].slice(0,4).forEach((ch,i)=>{const on=SEG[ch]||'';o+=`<g transform="translate(${X[i]} 0)">`+
+    Object.entries(SEGPOLY).map(([k,p])=>`<polygon class="sg${on.includes(k)?' on':''}" points="${p}"/>`).join('')+'</g>';});
+  o+=`<circle class="sg${colon?' on':''}" cx="96" cy="24" r="4.2"/><circle class="sg${colon?' on':''}" cx="94" cy="50" r="4.2"/></g>`;
+  $('ledSvg').innerHTML=o;}
+function updateLED(){
+  if(SAVE.mode==='practice')setLED(G.done&&G.won?'SAFE':'----');
+  else setLED(fmtTime(G.timeLeft).replace(':',''));
+  $('led').classList.toggle('urgent',G.running&&SAVE.mode!=='practice'&&G.timeLeft<=10);
+}
+requestAnimationFrame(loop);
+
+/* ---------- drag & tap ---------- */
+let drag=null;
+document.addEventListener('pointerdown',e=>{
+  const tile=e.target.closest('.tile');if(!tile||G.done||G.tut)return;
+  e.preventDefault();drag={tile,x0:e.clientX,y0:e.clientY,ghost:null,id:e.pointerId};
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  if(!drag.ghost&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>6){
+    drag.ghost=drag.tile.cloneNode(true);drag.ghost.classList.add('ghost');drag.ghost.classList.remove('sel');document.body.appendChild(drag.ghost);
+    markTargets(drag.tile.dataset.kind,true);}
+  if(drag.ghost){drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
+    document.querySelectorAll('.slot.hover').forEach(s=>s.classList.remove('hover'));
+    const s=slotAt(e.clientX,e.clientY);if(s&&compatible(drag.tile.dataset.kind,s))s.classList.add('hover');}
+});
+document.addEventListener('pointerup',e=>{
+  if(!drag)return;const d=drag;drag=null;
+  if(d.ghost){d.ghost.remove();markTargets(null,false);const s=slotAt(e.clientX,e.clientY);if(s&&compatible(d.tile.dataset.kind,s))fill(s,d.tile.dataset.v);}
+  else{ // tap: select / deselect
+    document.querySelectorAll('.tile.sel').forEach(t=>{if(t!==d.tile)t.classList.remove('sel')});
+    d.tile.classList.toggle('sel');G.sel=d.tile.classList.contains('sel')?{kind:d.tile.dataset.kind,v:d.tile.dataset.v}:null;
+    markTargets(G.sel?G.sel.kind:null,!!G.sel);}
+});
+document.addEventListener('pointercancel',()=>{if(drag&&drag.ghost)drag.ghost.remove();drag=null;markTargets(null,false);});
+$('play').addEventListener('click',e=>{
+  const s=e.target.closest('.slot');if(!s||G.done||G.tut)return;
+  if(G.sel&&compatible(G.sel.kind,s)){fill(s,G.sel.v);return;}
+  if(G.V[s.dataset.key]!=null){delete G.V[s.dataset.key];sfx.clear();afterChange();}
+});
+function slotAt(x,y){const el=document.elementFromPoint(x,y);return el?el.closest('.slot'):null;}
+function compatible(kind,s){return kind==='el'?s.dataset.kind==='el':s.dataset.kind==='num';}
+function markTargets(kind,on){document.querySelectorAll('.slot').forEach(s=>s.classList.toggle('target',on&&compatible(kind,s)&&G.V[s.dataset.key]==null));}
+function fill(s,v){G.V[s.dataset.key]=s.dataset.kind==='el'?v:+v;sfx.drop();afterChange();
+  if(!G.running&&!G.done&&$('ov').classList.contains('hidden')){G.running=true;G.last=performance.now();}}
+function afterChange(){renderScreen();if(G.sel)markTargets(G.sel.kind,true);}
+$('clearBtn').onclick=()=>{if(G.done||G.tut)return;G.V={};sfx.clear();renderScreen();};
+$('tipBtn').onclick=()=>say('<b>Tip:</b> '+L().tip);
+
+/* ---------- checking ---------- */
+$('disarm').onclick=check;
+function check(){
+  if(G.done||G.tut)return;
+  if(!G.running&&!$('ov').classList.contains('hidden'))return;
+  const lv=L(),slots=[...document.querySelectorAll('#eq .slot')];
+  const empty=slots.filter(s=>G.V[s.dataset.key]==null);
+  if(empty.length){empty.forEach(s=>s.classList.add('target'));say("Fill <b>every</b> box first! Even a 1 needs a tile.");return;}
+  let res;
+  if(lv.type==='count'){
+    let bad=null;
+    lv.items.forEach((it,idx)=>{const per={};tok(it.f).forEach(k=>per[k.el]=(per[k.el]||0)+k.n);
+      Object.keys(per).forEach(e=>{const key=`n-${idx}-${e}`;if(!bad&&G.V[key]!==it.c*per[e])bad={it,e,n:per[e],key};});});
+    res=bad?{ok:false,msg:`Look at <b>${it2(bad.it)}</b>. Each molecule has <b>${bad.n} ${bad.e}</b>, and there ${bad.it.c>1?'are':'is'} <b>${bad.it.c}</b> of them. Multiply!`,key:bad.key}:{ok:true};
+  }else{
+    // mystery atoms first
+    let elBad=null;[['l',lv.lhs],['r',lv.rhs]].forEach(([s,terms])=>terms.forEach((t,i)=>(t.el||[]).forEach((a,j)=>{const key=`e-${s}-${i}-${j}`;if(!elBad&&G.V[key]!==a)elBad=key;})));
+    if(elBad)res={ok:false,msg:`That mystery atom isn't right. Which element is on one side but missing from the other? Atoms can't appear or vanish!`,key:elBad};
+    else{
+      const t=tally(false),badEl=t.order.find(e=>(t.l[e]||0)!==(t.r[e]||0));
+      if(badEl){const scan=lv.scanner||G.repaired;
+        res={ok:false,msg:scan?`<b>${elName(badEl)} (${badEl})</b>: ${t.l[badEl]||0} on the left but ${t.r[badEl]||0} on the right. Those must match!`:
+          `Something's off with <b>${elName(badEl)} (${badEl})</b>. Count it on both sides: BIG number × little number.`};}
+      else{
+        const coefs=[];[['l',lv.lhs],['r',lv.rhs]].forEach(([s,terms])=>terms.forEach((tm,i)=>coefs.push(tm.c!=null?tm.c:G.V[`c-${s}-${i}`])));
+        const g=coefs.reduce((a,b)=>gcd(a,b));
+        if(g>1){say(`It IS balanced, nice! But bomb techs use the <b>smallest</b> whole numbers. Every number can be divided by ${g}. Shrink them!`);sfx.wrong();return;}
+        res={ok:true};
+      }
+    }
+  }
+  if(res.ok)win();else wrong(res);
+}
+const it2=it=>`${it.c} ${uni(it.f)}`;
+function wrong(res){
+  G.mistakes++;sfx.wrong();
+  if(SAVE.mode!=='practice'){G.timeLeft-=PENALTY;}
+  const w=$('bombWrap');w.classList.remove('shake');void w.offsetWidth;w.classList.add('shake');
+  if(res.key){const s=document.querySelector(`.slot[data-key="${res.key}"]`);if(s)s.classList.add('wrong');}
+  say(`${WRONG_QUIPS[Math.floor(Math.random()*WRONG_QUIPS.length)]} ${res.msg}${SAVE.mode==='practice'?'':` <i>(−${PENALTY}s)</i>`}`);
+  if(SAVE.mode!=='practice'&&G.timeLeft<=0){G.timeLeft=0;boom();}
+}
+function starsEarned(){let s=G.mistakes===0?3:G.mistakes<=2?2:1;if(G.repaired&&s>2)s=2;return s;}
+function win(){
+  G.running=false;G.done=true;G.won=true;sfx.win();
+  $('ltG').classList.add('on');$('led').classList.add('safe');$('led').classList.remove('urgent');
+  if(SAVE.mode==='practice')setLED('SAFE');
+  drawWires();confetti();
+  const st=starsEarned();SAVE.stars[G.lv]=Math.max(SAVE.stars[G.lv]||0,st);persist();
+  say(WIN_QUIPS[Math.floor(Math.random()*WIN_QUIPS.length)],'cheer');
+  setTimeout(()=>showResult(true,st),1300);
+}
+function boom(){
+  if(G.done)return;G.running=false;G.done=true;G.won=false;sfx.boom();
+  $('flash').classList.remove('go');void $('flash').offsetWidth;$('flash').classList.add('go');
+  const w=$('bombWrap');w.classList.remove('shake');void w.offsetWidth;w.classList.add('shake');
+  G.boomQuip=BOOM_QUIPS[Math.floor(Math.random()*BOOM_QUIPS.length)];say(G.boomQuip);G.talkUntil=0;
+  $('bombArt').classList.add('charred');
+  const sm=$('smoke');sm.innerHTML='';const r=$('bombWrap').getBoundingClientRect();
+  for(let k=0;k<14;k++){const p=document.createElement('div');p.className='puff';const sz=80+Math.random()*150;
+    p.style.width=p.style.height=sz+'px';p.style.left=(Math.random()*r.width-sz/2)+'px';p.style.top=(Math.random()*r.height*.8-sz/2)+'px';p.style.animationDelay=(Math.random()*.5)+'s';sm.appendChild(p);}
+  const k=document.createElement('div');k.className='kapoof';k.textContent='KA-POOF!';sm.appendChild(k);
+  setTimeout(()=>{if(G.done&&!G.won)showResult(false);},4800);
+}
+function finalEqHTML(){
+  const lv=L();
+  if(lv.type==='count')return lv.items.map(it=>{const per={};tok(it.f).forEach(k=>per[k.el]=(per[k.el]||0)+k.n);
+    return `<div><span class="fc">${it.c}</span> ${fmtHTML(it.f)} → ${Object.keys(per).map(e=>`${e}: <span class="fc">${it.c*per[e]}</span>`).join(', ')}</div>`;}).join('');
+  const side=(terms,s)=>terms.map((t,i)=>{const c=t.c!=null?t.c:t.ans;return `${c>1?`<span class="fc">${c}</span> `:''}${fmtHTML(t.f,s,i,'final',t)}`;}).join(' + ');
+  return side(lv.lhs,'l')+' → '+side(lv.rhs,'r');
+}
+function showResult(won,st){
+  const lv=L(),last=G.lv===LEVELS.length-1;
+  const steps=`<h3>🧠 How a bomb tech solves it</h3><ol>${lv.debrief.map(s=>`<li>${s}</li>`).join('')}</ol><div class="finalEq">${finalEqHTML()}</div>`;
+  if(won){
+    showOv(`<h2>${last?'ALL BOMBS DISARMED!':'BOMB DISARMED!'}</h2>
+      <div class="stars">${[1,2,3].map(n=>n<=st?'⭐':'<span class="off">⭐</span>').join('')}</div>
+      <p style="text-align:center">${G.mistakes===0?'Perfect: no wrong tries!':`${G.mistakes} wrong ${G.mistakes===1?'try':'tries'}.`}${G.repaired?' (scanner repaired)':''}${last?' You are an official Bony Bomb Squad Chemist!':''}</p>
+      ${steps}
+      <div class="btnRow">${last?'':'<button class="big g" id="nextBtn">Next bomb ▶</button>'}<button class="big b" id="againBtn">↺ Replay</button><button class="big" id="lvBtn">🗺 Levels</button></div>`);
+    if(!last)$('nextBtn').onclick=()=>startLevel(G.lv+1);
+  }else{
+    showOv(`<div class="boomTxt">KA-POOF!</div><p style="text-align:center;margin-top:10px">The clock ran out! Tony is a little sooty, but he's OK.</p>
+      <div class="fact"><b>🧪 Chemistry of a KA-POOF:</b> A TNT explosion is a chemical reaction, just like the ones you're balancing. It happens in a tiny fraction of a second! TNT is C₇H₅N₃O₆, and it breaks apart like this:
+      <span class="eqn">2 C₇H₅N₃O₆ → 3 N₂ + 5 H₂O + 7 CO + 7 C</span>Lots of gas forms almost instantly (that's the BOOM), and the 7 C is black soot. Try counting: it's balanced!</div>
+      <div id="solBox" class="hidden">${steps}</div>
+      <div class="btnRow"><button class="big g" id="againBtn">↺ Try again</button><button class="big b" id="solBtn">🧠 Show me how</button><button class="big" id="lvBtn">🗺 Levels</button></div>`,true);
+    $('solBtn').onclick=()=>{$('solBox').classList.remove('hidden');$('solBtn').remove();};
+  }
+  $('againBtn').onclick=()=>startLevel(G.lv);$('lvBtn').onclick=showMenu;
+}
+function confetti(){const cols=['#ffcf3d','#e5232f','#3dd6ff','#7a1fff','#3dff6b','#fff'];
+  for(let k=0;k<80;k++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=cols[k%cols.length];
+    d.style.animationDuration=(1.6+Math.random()*1.6)+'s';d.style.animationDelay=(Math.random()*.4)+'s';d.style.borderRadius=Math.random()>.5?'50%':'3px';
+    document.body.appendChild(d);setTimeout(()=>d.remove(),3800);}}
+
+/* ---------- Tony's animated lesson ---------- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function tw(ms,id){const end=performance.now()+ms;while(performance.now()<end){if(G.tutAbort||id!==G.tutRun)throw 'skip';await sleep(40);}}
+function applySpot(){document.querySelectorAll('.spot').forEach(e=>e.classList.remove('spot'));if(G.spot)document.querySelectorAll(G.spot).forEach(e=>e.classList.add('spot'));
+  document.querySelectorAll('.hl,.hlc').forEach(e=>e.classList.remove('hl','hlc'));
+  if(G.hl){const sides=G.hl.side==='both'?['l','r']:[G.hl.side];
+    sides.forEach(sd=>{document.querySelectorAll(`.at[data-el="${G.hl.el}"][data-side="${sd}"]`).forEach(a=>{a.classList.add('hl');const c=a.closest('.term')?.querySelector('.coef,.slot.num');if(c)c.classList.add('hlc');});
+      document.querySelectorAll(`.sc[data-el="${G.hl.el}"] .sc${sd.toUpperCase()}`).forEach(b=>b.classList.add('hl'));});}}
+async function flyTile(key,v){
+  const tile=document.querySelector(`.tile[data-v="${v}"]`),slot=document.querySelector(`.slot[data-key="${key}"]`);
+  if(!tile||!slot){G.V[key]=v;renderScreen();return;}
+  const a=tile.getBoundingClientRect(),b=slot.getBoundingClientRect(),g=tile.cloneNode(true);
+  g.classList.add('ghost');g.style.left=(a.left+a.width/2)+'px';g.style.top=(a.top+a.height/2)+'px';document.body.appendChild(g);tile.classList.add('sel');
+  const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2);
+  await g.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:`translate(calc(-50% + ${dx*.5}px),calc(-50% + ${dy*.5-90}px)) scale(1.3) rotate(-12deg)`},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(1)`}],{duration:1000,easing:'ease-in-out'}).finished;
+  g.remove();tile.classList.remove('sel');G.V[key]=v;sfx.drop();renderScreen();
+}
+async function runTutorial(){
+  const lv=L();if(!lv.tutorial)return;
+  const id=++G.tutRun;hideOv();G.running=false;G.tut=true;G.tutAbort=false;G.done=false;G.V={};G.sel=null;
+  document.querySelectorAll('.tile.sel').forEach(t=>t.classList.remove('sel'));
+  $('ltG').classList.remove('on');$('led').classList.remove('safe','urgent');G.timeLeft=timeFor(lv);updateLED();
+  renderScreen();$('tutBar').classList.remove('hidden');
+  try{
+    for(const st of lv.tutorial){
+      G.spot=st.spot||null;G.hl=st.hl||null;G.tutMood=st.mood||'talk';if(st.say)say(st.say);applySpot();
+      if(st.fill){await tw(1000,id);await flyTile(st.fill[0],st.fill[1]);}
+      if(st.press){$('disarm').classList.add('pressing');sfx.win();$('ltG').classList.add('on');$('led').classList.add('safe');await tw(450,id);$('disarm').classList.remove('pressing');}
+      await tw(st.wait||Math.max(2400,900+(st.say||'').replace(/<[^>]+>/g,'').length*45),id);
+    }
+  }catch(e){}
+  if(id!==G.tutRun)return;
+  const skipped=G.tutAbort;
+  G.tut=false;G.tutAbort=false;G.spot=null;G.hl=null;applySpot();$('tutBar').classList.add('hidden');
+  G.V={};$('ltG').classList.remove('on');$('led').classList.remove('safe');renderScreen();
+  G.timeLeft=timeFor(lv);G.mistakes=0;G.done=false;G.running=true;G.last=performance.now();updateLED();
+  say(skipped?"Okay! Your turn. The clock is running!":"Now YOU try it! The clock is running!");
+}
+$('skipTut').onclick=()=>{G.tutAbort=true;};
+$('tutBtn').onclick=()=>{if(G.done||G.tut)return;runTutorial();};
+
+/* ---------- overlays ---------- */
+let pausedByOv=false;
+function showOv(html,side){$('ovCard').innerHTML=html;$('ov').classList.toggle('side',!!side);$('ov').classList.remove('hidden');}
+function hideOv(){$('ov').classList.add('hidden');}
+function pauseFor(fn){const was=G.running;G.running=false;fn(()=>{hideOv();if(was){G.running=true;G.last=performance.now();}});}
+function manual(){pauseFor(resume=>{showOv(`<h2>📖 Bomb Squad Field Manual</h2>
+  <p>How to balance ANY chemical equation:</p>
+  <ol>
+   <li><b>Count every atom.</b> BIG number in front × little number after the element. No little number = 1. <br><i>3 H₂O → H: 3 × 2 = 6, O: 3 × 1 = 3.</i></li>
+   <li><b>Never change the little numbers.</b> They define the chemical. H₂O is water; H₂O₂ is hydrogen peroxide! Only change the BIG numbers.</li>
+   <li><b>Start with the biggest molecule</b> (the one with the most atoms) and give it a 1. It's often a product (like Fe₂O₃ in rust), so working backward from the products often works great.</li>
+   <li><b>Balance one element at a time.</b> For things that burn, use C, then H, then O.</li>
+   <li><b>Save lone elements for last</b> (Fe, Al, Ag, O₂, H₂). Changing them only changes one atom count, so they're easiest to fix.</li>
+   <li><b>Need half a molecule?</b> No such thing! Double every number.</li>
+   <li><b>Check every element</b> on both sides, and use the smallest whole numbers.</li>
+  </ol>
+  <div class="trick"><b>Why it works:</b> In a chemical reaction atoms are rearranged, never created or destroyed. Every atom that goes in must come out!</div>
+  <div class="btnRow"><button class="big g" id="okBtn">Got it!</button></div>`);$('okBtn').onclick=resume;});}
+function settings(){pauseFor(resume=>{
+  const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${String(SAVE[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
+  showOv(`<h2>⚙ Settings</h2>
+   <h3>Timer</h3>${seg('mode',[['normal','⏱ Normal'],['relaxed','🐢 Relaxed (double time)'],['practice','🧪 Practice (no timer)']])}
+   <p style="font-size:15px;opacity:.75">Changing the timer restarts the current level. Clock times per level live in the LEVELS list at the top of the code.</p>
+   <h3>Sound</h3>${seg('sound',[[true,'🔊 On'],[false,'🔇 Off']])}
+   <div class="btnRow"><button class="big g" id="okBtn">Done</button></div>`);
+  const before=SAVE.mode;
+  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;SAVE[k]=k==='sound'?b.dataset.v==='true':b.dataset.v;persist();
+    b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));});
+  $('okBtn').onclick=()=>{if(SAVE.mode!==before){hideOv();if(!$('play').classList.contains('hidden'))startLevel(G.lv);else showMenu();}else resume();};
+});}
+$('hManual').onclick=manual;$('mManual').onclick=manual;$('hSettings').onclick=settings;$('hLevels').onclick=showMenu;
+$('mUnlock').onclick=()=>{SAVE.unlockAll=true;persist();showMenu();};
+$('mReset').onclick=()=>{$('mReset').textContent='Click again to erase stars';$('mReset').onclick=()=>{SAVE.stars={};SAVE.unlockAll=false;persist();$('mReset').textContent='↺ Reset progress';showMenu();};};
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('play').classList.contains('hidden')&&$('ov').classList.contains('hidden'))check();});
+showMenu();
+</script>
+</body>
+</html>
