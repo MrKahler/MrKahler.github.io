@@ -1,0 +1,496 @@
+<title>What's Earth Made Of?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: sunburst left, Tony + "what's inside" panel right; stacks on phones */
+:root{
+  --bg:#e9eff4; --panel:#ffffff; --ink:#1b2430; --muted:#5a6878; --line:#d3dce5;
+  --accent:#c2410c; --accent2:#1d6fa5; --chip:#f3f6f9; --tip:#1b2430; --tipInk:#ffffff;
+  --display:"Fredoka","Nunito",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151c; --panel:#18212b; --ink:#e7edf3; --muted:#97a6b6; --line:#2a3744;
+  --accent:#f5844f; --accent2:#62b3e8; --chip:#1f2a36; --tip:#e7edf3; --tipInk:#0f151c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151c; --panel:#18212b; --ink:#e7edf3; --muted:#97a6b6; --line:#2a3744;
+  --accent:#f5844f; --accent2:#62b3e8; --chip:#1f2a36; --tip:#e7edf3; --tipInk:#0f151c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.1;margin:0;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:4px 0 0;max-width:60ch}
+.toggle{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px}
+.toggle button{font:700 .9rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--accent2);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:700 .88rem var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.chip[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+button:focus-visible,.row:focus-visible{outline:3px solid var(--accent2);outline-offset:2px}
+.main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){.main{grid-template-columns:1fr}}
+.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px;min-width:0;position:relative}
+#chart{display:block;width:100%;height:auto;max-width:100%;touch-action:manipulation}
+#chart path,#chart circle.hub{cursor:pointer;transition:opacity .2s}
+#chart path:hover{opacity:.85}
+#chart text{pointer-events:none;font-family:var(--display);font-weight:600}
+#burst{transform-origin:300px 300px}
+@media (prefers-reduced-motion:no-preference){#burst.zoom{animation:zoomIn .35s ease-out}}
+@keyframes zoomIn{from{transform:scale(.82) rotate(-8deg);opacity:.2}to{transform:none;opacity:1}}
+.tip{position:absolute;pointer-events:none;background:var(--tip);color:var(--tipInk);border-radius:10px;padding:8px 11px;font-size:.85rem;line-height:1.35;max-width:240px;box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:5}
+.tip b{font-family:var(--display);font-weight:600;font-size:.95rem}
+.hint{font-size:.85rem;color:var(--muted);text-align:center;margin:4px 0 2px}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.tony{display:flex;gap:8px;align-items:flex-end}
+#tony{flex:0 0 auto;width:132px;height:auto}
+.bubble{position:relative;background:var(--panel);border:2px solid var(--ink);border-radius:16px;padding:12px 14px;min-width:0;flex:1;align-self:center}
+.bubble::before{content:"";position:absolute;left:-11px;top:26px;border:10px solid transparent;border-right-color:var(--ink);border-left:0}
+.bubble::after{content:"";position:absolute;left:-8px;top:28px;border:8px solid transparent;border-right-color:var(--panel);border-left:0}
+.bubble .pun{display:block;margin-top:6px;color:var(--accent);font-weight:700}
+@media (prefers-reduced-motion:no-preference){.bubble.pop{animation:pop .3s ease}}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:none}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.panel h2{font-family:var(--display);font-weight:600;font-size:1.35rem;margin:0;text-wrap:balance}
+.meta{color:var(--muted);font-size:.9rem;margin:2px 0 12px;font-variant-numeric:tabular-nums}
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) 78px;gap:10px;align-items:center;padding:5px 6px;border-radius:10px;cursor:pointer;background:transparent;border:0;color:inherit;font:inherit;text-align:left;width:100%}
+.row:hover{background:var(--chip)}
+.sym{font-family:var(--display);font-weight:700;font-size:1rem;width:40px;height:34px;border-radius:8px;display:grid;place-items:center;color:#1b2430}
+.sym.layer{width:22px;height:22px;border-radius:6px;justify-self:center}
+.name{font-weight:700;font-size:.95rem;line-height:1.2;min-width:0}
+.bar{display:block;height:6px;border-radius:3px;background:var(--line);margin-top:4px;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:3px}
+.pct{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:.95rem}
+.back{font:700 .85rem var(--body);border:0;background:none;color:var(--accent2);cursor:pointer;padding:0;margin-bottom:6px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+summary{cursor:pointer;font-weight:800}
+details p,details li{color:var(--muted);font-size:.92rem}
+details ul{padding-left:20px;margin:6px 0}
+footer{color:var(--muted);font-size:.85rem;text-align:center}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>What's <span>Earth</span> Made Of?</h1>
+      <p class="sub">Every slice is sized by how much stuff is there. Click a ring to zoom in, click the center to zoom back out, or jump with the buttons.</p>
+    </div>
+    <div class="toggle" role="group" aria-label="Measure by">
+      <button id="byMass" type="button" aria-pressed="true">By weight</button>
+      <button id="byAtoms" type="button" aria-pressed="false">By atoms</button>
+    </div>
+  </header>
+
+  <nav class="chips" id="chips" aria-label="Jump to a part of Earth"></nav>
+
+  <div class="main">
+    <div class="chartbox" id="chartbox">
+      <svg id="chart" viewBox="0 0 600 600" role="img" aria-label="Sunburst chart of Earth's elements"><g id="burst"></g></svg>
+      <div class="tip" id="tip" hidden></div>
+      <p class="hint">Some slices are too thin to see (like the crust from the whole-Earth view). Use the buttons above or the list on the right to open them.</p>
+    </div>
+    <div class="side">
+      <div class="tony">
+        <canvas id="tony" width="300" height="420" aria-hidden="true"></canvas>
+        <div class="bubble" id="bubble" aria-live="polite"></div>
+      </div>
+      <section class="panel" id="panel" aria-live="polite"></section>
+    </div>
+  </div>
+
+  <details>
+    <summary>Where do these numbers come from?</summary>
+    <p>All percentages are by weight (mass) unless you switch to "By atoms," which counts atoms instead. Light elements like hydrogen look tiny by weight but huge by atom count.</p>
+    <ul>
+      <li><b>Crust, oceans, air:</b> measured directly from huge numbers of rock, water, and air samples. These are the most reliable numbers here.</li>
+      <li><b>Mantle:</b> estimated from mantle rocks brought up by volcanoes plus lab experiments. Good, but not exact.</li>
+      <li><b>Core:</b> nobody has ever sampled it. Scientists infer it from how earthquake waves travel, Earth's overall density, and metal-rich meteorites. Iron and nickel are certain; the light elements (silicon, sulfur, oxygen) are educated estimates.</li>
+      <li><b>Living things:</b> rough estimates. The split between plants, microbes, and animals uses carbon-weight estimates (Bar-On, Phillips &amp; Milo, PNAS 2018); total wet weight is approximate.</li>
+    </ul>
+    <p>Main references: McDonough (2003) core model; McDonough &amp; Sun (1995) mantle; Rudnick &amp; Gao (2003) continental crust; typical mid-ocean-ridge basalt for ocean-floor crust; standard seawater (3.5% salt); standard dry air.</p>
+  </details>
+
+  <footer>Created by Mr. Kahler · © 2026 S. Kahler Teaching</footer>
+</div>
+
+<script>
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const TAU=Math.PI*2;
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+const Tony=(function(){
+  const INK='#2d2452',BONE='#fff6e4',BONE2='#e9dcc3';
+  const L1=Math.hypot(11,10.5),L2=Math.hypot(15,14.5),R1=Math.hypot(10,11.5),R2=Math.hypot(14,15.5);
+  const B={L1:Math.atan2(-10.5,-11),L2:Math.atan2(-14.5,-15),R1:Math.atan2(11.5,10),R2:Math.atan2(15.5,14)};
+  const wrap=a=>{while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;return a;};
+  function reach(side,tx,ty){
+    const Ls=side==='L',S=Ls?[74,153]:[126,153],l1=Ls?L1:R1,l2=Ls?L2:R2,b1=Ls?B.L1:B.R1,b2=Ls?B.L2:B.R2;
+    let dx=tx-S[0],dy=ty-S[1],d=Math.hypot(dx,dy)||1;const dd=clamp(d,Math.abs(l1-l2)+.1,l1+l2-.05);dx*=dd/d;dy*=dd/d;
+    const base=Math.atan2(dy,dx),al=Math.acos(clamp((l1*l1+dd*dd-l2*l2)/(2*l1*dd),-1,1));
+    const c=[base+al,base-al],e1=Math.sin(c[0]),e2=Math.sin(c[1]),a=e1>e2?c[0]:c[1];
+    const ex=S[0]+Math.cos(a)*l1,ey=S[1]+Math.sin(a)*l1,d2=Math.atan2(S[1]+dy-ey,S[0]+dx-ex);
+    const a1=wrap(a-b1);return [a1,wrap(d2-b2-a1),0];
+  }
+  const RIBS=['M95 152 C88 149 76 149 73 158 C72 161 72.5 164 74.5 166','M95 165 C88 162 76 162 73 171 C72 174 72.5 177 74.5 179','M95 178 C88 175 76 175 73 184 C72 187 72.5 190 74.5 192'].map(d=>new Path2D(d));
+  const RIB4=new Path2D('M91 189 C86 187 81 188 79 192');
+  const CRANIUM=new Path2D('M100 28 C126 28 142 42 142 64 C142 84 134 104 124 120 L76 120 C66 104 58 84 58 64 C58 42 74 28 100 28 Z');
+  const NOSE=new Path2D('M100 97 L94 107 C92 111 97 113 100 109 C103 113 108 111 106 107 Z');
+  const PELVIS=new Path2D('M72 194 Q80 187 92 193 L108 193 Q120 187 128 194 Q132 204 122 208 Q112 206 106 200 L94 200 Q88 206 78 208 Q68 204 72 194Z');
+  const JAW=new Path2D('M76 124 L124 124 C123 132 119 140 111 142 L89 142 C81 140 77 132 76 124 Z');
+  const TINT=new Path2D('M74 150 Q100 140 126 150 Q132 172 124 194 Q100 200 76 194 Q68 172 74 150 Z');
+  function smudge(ctx,x,y,r,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(28,22,24,${a})`);g.addColorStop(.6,`rgba(28,22,24,${a*.55})`);g.addColorStop(1,'rgba(28,22,24,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();}
+  function ln(ctx,a,b,c,d,col,w){ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();}
+  function bone(ctx,a,b,c,d,w){ln(ctx,a,b,c,d,INK,w);ln(ctx,a,b,c,d,BONE,w/2);}
+  function joint(ctx,x,y){ctx.beginPath();ctx.arc(x,y,3.4,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.2;ctx.strokeStyle=INK;ctx.stroke();}
+  function rot(ctx,p,a){ctx.translate(p[0],p[1]);ctx.rotate(a);ctx.translate(-p[0],-p[1]);}
+  function handG(ctx,w,tips){tips.forEach(t=>ln(ctx,w[0],w[1],t[0],t[1],INK,5.6));tips.forEach(t=>ln(ctx,w[0],w[1],t[0],t[1],BONE,2.2));
+    ctx.beginPath();ctx.arc(w[0],w[1],5,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.4;ctx.strokeStyle=INK;ctx.stroke();}
+  function leg(ctx,side,a1,a2){
+    const L=side==='L',hip=L?[88,204]:[112,204],kn=L?[87,222]:[113,222],an=L?[86,240]:[114,240],ft=L?82:118;
+    ctx.save();rot(ctx,hip,a1);bone(ctx,hip[0],hip[1],kn[0],kn[1],9);
+    ctx.save();rot(ctx,kn,a2);bone(ctx,kn[0],kn[1],an[0],an[1],9);
+    ctx.beginPath();ctx.ellipse(ft,243.5,8.5,4.2,0,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.6;ctx.strokeStyle=INK;ctx.stroke();joint(ctx,kn[0],kn[1]);
+    ctx.restore();ctx.restore();
+  }
+  function arm(ctx,side,A){
+    const L=side==='L',sh=L?[74,153]:[126,153],el=L?[63,142.5]:[136,164.5],wr=L?[48,128]:[150,180];
+    const tips=L?[[38.2,125.9],[40.8,121.1],[45.5,118.3]]:[[159.6,182.9],[156.6,187.5],[151.8,189.8]];
+    ctx.save();rot(ctx,sh,A[0]);bone(ctx,sh[0],sh[1],el[0],el[1],9);
+    ctx.save();rot(ctx,el,A[1]);bone(ctx,el[0],el[1],wr[0],wr[1],9);
+    ctx.save();rot(ctx,wr,A[2]);handG(ctx,wr,tips);ctx.restore();
+    joint(ctx,el[0],el[1]);ctx.restore();ctx.restore();
+  }
+  function torso(ctx){
+    for(let i=0;i<6;i++){rr(ctx,95,147+8*i,10,6.5,3);ctx.fillStyle=BONE2;ctx.fill();ctx.lineWidth=1.8;ctx.strokeStyle=INK;ctx.stroke();}
+    ctx.globalAlpha=.28;ctx.fillStyle=BONE;ctx.fill(TINT);ctx.globalAlpha=1;
+    ctx.fillStyle=BONE;ctx.fill(PELVIS);ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.strokeStyle=INK;ctx.stroke(PELVIS);
+    ctx.lineCap='round';
+    for(const flip of [0,1]){
+      ctx.save();if(flip){ctx.translate(200,0);ctx.scale(-1,1);}
+      RIBS.forEach(p=>{ctx.strokeStyle=INK;ctx.lineWidth=7.6;ctx.stroke(p);ctx.strokeStyle=BONE;ctx.lineWidth=3.6;ctx.stroke(p);});
+      ctx.strokeStyle=INK;ctx.lineWidth=7.2;ctx.stroke(RIB4);ctx.strokeStyle=BONE;ctx.lineWidth=3.2;ctx.stroke(RIB4);ctx.restore();
+    }
+    rr(ctx,95.5,147,9,26,4.5);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.2;ctx.strokeStyle=INK;ctx.stroke();
+  }
+  function neck(ctx){
+    for(let i=0;i<3;i++){rr(ctx,94,126+8*i,12,7,3);ctx.fillStyle=BONE2;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();}
+    ctx.lineCap='round';ln(ctx,98,147,73,151,INK,10.5);ln(ctx,98,147,73,151,BONE,4.5);ln(ctx,102,147,127,151,INK,10.5);ln(ctx,102,147,127,151,BONE,4.5);
+  }
+  // bomb-squad harness (red straps + gold buckle)
+  function harness(ctx){ctx.lineCap='round';
+    for(const p of [[[80,150],[120,198]],[[120,150],[80,198]]]){ln(ctx,p[0][0],p[0][1],p[1][0],p[1][1],INK,7.5);ln(ctx,p[0][0],p[0][1],p[1][0],p[1][1],'#e5232f',4.2);}
+    ctx.beginPath();ctx.arc(100,174,4.4,0,TAU);ctx.fillStyle='#ffd166';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();}
+  function head(ctx,P){
+    ctx.save();rot(ctx,[100,140],P.head||0);
+    const jd=(P.jaw||0)*26;ctx.fillStyle=INK;ctx.fillRect(76,118,48,7+jd);
+    ctx.fillStyle=BONE;ctx.fill(CRANIUM);
+    if(P.soot){ctx.save();ctx.clip(CRANIUM);[[66,60,24,.85],[88,42,18,.6],[133,76,20,.8],[108,34,15,.5],[124,104,15,.7],[72,102,13,.55],[100,92,10,.4],[140,52,12,.5]].forEach(b=>smudge(ctx,b[0],b[1],b[2],b[3]));ctx.restore();}
+    ctx.lineWidth=3;ctx.lineJoin='round';ctx.strokeStyle=INK;ctx.stroke(CRANIUM);
+    ctx.lineCap='round';ctx.strokeStyle='#cdb994';ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(59,52);ctx.quadraticCurveTo(100,37,141,52);ctx.stroke();
+    ctx.strokeStyle='#d9c9ac';ctx.lineWidth=2;ctx.beginPath();[82.5,89.5,96.5,103.5,110.5,117.5].forEach(x=>{ctx.moveTo(x,113);ctx.lineTo(x,119);});ctx.stroke();
+    ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(81,84,14,15,0,0,TAU);ctx.ellipse(119,84,14,15,0,0,TAU);ctx.fill();
+    ctx.fillStyle=INK;ctx.fill(NOSE);ctx.lineWidth=1.5;ctx.strokeStyle=INK;ctx.stroke(NOSE);
+    ctx.strokeStyle=BONE;ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(100,104.8);ctx.lineTo(100,111);ctx.stroke();
+    ctx.fillStyle=BONE;ctx.beginPath();ctx.moveTo(98.9,111.4);ctx.lineTo(101.1,111.4);ctx.lineTo(100,109.6);ctx.closePath();ctx.fill();
+    ctx.globalAlpha=.75;ctx.fillStyle='#ff8fb5';ctx.beginPath();ctx.ellipse(77,105,4.5,2.8,0,0,TAU);ctx.ellipse(123,105,4.5,2.8,0,0,TAU);ctx.fill();ctx.globalAlpha=1;
+    ctx.save();ctx.translate(0,jd);ctx.fillStyle=BONE;ctx.fill(JAW);ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke(JAW);
+    ctx.strokeStyle='#d9c9ac';ctx.lineWidth=2;ctx.beginPath();[[82.5,5],[89.5,7],[96.5,7],[103.5,7],[110.5,7],[117.5,5]].forEach(a=>{ctx.moveTo(a[0],125);ctx.lineTo(a[0],125+a[1]);});ctx.stroke();ctx.restore();
+    ln(ctx,100,33,100,25,INK,6);ctx.beginPath();ctx.arc(100,20,5,0,TAU);ctx.lineWidth=6;ctx.strokeStyle=INK;ctx.stroke();
+    ln(ctx,100,33,100,25,'#a9b1c4',2.8);ctx.beginPath();ctx.arc(100,20,5,0,TAU);ctx.lineWidth=2.8;ctx.strokeStyle='#a9b1c4';ctx.stroke();
+    const pu=P.pupil||[0,0],ps=P.pupilScale||1;
+    [[81,83,78.8,82.5],[119,83,116.8,117.5]].forEach(e=>{
+      ctx.beginPath();ctx.arc(e[0],e[1],12.5,0,TAU);ctx.fillStyle='#d3d8ec';ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle=INK;ctx.stroke();
+      ctx.beginPath();ctx.arc(e[2],80.5,9.8,0,TAU);ctx.fillStyle='#fff';ctx.fill();
+      ctx.save();ctx.translate(e[3]+pu[0],85+pu[1]);ctx.rotate(-.26);ctx.beginPath();ctx.ellipse(0,0,4.2*ps,3.86*ps,0,0,TAU);ctx.fillStyle='#1b1730';ctx.fill();ctx.restore();
+    });
+    ctx.lineCap='round';ctx.strokeStyle=INK;ctx.lineWidth=3;
+    ctx.save();rot(ctx,[81,62],P.browL||0);ctx.beginPath();ctx.moveTo(75,62.5);ctx.lineTo(87,61.5);ctx.stroke();ctx.restore();
+    ctx.save();rot(ctx,[119,62],P.browR||0);ctx.beginPath();ctx.moveTo(125,62.5);ctx.lineTo(113,61.5);ctx.stroke();ctx.restore();
+    ctx.restore();
+  }
+  function blank(){return {lean:0,head:0,jaw:0,pupil:[0,0],pupilScale:1,browL:0,browR:0,legL:[0,0],legR:[0,0],armL:[0,0,0],armR:[0,0,0],harness:false};}
+  function idle(t){const P=blank();P.armL=[Math.sin(t*1.4)*.08+.1,.5,0];P.head=Math.sin(t*1.7)*.05;P.lean=Math.sin(t*1.3)*.015;
+    P.jaw=.04+Math.max(0,Math.sin(t*2.1))*.05;P.pupil=[Math.sin(t*.8)*2,Math.cos(t*.6)];return P;}
+  function talk(t){const P=idle(t);P.jaw=.1+Math.abs(Math.sin(t*11))*.22;P.armR=[-.35+Math.sin(t*3)*.15,-.5,0];return P;}
+  function wave(t){const P=blank();P.armL=[Math.sin(t*3.4)*.1,Math.sin(t*7)*.55,Math.sin(t*7)*.3];P.head=Math.sin(t*1.7)*.05;P.jaw=.08;P.pupil=[Math.sin(t*.8)*2,0];return P;}
+  function cheer(t){const P=blank(),w=Math.sin(t*13);
+    P.armL=[w*.15,w*.45,w*.3];P.armR=[-1.62-w*.15,-w*.45,-w*.3];P.head=Math.sin(t*6)*.08;P.jaw=.4+.12*Math.sin(t*14);P.browL=-.2;P.browR=.2;P.pupil=[0,-2];return P;}
+  function nervous(t){const P=blank();P.jaw=.12+Math.abs(Math.sin(t*38))*.1;P.pupil=[Math.sin(t*41)*1.2,1+Math.cos(t*37)];P.pupilScale=.8;P.browL=-.3;P.browR=.3;
+    P.legL=[.12+Math.sin(t*30)*.06,0];P.legR=[-.12-Math.sin(t*30)*.06,0];P.armL=[.3,.9,.2];P.armR=[-.3,-.9,-.2];P.head=Math.sin(t*25)*.02;return P;}
+  function sooty(t){const P=blank();P.soot=true;P.jaw=.45;P.pupilScale=.55;P.pupil=[Math.cos(t*4)*2.5,Math.sin(t*4)*2.5];P.head=Math.sin(t*1.5)*.12;
+    P.armL=[.6,.3,0];P.armR=[-.6,-.3,0];P.browL=.25;P.browR=-.25;return P;}
+  function draw(ctx,o){
+    const P=o.pose;
+    ctx.save();ctx.translate(o.x,o.y);ctx.scale(o.s,o.s);ctx.translate(-100,-247);
+    ctx.lineCap='round';ctx.lineJoin='round';
+    leg(ctx,'L',P.legL[0],P.legL[1]);leg(ctx,'R',P.legR[0],P.legR[1]);
+    ctx.save();rot(ctx,[100,200],P.lean||0);
+    arm(ctx,'L',P.armL);arm(ctx,'R',P.armR);
+    torso(ctx);if(P.harness)harness(ctx);neck(ctx);head(ctx,P);
+    if(P.soot){[[84,168,12,.4],[117,184,11,.35],[100,200,9,.3]].forEach(b=>smudge(ctx,b[0],b[1],b[2],b[3]));}
+    ctx.restore();ctx.restore();
+  }
+  function think(t){const P=idle(t);P.armR=reach('R',110,141);P.head=-.08+Math.sin(t*1.2)*.03;P.pupil=[-2.5,-2.5];P.browL=-.18;P.browR=.05;return P;}
+  function point(t){const P=idle(t);P.armR=reach('R',176+Math.sin(t*4)*2,128);P.head=.05;P.pupil=[2.5,0];return P;}
+  function surprise(t){const P=blank();P.jaw=.5+Math.sin(t*9)*.05;P.browL=-.4;P.browR=.4;P.pupilScale=.6;P.armL=reach('L',58,112);P.armR=reach('R',142,112);P.head=Math.sin(t*20)*.02;return P;}
+  return {draw,idle,talk,wave,cheer,nervous,sooty,think,point,surprise};
+})();
+
+(function(){
+const EL={
+  O:{n:"Oxygen",A:16.00,c:"#5aa7de",f:"The #1 element in rock, ocean water, and you, by weight. In rocks it's locked tight to silicon and metals, so you can't breathe it out of a pebble."},
+  Si:{n:"Silicon",A:28.09,c:"#d2b07a",f:"Silicon plus oxygen makes quartz and sand. It's the backbone of nearly every kind of rock."},
+  Fe:{n:"Iron",A:55.85,c:"#c0603f",f:"Earth's most common element overall, by weight. Almost all of it is down in the core. A little is in your blood, carrying oxygen."},
+  Mg:{n:"Magnesium",A:24.31,c:"#93c26f",f:"Mantle rock is packed with magnesium. The green gem peridot is a mantle mineral (olivine)."},
+  Al:{n:"Aluminum",A:26.98,c:"#aeb4c0",f:"The most common metal in the crust. Clay and feldspar are full of it."},
+  Ca:{n:"Calcium",A:40.08,c:"#eadc9e",f:"Builds bones, teeth, seashells, and limestone."},
+  Na:{n:"Sodium",A:22.99,c:"#eaa443",f:"Half of table salt. On its own it's a soft metal that fizzes wildly in water!"},
+  K:{n:"Potassium",A:39.10,c:"#b98ad9",f:"In bananas and in granite. Plants need it to grow."},
+  Ni:{n:"Nickel",A:58.69,c:"#7f9aa0",f:"Iron's partner in the core."},
+  S:{n:"Sulfur",A:32.06,c:"#e6d340",f:"The rotten-egg smell element. It's in the core, in seawater, and in the proteins that make your hair."},
+  H:{n:"Hydrogen",A:1.008,c:"#a6dcea",f:"The lightest element. Tiny by weight, but count the atoms and it's most of the atoms in the ocean and in you."},
+  C:{n:"Carbon",A:12.01,c:"#6b737d",f:"Every living thing is built on carbon chains. Diamonds and pencil graphite are pure carbon too."},
+  N:{n:"Nitrogen",A:14.01,c:"#7486dc",f:"Most of the air is nitrogen, not oxygen. Your muscles and DNA need it too."},
+  Cl:{n:"Chlorine",A:35.45,c:"#5fbd8f",f:"The other half of table salt. Most of the ocean's dissolved salt is chloride."},
+  Ar:{n:"Argon",A:39.95,c:"#de8fbe",f:"A lazy gas that reacts with almost nothing. About 1% of the air."},
+  Ti:{n:"Titanium",A:47.87,c:"#93a0b3",f:"A strong, light metal. White paint and many sunscreens use titanium dioxide."},
+  P:{n:"Phosphorus",A:30.97,c:"#e88787",f:"Teams up with calcium to make bones. It's also part of the DNA ladder."},
+  Other:{n:"Other elements",A:50,c:"#cfd3d8",f:"Dozens of other elements in small amounts: chromium, manganese, cobalt, and many more."}
+};
+const PUNS={Ca:"Calcium is what I'm made of. No bones about it!",P:"Phosphorus and calcium: my two favorite building blocks.",Fe:"Iron jokes? I've got a whole ton.",O:"Oxygen is everywhere. I find that breathtaking.",H:"Hydrogen is small, but it really knows how to bond.",Na:"Sodium + chlorine = salt. That's a solution I can get behind.",Cl:"Sodium + chlorine = salt. That's a solution I can get behind.",Ar:"Argon doesn't react to my jokes. Noble gases are tough crowds.",N:"Nitrogen is in my notes. I mean nucleotides."};
+
+// mass in kg; composition in mass percent
+const TREE={id:"earth",name:"Whole Earth",short:"Earth",color:"#3a6ea5",children:[
+  {id:"innerCore",name:"Inner core",short:"Inner core",color:"#f2b134",mass:9.8e22,comp:{Fe:88,Ni:5.5,Si:2.5,S:1.0,Other:3.0}},
+  {id:"outerCore",name:"Outer core",short:"Outer core",color:"#e0782f",mass:1.84e24,comp:{Fe:84,Ni:5.2,Si:6.0,S:2.0,O:1.0,Other:1.8}},
+  {id:"mantle",name:"Mantle",short:"Mantle",color:"#b8452c",mass:4.01e24,comp:{O:44.0,Mg:22.8,Si:21.0,Fe:6.3,Ca:2.5,Al:2.4,Other:1.0}},
+  {id:"shell",name:"Outer shell",short:"Outer shell",color:"#6d7f3a",children:[
+    {id:"crust",name:"Crust",short:"Crust",color:"#8b6b47",children:[
+      {id:"contCrust",name:"Continental crust",short:"Continents",color:"#a07c52",mass:2.1e22,comp:{O:46.1,Si:28.3,Al:8.4,Fe:5.2,Ca:4.6,Mg:2.8,Na:2.3,K:1.5,Ti:0.4,Other:0.4}},
+      {id:"oceanCrust",name:"Ocean-floor crust",short:"Ocean floor",color:"#56677a",mass:6.6e21,comp:{O:44.0,Si:23.6,Al:8.1,Fe:8.1,Ca:8.1,Mg:4.6,Na:2.1,Ti:1.0,Other:0.4}}]},
+    {id:"water",name:"Water & ice",short:"Water",color:"#2f7fc1",children:[
+      {id:"oceans",name:"Oceans",short:"Oceans",color:"#2a6fae",mass:1.335e21,comp:{O:85.8,H:10.8,Cl:1.94,Na:1.08,Mg:0.13,S:0.09,Ca:0.04,K:0.04,Other:0.08}},
+      {id:"ice",name:"Ice caps & glaciers",short:"Ice",color:"#9fd3ec",mass:2.4e19,comp:{O:88.8,H:11.2}},
+      {id:"fresh",name:"Groundwater, lakes & rivers",short:"Fresh water",color:"#5aa9d6",mass:2.35e19,comp:{O:88.8,H:11.2}}]},
+    {id:"air",name:"Air",short:"Air",color:"#8fb4dc",mass:5.15e18,comp:{N:75.5,O:23.1,Ar:1.29,C:0.02,Other:0.09}},
+    {id:"life",name:"Living things",short:"Life",color:"#4caf50",children:[
+      {id:"plants",name:"Plants",short:"Plants",color:"#3f9a42",mass:2.05e15,comp:{O:72,H:10.5,C:15,N:0.6,K:0.6,Ca:0.5,Other:0.8}},
+      {id:"microbes",name:"Bacteria & fungi",short:"Microbes",color:"#8bc34a",mass:4.3e14,comp:{O:65,C:18,H:10,N:4.5,P:1.0,S:0.5,K:0.5,Other:0.5}},
+      {id:"animals",name:"Animals (and people)",short:"Animals",color:"#d4a24c",mass:1.0e13,comp:{O:65,C:18.5,H:9.5,N:3.2,Ca:1.5,P:1.0,K:0.4,S:0.3,Na:0.2,Cl:0.2,Other:0.2}}]}
+  ]}
+]};
+
+// [line, pun, mood]
+const TALK={
+  earth:["Hi, I'm Tony Bony! This whole circle is planet Earth. Click a ring to dig in.","Don't worry, digging doesn't scare me. I'm a skeleton, I've got no guts!","wave"],
+  innerCore:["The inner core is a ball of solid iron and nickel, about as hot as the surface of the Sun. The crushing pressure keeps it solid.","Talk about a hard-core fan!","surprise"],
+  outerCore:["The outer core is liquid metal, mostly iron. As it flows, it helps make Earth's magnetic field, which is why compasses work.","That's what I call a magnetic personality.","talk"],
+  mantle:["The mantle is about two-thirds of Earth's weight. It's hot rock, mostly solid, made mainly of oxygen, magnesium, and silicon.","I'd put a trophy on it. Get it? A mantle-piece!","talk"],
+  shell:["Everything you've ever touched (rocks, oceans, air, and every living thing) fits in this thin shell: less than half of one percent of Earth.","Small, but it's where all the fun is.","think"],
+  crust:["The crust is the rocky skin we live on. Under continents it averages about 35 km thick; under the oceans only about 7 km.","Oxygen is the top element in rocks. Rocks aren't breathing, they just have a lot of it locked up.","talk"],
+  contCrust:["Continental crust is light-colored rock like granite, rich in silicon, aluminum, and potassium.","Granite? I take it for granite every day.","talk"],
+  oceanCrust:["Ocean-floor crust is dark basalt, with more iron, magnesium, and calcium than the continents.","Basalt is so dense. Must be a heavy reader.","talk"],
+  water:["All the water on Earth together is only about 0.02% of Earth's weight. Almost all of it is in the oceans.","Water you waiting for? Click the oceans!","talk"],
+  oceans:["Seawater is about 96.5% water and 3.5% salt. The salt is mostly chlorine and sodium.","Why is the ocean so friendly? It always waves!","wave"],
+  ice:["Ice caps and glaciers hold most of Earth's fresh water. Ice is just hydrogen and oxygen, H₂O.","I'd tell you an ice joke, but I don't want to break the ice.","talk"],
+  fresh:["Most fresh liquid water is hidden underground as groundwater. Lakes and rivers are a tiny part of it.","That's deep! Literally.","think"],
+  air:["Air is about three-quarters nitrogen by weight. Oxygen is only about a quarter. All the air weighs around 5 quadrillion tonnes.","Air jokes go right over my head.","talk"],
+  life:["Every living thing on Earth together is a tiny, tiny slice, far less than the air. Most of it is plants.","Life is short, but this slice is shorter!","surprise"],
+  plants:["Plants are about 80% of all life by weight (measured by their carbon). Trees hold most of it.","Plants are rooting for you!","cheer"],
+  microbes:["Bacteria, fungi, and other microbes are tiny one by one, but there are so many they're the second-biggest group of living things.","Fungi are fun guys.","talk"],
+  animals:["All the animals, people included, are less than 1% of life by weight. You're mostly oxygen because you're mostly water.","Not me, I'm bone dry. My bones are calcium and phosphorus!","cheer"]
+};
+
+// ---------- data ----------
+let mode="mass";
+const nodes={};
+function walk(n,parent){
+  const node={id:n.id,name:n.name,short:n.short,color:n.color,parent,children:[],mass:n.mass,comp:n.comp};
+  nodes[n.id]=node;
+  if(n.children){n.children.forEach(c=>{walk(c,n.id);node.children.push(c.id);});}
+  else for(const sym in n.comp){const id=n.id+"/"+sym;nodes[id]={id,name:EL[sym].n,short:sym,color:EL[sym].c,parent:n.id,children:[],el:sym,frac:n.comp[sym]/100};node.children.push(id);}
+}
+walk(TREE,"");
+const AV=6.022e23;
+function computeValues(){
+  (function v(id){const n=nodes[id];
+    if(n.el){const kg=nodes[n.parent].mass*n.frac;n.kg=kg;n.val=mode==="mass"?kg:kg*1000/EL[n.el].A*AV;return n.val;}
+    let s=0,kg=0;n.children.forEach(c=>{s+=v(c);kg+=nodes[c].kg;});n.val=s;n.kg=kg;return s;})("earth");
+  for(const id in nodes){const n=nodes[id];n.kids=n.children.slice().sort((a,b)=>nodes[b].val-nodes[a].val);}
+}
+
+// ---------- formatting ----------
+function pct(x){x*=100;if(x>=99.95)return "100%";if(x>=1)return x.toFixed(1)+"%";if(x<=0)return "0%";if(x<0.001)return "<0.001%";
+  const d=Math.max(1,-Math.floor(Math.log10(x))+1);return x.toFixed(Math.min(d,14))+"%";}
+const BIG=[[1e21,"sextillion"],[1e18,"quintillion"],[1e15,"quadrillion"],[1e12,"trillion"],[1e9,"billion"],[1e6,"million"],[1e3,"thousand"]];
+const SUP="⁰¹²³⁴⁵⁶⁷⁸⁹";
+function amount(n){
+  if(mode==="mass"){const t=n.kg/1000;for(const [b,w] of BIG){if(t>=b)return trim((t/b).toPrecision(3))+" "+w+" tonnes";}return trim(t.toPrecision(3))+" tonnes";}
+  const e=Math.floor(Math.log10(n.val));return (n.val/Math.pow(10,e)).toFixed(1)+" × 10"+String(e).split("").map(d=>SUP[+d]).join("")+" atoms";
+}
+function trim(s){return s.indexOf(".")>=0?s.replace(/0+$/,"").replace(/\.$/,""):s;}
+function textOn(hex){const c=parseInt(hex.slice(1),16),r=c>>16,g=c>>8&255,b=c&255;return (0.299*r+0.587*g+0.114*b)>150?"#1b2430":"#ffffff";}
+
+// ---------- sunburst (hand-built SVG) ----------
+const NS="http://www.w3.org/2000/svg",CX=300,CY=300,R0=92,R1=196,R2=292;
+const svg=document.getElementById("chart"),burst=document.getElementById("burst"),tip=document.getElementById("tip"),box=document.getElementById("chartbox");
+let level="earth",selectedEl=null;
+function pt(a,r){return [CX+r*Math.sin(a),CY-r*Math.cos(a)];}
+function sector(a0,a1,ri,ro){
+  if(a1-a0>=Math.PI*2-1e-6){ // full ring as two halves
+    return sector(a0,a0+Math.PI,ri,ro)+" "+sector(a0+Math.PI,a0+2*Math.PI,ri,ro);}
+  const lg=a1-a0>Math.PI?1:0,[x0,y0]=pt(a0,ro),[x1,y1]=pt(a1,ro),[x2,y2]=pt(a1,ri),[x3,y3]=pt(a0,ri);
+  return `M${x0} ${y0}A${ro} ${ro} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${ri} ${ri} 0 ${lg} 0 ${x3} ${y3}Z`;
+}
+function el(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function label(n,a0,a1,ri,ro,text){
+  const span=a1-a0,mid=(a0+a1)/2,rm=(ri+ro)/2,arc=span*rm,thick=ro-ri;
+  const size=n.el?Math.min(20,Math.max(11,Math.min(arc*.45,thick*.32))):14;
+  // fits tangentially (wide wedge) or radially (thin wedge)?
+  const w=text.length*size*.58;let rot;
+  if(span>=Math.PI*2-1e-6){rot=0;}
+  else if(arc>w+8&&thick>size+6){rot=mid*180/Math.PI;if(rot>90&&rot<270)rot+=180;}
+  else if(thick>w+10&&arc>size+2){rot=mid*180/Math.PI-90;if(mid>Math.PI)rot+=180;}
+  else return null;
+  const [x,y]=pt(span>=Math.PI*2-1e-6?0:mid,span>=Math.PI*2-1e-6?rm:rm);
+  const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"central","font-size":size,fill:textOn(n.color),transform:`rotate(${rot} ${x} ${y})`});
+  t.textContent=text;return t;
+}
+function hubText(lines){const g=el("g",{});lines.forEach((l,i)=>{const t=el("text",{x:CX,y:CY+(i-(lines.length-1)/2)*20+ (i===0?0:2),"text-anchor":"middle","dominant-baseline":"central","font-size":i===0?19:12.5,fill:textOn(nodes[level].color),"font-weight":i===0?700:600});t.textContent=l;g.appendChild(t);});return g;}
+function drawChart(animate){
+  burst.innerHTML="";const root=nodes[level];
+  const panelCol=getComputedStyle(document.documentElement).getPropertyValue("--panel").trim()||"#fff";
+  const hub=el("circle",{cx:CX,cy:CY,r:R0-4,fill:root.color,class:"hub",stroke:panelCol,"stroke-width":3});
+  hub.addEventListener("click",()=>{if(root.parent){go(root.parent);}});
+  hover(hub,root);burst.appendChild(hub);
+  burst.appendChild(hubText(root.parent?[root.short,"tap to go back"]:[root.short,mode==="mass"?amount(root):"all its atoms"]));
+  let a=0;
+  root.kids.forEach(cid=>{
+    const c=nodes[cid],span=c.val/root.val*Math.PI*2,a0=a,a1=a+span;a=a1;
+    ring(c,a0,a1,R0,c.kids.length?R1:R2,panelCol);
+    let b=a0;c.kids.forEach(gid=>{const g=nodes[gid],s2=g.val/c.val*span;ring(g,b,b+s2,R1+2,R2,panelCol);b+=s2;});
+  });
+  if(animate){burst.classList.remove("zoom");void burst.getBoundingClientRect();burst.classList.add("zoom");}
+}
+function ring(n,a0,a1,ri,ro,stroke){
+  if(a1-a0<1e-5)return;
+  const dim=selectedEl&&n.el&&n.el!==selectedEl.sym;
+  const p=el("path",{d:sector(a0,a1,ri,ro),fill:n.color,stroke,"stroke-width":a1-a0>0.02?1.5:0.4,opacity:dim?0.28:1});
+  p.addEventListener("click",()=>clickNode(n));hover(p,n);burst.appendChild(p);
+  const t=label(n,a0,a1,ri,ro,n.el?(n.el==="Other"?"…":n.el):n.short);if(t){if(dim)t.setAttribute("opacity",.35);burst.appendChild(t);}
+}
+function hover(target,n){
+  target.addEventListener("pointermove",e=>{
+    const p=n.parent?nodes[n.parent]:null;
+    tip.innerHTML="";const b=document.createElement("b");b.textContent=n.el?n.name+" in "+p.name.toLowerCase():n.name;tip.appendChild(b);
+    const lines=[];if(p)lines.push(pct(n.val/p.val)+" of "+p.name.toLowerCase());lines.push(pct(n.val/nodes.earth.val)+" of all of Earth");lines.push(amount(n));
+    lines.forEach(l=>{tip.appendChild(document.createElement("br"));tip.appendChild(document.createTextNode(l));});
+    tip.hidden=false;const r=box.getBoundingClientRect();let x=e.clientX-r.left+14,y=e.clientY-r.top+14;
+    if(x+tip.offsetWidth>r.width-6)x=e.clientX-r.left-tip.offsetWidth-14;if(y+tip.offsetHeight>r.height-6)y=e.clientY-r.top-tip.offsetHeight-14;
+    tip.style.left=Math.max(6,x)+"px";tip.style.top=Math.max(6,y)+"px";});
+  target.addEventListener("pointerleave",()=>{tip.hidden=true;});
+}
+function clickNode(n){tip.hidden=true;
+  if(n.el){selectedEl={sym:n.el,from:n.parent};render(false);return;}
+  if(n.id===level){if(n.parent)go(n.parent);return;}
+  if(n.children.length)go(n.id);
+}
+function go(id){level=id;selectedEl=null;render(true);}
+
+// ---------- Tony ----------
+const tc=document.getElementById("tony").getContext("2d");
+const T={mood:"wave",moodUntil:performance.now()+3500,talkUntil:0};
+const bubble=document.getElementById("bubble");
+function say(text,pun,mood){
+  bubble.innerHTML="";const d=document.createElement("div");d.textContent=text;bubble.appendChild(d);
+  if(pun){const s=document.createElement("span");s.className="pun";s.textContent=pun;bubble.appendChild(s);}
+  bubble.classList.remove("pop");void bubble.offsetWidth;bubble.classList.add("pop");
+  const now=performance.now();T.talkUntil=now+Math.min(4500,600+(text.length+(pun||"").length)*30);
+  if(mood&&mood!=="talk"){T.mood=mood;T.moodUntil=now+2600;}
+}
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function pose(t,now){
+  let P;
+  if(now<T.moodUntil&&Tony[T.mood])P=Tony[T.mood](t);
+  else if(now<T.talkUntil)P=Tony.talk(t);
+  else P=Tony.idle(t);
+  if(now<T.talkUntil&&T.mood!=="cheer"&&T.mood!=="surprise")P.jaw=.1+Math.abs(Math.sin(t*11))*.22;
+  return P;
+}
+function loop(now){
+  const t=reduce?0:now/1000;
+  tc.clearRect(0,0,300,420);Tony.draw(tc,{x:150,y:412,s:1.62,pose:pose(t,reduce?0:now)});
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ---------- side panel ----------
+const panel=document.getElementById("panel");
+function row(color,lab,isLayer,name,share,onclick){
+  const b=document.createElement("button");b.className="row";b.type="button";
+  b.innerHTML='<span class="sym'+(isLayer?" layer":"")+'"></span><span class="name"><span class="nm"></span><span class="bar"><span></span></span></span><span class="pct"></span>';
+  const s=b.querySelector(".sym");s.style.background=color;if(!isLayer)s.textContent=lab;
+  b.querySelector(".nm").textContent=name;const bar=b.querySelector(".bar span");bar.style.width=Math.max(share*100,0.8)+"%";bar.style.background=color;
+  b.querySelector(".pct").textContent=pct(share);b.addEventListener("click",onclick);return b;
+}
+function abbr(s){return s.length<=5?s:s.slice(0,4);}
+function renderLevel(speak){
+  const n=nodes[level];if(speak){const t=TALK[level]||TALK.earth;say(t[0],t[1],t[2]);}
+  panel.innerHTML="";
+  if(n.parent){const bk=document.createElement("button");bk.className="back";bk.type="button";bk.textContent="← Back to "+nodes[n.parent].name.toLowerCase();bk.onclick=()=>go(n.parent);panel.appendChild(bk);}
+  const h=document.createElement("h2");h.textContent=n.name;panel.appendChild(h);
+  const m=document.createElement("p");m.className="meta";m.textContent=amount(n)+(n.parent?" · "+pct(n.val/nodes.earth.val)+" of Earth":"");panel.appendChild(m);
+  const rows=document.createElement("div");rows.className="rows";
+  n.kids.forEach(id=>{const k=nodes[id];
+    if(k.el)rows.appendChild(row(k.color,k.el==="Other"?"…":k.el,false,k.name,k.val/n.val,()=>{selectedEl={sym:k.el,from:n.id};render(false);}));
+    else rows.appendChild(row(k.color,abbr(k.short),true,k.name,k.val/n.val,()=>go(k.id)));});
+  panel.appendChild(rows);
+}
+function renderElement(speak){
+  const {sym,from}=selectedEl,e=EL[sym];
+  if(speak)say(e.n+": "+e.f,PUNS[sym]||null,"cheer");
+  panel.innerHTML="";
+  const bk=document.createElement("button");bk.className="back";bk.type="button";bk.textContent="← Back to "+nodes[from].name.toLowerCase();bk.onclick=()=>{selectedEl=null;render(false,false);};panel.appendChild(bk);
+  const h=document.createElement("h2");h.textContent=sym==="Other"?"Where are the other elements?":"Where is all the "+e.n.toLowerCase()+"?";panel.appendChild(h);
+  let total=0;const list=[];
+  for(const id in nodes){const x=nodes[id];if(x.el===sym){total+=x.val;list.push({layer:nodes[x.parent],val:x.val});}}
+  const here=nodes[from+"/"+sym];
+  const m=document.createElement("p");m.className="meta";
+  m.textContent=e.n+" is "+pct(here.val/nodes[from].val)+" of "+nodes[from].name.toLowerCase()+(mode==="atoms"?" (by atoms). ":" (by weight). ")+"Here's how all of Earth's "+(sym==="Other"?"other elements are":e.n.toLowerCase()+" is")+" spread out:";
+  panel.appendChild(m);
+  const rows=document.createElement("div");rows.className="rows";
+  list.sort((a,b)=>b.val-a.val).forEach(it=>rows.appendChild(row(it.layer.color,abbr(it.layer.short),true,it.layer.name,it.val/total,()=>go(it.layer.id))));
+  panel.appendChild(rows);
+}
+function render(animate,speak){
+  if(speak===undefined)speak=true;
+  computeValues();drawChart(animate);
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-current",c.dataset.id===level?"true":"false"));
+  selectedEl?renderElement(speak):renderLevel(speak);
+}
+
+// chips
+const chipBox=document.getElementById("chips");
+["earth","innerCore","outerCore","mantle","crust","oceans","air","life"].forEach(id=>{const n=nodes[id];const b=document.createElement("button");b.className="chip";b.type="button";b.dataset.id=id;
+  b.innerHTML='<i></i><span></span>';b.querySelector("i").style.background=n.color;b.querySelector("span").textContent=n.name;b.onclick=()=>go(id);chipBox.appendChild(b);});
+
+// mode toggle
+const bm=document.getElementById("byMass"),ba=document.getElementById("byAtoms");
+function setMode(m){if(m===mode)return;mode=m;bm.setAttribute("aria-pressed",m==="mass");ba.setAttribute("aria-pressed",m==="atoms");
+  render(true,false);
+  if(m==="atoms")say("Now we're counting atoms instead of weighing them. Light hydrogen atoms suddenly look big, especially in water and living things!","Atoms make up everything. Even their own excuses.","think");
+  else say("Back to weighing things. Heavy atoms like iron count for more now.","That's a weight off my shoulders.","talk");}
+bm.onclick=()=>setMode("mass");ba.onclick=()=>setMode("atoms");
+
+// theme changes (slice borders use the panel color)
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawChart(false));}catch(e){}
+new MutationObserver(()=>drawChart(false)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+render(false,true);
+})();
+</script>

@@ -55,6 +55,19 @@
       "about": "The same kitchen for older students, with the real vocabulary: weathering, compaction, metamorphism, and melting. Quest mode walks a rock all the way around the cycle, one machine at a time."
     },
     {
+      "id": "earth-elements",
+      "title": "What's Earth Made Of?",
+      "file": "demos/earth-elements.html",
+      "category": "earth",
+      "grades": "3-9",
+      "blurb": "Click through Earth's layers with Tony to see which elements make up the core, mantle, crust, oceans, air, and life.",
+      "source": {
+        "type": "artifact",
+        "slug": "ADSsvt1WeCbKmaNYnLjmmB"
+      },
+      "about": "A click-to-zoom ring chart of Earth sized by weight. Start with the whole planet, then open the inner and outer core, the mantle, the crust, the oceans, the air, and living things to see their elements. Click any element to see where all of Earth's supply of it is (almost all the iron is in the core). Switch to By atoms to watch light hydrogen jump from tiny to huge in water and living things. Tony gives a fact and a pun for every stop."
+    },
+    {
       "id": "atom-builder",
       "title": "Atom Builder",
       "file": "demos/atom-builder.html",
