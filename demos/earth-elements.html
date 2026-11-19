@@ -25,6 +25,7 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-be
 h1{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.1;margin:0;text-wrap:balance}
 h1 span{color:var(--accent)}
 .sub{color:var(--muted);margin:4px 0 0;max-width:60ch}
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
 .toggle{display:inline-flex;background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:3px}
 .toggle button{font:700 .9rem var(--body);border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer}
 .toggle button[aria-pressed="true"]{background:var(--accent2);color:#fff}
@@ -79,11 +80,17 @@ footer{color:var(--muted);font-size:.85rem;text-align:center}
   <header>
     <div>
       <h1>What's <span>Earth</span> Made Of?</h1>
-      <p class="sub">Every slice is sized by how much stuff is there. Click a ring to zoom in, click the center to zoom back out, or jump with the buttons.</p>
+      <p class="sub">Every slice is sized by how much stuff is there. Elements first shows all of Earth's elements; Layers first splits Earth into core, mantle, and crust. Click a ring to zoom in, click the center to zoom out.</p>
+    </div>
+    <div class="toggles">
+    <div class="toggle" role="group" aria-label="Show first">
+      <button id="byElement" type="button" aria-pressed="true">Elements first</button>
+      <button id="byLayer" type="button" aria-pressed="false">Layers first</button>
     </div>
     <div class="toggle" role="group" aria-label="Measure by">
       <button id="byMass" type="button" aria-pressed="true">By weight</button>
       <button id="byAtoms" type="button" aria-pressed="false">By atoms</button>
+    </div>
     </div>
   </header>
 
@@ -307,21 +314,50 @@ const TALK={
 };
 
 // ---------- data ----------
+// Two trees share one node table:
+//   "Layers first":   earth > layer > ... > element (ids like "mantle/O")
+//   "Elements first": all  > element ("E:O") > layer it sits in ("E:O|mantle")
 let mode="mass";
 const nodes={};
+const LEAVES=[];
 function walk(n,parent){
   const node={id:n.id,name:n.name,short:n.short,color:n.color,parent,children:[],mass:n.mass,comp:n.comp};
   nodes[n.id]=node;
   if(n.children){n.children.forEach(c=>{walk(c,n.id);node.children.push(c.id);});}
-  else for(const sym in n.comp){const id=n.id+"/"+sym;nodes[id]={id,name:EL[sym].n,short:sym,color:EL[sym].c,parent:n.id,children:[],el:sym,frac:n.comp[sym]/100};node.children.push(id);}
+  else{LEAVES.push(n.id);for(const sym in n.comp){const id=n.id+"/"+sym;nodes[id]={id,name:EL[sym].n,short:sym,color:EL[sym].c,parent:n.id,children:[],el:sym,frac:n.comp[sym]/100};node.children.push(id);}}
 }
 walk(TREE,"");
+nodes.all={id:"all",name:"All of Earth",short:"Earth",color:"#3a6ea5",parent:"",children:[],byEl:true};
+Object.keys(EL).forEach(sym=>{
+  const eid="E:"+sym,kids=LEAVES.filter(l=>nodes[l].comp[sym]!=null);
+  nodes[eid]={id:eid,name:EL[sym].n,short:sym,color:EL[sym].c,parent:"all",children:[],byEl:true,sym};
+  nodes.all.children.push(eid);
+  kids.forEach(l=>{const id=eid+"|"+l;nodes[id]={id,name:nodes[l].name,short:nodes[l].short,color:nodes[l].color,parent:eid,children:[],byEl:true,sym,layer:l,src:l+"/"+sym};nodes[eid].children.push(id);});
+});
 const AV=6.022e23;
 function computeValues(){
   (function v(id){const n=nodes[id];
     if(n.el){const kg=nodes[n.parent].mass*n.frac;n.kg=kg;n.val=mode==="mass"?kg:kg*1000/EL[n.el].A*AV;return n.val;}
     let s=0,kg=0;n.children.forEach(c=>{s+=v(c);kg+=nodes[c].kg;});n.val=s;n.kg=kg;return s;})("earth");
+  (function v(id){const n=nodes[id];
+    if(n.src){const s=nodes[n.src];n.val=s.val;n.kg=s.kg;return n.val;}
+    let s=0,kg=0;n.children.forEach(c=>{s+=v(c);kg+=nodes[c].kg;});n.val=s;n.kg=kg;return s;})("all");
   for(const id in nodes){const n=nodes[id];n.kids=n.children.slice().sort((a,b)=>nodes[b].val-nodes[a].val);}
+}
+const TOTAL=()=>nodes.earth.val;
+
+// what to call a slice in the hover box and panel
+function tipTitle(n){
+  if(n.el)return n.name+" in the "+nodes[n.parent].name.toLowerCase();
+  if(n.src)return EL[n.sym].n+" in the "+n.name.toLowerCase();
+  if(n.sym)return "All of Earth's "+n.name.toLowerCase();
+  return n.name;
+}
+function shareLine(n){
+  const p=n.parent?nodes[n.parent]:null;if(!p)return null;
+  if(n.src)return pct(n.val/p.val)+" of all of Earth's "+EL[n.sym].n.toLowerCase()+" is here";
+  if(n.sym)return null;
+  return pct(n.val/p.val)+" of the "+p.name.toLowerCase();
 }
 
 // ---------- formatting ----------
@@ -338,37 +374,37 @@ function textOn(hex){const c=parseInt(hex.slice(1),16),r=c>>16,g=c>>8&255,b=c&25
 
 // ---------- sunburst (hand-built SVG) ----------
 const NS="http://www.w3.org/2000/svg",CX=300,CY=300,R0=92,R1=196,R2=292;
-const svg=document.getElementById("chart"),burst=document.getElementById("burst"),tip=document.getElementById("tip"),box=document.getElementById("chartbox");
-let level="earth",selectedEl=null;
+const burst=document.getElementById("burst"),tip=document.getElementById("tip"),box=document.getElementById("chartbox");
+let level="all";
 function pt(a,r){return [CX+r*Math.sin(a),CY-r*Math.cos(a)];}
 function sector(a0,a1,ri,ro){
-  if(a1-a0>=Math.PI*2-1e-6){ // full ring as two halves
-    return sector(a0,a0+Math.PI,ri,ro)+" "+sector(a0+Math.PI,a0+2*Math.PI,ri,ro);}
+  if(a1-a0>=Math.PI*2-1e-6)return sector(a0,a0+Math.PI,ri,ro)+" "+sector(a0+Math.PI,a0+2*Math.PI,ri,ro);
   const lg=a1-a0>Math.PI?1:0,[x0,y0]=pt(a0,ro),[x1,y1]=pt(a1,ro),[x2,y2]=pt(a1,ri),[x3,y3]=pt(a0,ri);
   return `M${x0} ${y0}A${ro} ${ro} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${ri} ${ri} 0 ${lg} 0 ${x3} ${y3}Z`;
 }
 function el(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
 function label(n,a0,a1,ri,ro,text){
-  const span=a1-a0,mid=(a0+a1)/2,rm=(ri+ro)/2,arc=span*rm,thick=ro-ri;
-  const size=n.el?Math.min(20,Math.max(11,Math.min(arc*.45,thick*.32))):14;
-  // fits tangentially (wide wedge) or radially (thin wedge)?
+  const span=a1-a0,mid=(a0+a1)/2,rm=(ri+ro)/2,arc=span*rm,thick=ro-ri,full=span>=Math.PI*2-1e-6;
+  const isSym=text.length<=2;
+  const size=isSym?Math.min(22,Math.max(11,Math.min(arc*.45,thick*.32))):13;
   const w=text.length*size*.58;let rot;
-  if(span>=Math.PI*2-1e-6){rot=0;}
+  if(full)rot=0;
   else if(arc>w+8&&thick>size+6){rot=mid*180/Math.PI;if(rot>90&&rot<270)rot+=180;}
   else if(thick>w+10&&arc>size+2){rot=mid*180/Math.PI-90;if(mid>Math.PI)rot+=180;}
   else return null;
-  const [x,y]=pt(span>=Math.PI*2-1e-6?0:mid,span>=Math.PI*2-1e-6?rm:rm);
+  const [x,y]=full?[CX,CY-rm]:pt(mid,rm);
   const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"central","font-size":size,fill:textOn(n.color),transform:`rotate(${rot} ${x} ${y})`});
   t.textContent=text;return t;
 }
-function hubText(lines){const g=el("g",{});lines.forEach((l,i)=>{const t=el("text",{x:CX,y:CY+(i-(lines.length-1)/2)*20+ (i===0?0:2),"text-anchor":"middle","dominant-baseline":"central","font-size":i===0?19:12.5,fill:textOn(nodes[level].color),"font-weight":i===0?700:600});t.textContent=l;g.appendChild(t);});return g;}
+function hubText(lines){const g=el("g",{});lines.forEach((l,i)=>{const t=el("text",{x:CX,y:CY+(i-(lines.length-1)/2)*20+(i===0?0:2),"text-anchor":"middle","dominant-baseline":"central","font-size":i===0?19:12.5,fill:textOn(nodes[level].color),"font-weight":i===0?700:600});t.textContent=l;g.appendChild(t);});return g;}
 function drawChart(animate){
   burst.innerHTML="";const root=nodes[level];
   const panelCol=getComputedStyle(document.documentElement).getPropertyValue("--panel").trim()||"#fff";
   const hub=el("circle",{cx:CX,cy:CY,r:R0-4,fill:root.color,class:"hub",stroke:panelCol,"stroke-width":3});
-  hub.addEventListener("click",()=>{if(root.parent){go(root.parent);}});
+  hub.addEventListener("click",()=>{if(root.parent)go(root.parent);});
   hover(hub,root);burst.appendChild(hub);
-  burst.appendChild(hubText(root.parent?[root.short,"tap to go back"]:[root.short,mode==="mass"?amount(root):"all its atoms"]));
+  const hubName=root.sym?EL[root.sym].n:root.short;
+  burst.appendChild(hubText(root.parent?[hubName,"tap to go back"]:[hubName,mode==="mass"?amount(root):"all its atoms"]));
   let a=0;
   root.kids.forEach(cid=>{
     const c=nodes[cid],span=c.val/root.val*Math.PI*2,a0=a,a1=a+span;a=a1;
@@ -379,16 +415,17 @@ function drawChart(animate){
 }
 function ring(n,a0,a1,ri,ro,stroke){
   if(a1-a0<1e-5)return;
-  const dim=selectedEl&&n.el&&n.el!==selectedEl.sym;
-  const p=el("path",{d:sector(a0,a1,ri,ro),fill:n.color,stroke,"stroke-width":a1-a0>0.02?1.5:0.4,opacity:dim?0.28:1});
+  const p=el("path",{d:sector(a0,a1,ri,ro),fill:n.color,stroke,"stroke-width":a1-a0>0.02?1.5:0.4});
   p.addEventListener("click",()=>clickNode(n));hover(p,n);burst.appendChild(p);
-  const t=label(n,a0,a1,ri,ro,n.el?(n.el==="Other"?"…":n.el):n.short);if(t){if(dim)t.setAttribute("opacity",.35);burst.appendChild(t);}
+  const txt=n.el?(n.el==="Other"?"…":n.el):(n.sym&&!n.src?(n.sym==="Other"?"…":n.sym):n.short);
+  const t=label(n,a0,a1,ri,ro,txt);if(t)burst.appendChild(t);
 }
 function hover(target,n){
   target.addEventListener("pointermove",e=>{
-    const p=n.parent?nodes[n.parent]:null;
-    tip.innerHTML="";const b=document.createElement("b");b.textContent=n.el?n.name+" in "+p.name.toLowerCase():n.name;tip.appendChild(b);
-    const lines=[];if(p)lines.push(pct(n.val/p.val)+" of "+p.name.toLowerCase());lines.push(pct(n.val/nodes.earth.val)+" of all of Earth");lines.push(amount(n));
+    tip.innerHTML="";const b=document.createElement("b");b.textContent=tipTitle(n);tip.appendChild(b);
+    const lines=[];const s=shareLine(n);if(s)lines.push(s);
+    if(n.id!=="earth"&&n.id!=="all")lines.push(pct(n.val/TOTAL())+" of all of Earth");
+    lines.push(amount(n));
     lines.forEach(l=>{tip.appendChild(document.createElement("br"));tip.appendChild(document.createTextNode(l));});
     tip.hidden=false;const r=box.getBoundingClientRect();let x=e.clientX-r.left+14,y=e.clientY-r.top+14;
     if(x+tip.offsetWidth>r.width-6)x=e.clientX-r.left-tip.offsetWidth-14;if(y+tip.offsetHeight>r.height-6)y=e.clientY-r.top-tip.offsetHeight-14;
@@ -396,11 +433,12 @@ function hover(target,n){
   target.addEventListener("pointerleave",()=>{tip.hidden=true;});
 }
 function clickNode(n){tip.hidden=true;
-  if(n.el){selectedEl={sym:n.el,from:n.parent};render(false);return;}
+  if(n.el){go("E:"+n.el);return;}          // element inside a layer -> where is all of it?
+  if(n.src){go(n.layer);return;}           // layer inside an element -> open that layer
   if(n.id===level){if(n.parent)go(n.parent);return;}
   if(n.children.length)go(n.id);
 }
-function go(id){level=id;selectedEl=null;render(true);}
+function go(id){level=id;render(true);}
 
 // ---------- Tony ----------
 const tc=document.getElementById("tony").getContext("2d");
@@ -438,46 +476,45 @@ function row(color,lab,isLayer,name,share,onclick){
   b.querySelector(".nm").textContent=name;const bar=b.querySelector(".bar span");bar.style.width=Math.max(share*100,0.8)+"%";bar.style.background=color;
   b.querySelector(".pct").textContent=pct(share);b.addEventListener("click",onclick);return b;
 }
-function abbr(s){return s.length<=5?s:s.slice(0,4);}
-function renderLevel(speak){
-  const n=nodes[level];if(speak){const t=TALK[level]||TALK.earth;say(t[0],t[1],t[2]);}
+const ALL_TALK=["This is all of Earth mixed together. The inside ring is every element on the planet; the outside ring shows which layer it's sitting in.","Iron and oxygen are neck and neck. I know a thing or two about necks.","wave"];
+function renderPanel(speak){
+  const n=nodes[level];
+  if(speak){
+    if(n.sym){const e=EL[n.sym];say(e.n+": "+e.f,PUNS[n.sym]||null,"cheer");}
+    else{const t=level==="all"?ALL_TALK:(TALK[level]||TALK.earth);say(t[0],t[1],t[2]);}
+  }
   panel.innerHTML="";
-  if(n.parent){const bk=document.createElement("button");bk.className="back";bk.type="button";bk.textContent="← Back to "+nodes[n.parent].name.toLowerCase();bk.onclick=()=>go(n.parent);panel.appendChild(bk);}
-  const h=document.createElement("h2");h.textContent=n.name;panel.appendChild(h);
-  const m=document.createElement("p");m.className="meta";m.textContent=amount(n)+(n.parent?" · "+pct(n.val/nodes.earth.val)+" of Earth":"");panel.appendChild(m);
+  if(n.parent){const bk=document.createElement("button");bk.className="back";bk.type="button";bk.textContent="← Back to "+nodes[n.parent].name.toLowerCase().replace(/earth/,"Earth");bk.onclick=()=>go(n.parent);panel.appendChild(bk);}
+  const h=document.createElement("h2");
+  h.textContent=n.sym?(n.sym==="Other"?"Where are the other elements?":"Where is all the "+EL[n.sym].n.toLowerCase()+"?"):n.name;panel.appendChild(h);
+  const m=document.createElement("p");m.className="meta";
+  m.textContent=amount(n)+(n.id!=="all"&&n.id!=="earth"?" · "+pct(n.val/TOTAL())+" of Earth":"");panel.appendChild(m);
   const rows=document.createElement("div");rows.className="rows";
   n.kids.forEach(id=>{const k=nodes[id];
-    if(k.el)rows.appendChild(row(k.color,k.el==="Other"?"…":k.el,false,k.name,k.val/n.val,()=>{selectedEl={sym:k.el,from:n.id};render(false);}));
-    else rows.appendChild(row(k.color,abbr(k.short),true,k.name,k.val/n.val,()=>go(k.id)));});
-  panel.appendChild(rows);
-}
-function renderElement(speak){
-  const {sym,from}=selectedEl,e=EL[sym];
-  if(speak)say(e.n+": "+e.f,PUNS[sym]||null,"cheer");
-  panel.innerHTML="";
-  const bk=document.createElement("button");bk.className="back";bk.type="button";bk.textContent="← Back to "+nodes[from].name.toLowerCase();bk.onclick=()=>{selectedEl=null;render(false,false);};panel.appendChild(bk);
-  const h=document.createElement("h2");h.textContent=sym==="Other"?"Where are the other elements?":"Where is all the "+e.n.toLowerCase()+"?";panel.appendChild(h);
-  let total=0;const list=[];
-  for(const id in nodes){const x=nodes[id];if(x.el===sym){total+=x.val;list.push({layer:nodes[x.parent],val:x.val});}}
-  const here=nodes[from+"/"+sym];
-  const m=document.createElement("p");m.className="meta";
-  m.textContent=e.n+" is "+pct(here.val/nodes[from].val)+" of "+nodes[from].name.toLowerCase()+(mode==="atoms"?" (by atoms). ":" (by weight). ")+"Here's how all of Earth's "+(sym==="Other"?"other elements are":e.n.toLowerCase()+" is")+" spread out:";
-  panel.appendChild(m);
-  const rows=document.createElement("div");rows.className="rows";
-  list.sort((a,b)=>b.val-a.val).forEach(it=>rows.appendChild(row(it.layer.color,abbr(it.layer.short),true,it.layer.name,it.val/total,()=>go(it.layer.id))));
+    if(k.el)rows.appendChild(row(k.color,k.el==="Other"?"…":k.el,false,k.name,k.val/n.val,()=>go("E:"+k.el)));
+    else if(k.sym&&!k.src)rows.appendChild(row(k.color,k.sym==="Other"?"…":k.sym,false,k.name,k.val/n.val,()=>go(k.id)));
+    else if(k.src)rows.appendChild(row(k.color,"",true,k.name,k.val/n.val,()=>go(k.layer)));
+    else rows.appendChild(row(k.color,"",true,k.name,k.val/n.val,()=>go(k.id)));});
   panel.appendChild(rows);
 }
 function render(animate,speak){
   if(speak===undefined)speak=true;
   computeValues();drawChart(animate);
+  const byEl=!!nodes[level].byEl;
+  gl.setAttribute("aria-pressed",!byEl);ge.setAttribute("aria-pressed",byEl);
   document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-current",c.dataset.id===level?"true":"false"));
-  selectedEl?renderElement(speak):renderLevel(speak);
+  renderPanel(speak);
 }
 
-// chips
+// chips (layers view)
 const chipBox=document.getElementById("chips");
 ["earth","innerCore","outerCore","mantle","crust","oceans","air","life"].forEach(id=>{const n=nodes[id];const b=document.createElement("button");b.className="chip";b.type="button";b.dataset.id=id;
-  b.innerHTML='<i></i><span></span>';b.querySelector("i").style.background=n.color;b.querySelector("span").textContent=n.name;b.onclick=()=>go(id);chipBox.appendChild(b);});
+  b.innerHTML='<i></i><span></span>';b.querySelector("i").style.background=n.color;b.querySelector("span").textContent=id==="earth"?"Earth's layers":n.name;b.onclick=()=>go(id);chipBox.appendChild(b);});
+
+// group toggle
+const gl=document.getElementById("byLayer"),ge=document.getElementById("byElement");
+gl.onclick=()=>{if(nodes[level].byEl)go("earth");};
+ge.onclick=()=>{if(!nodes[level].byEl)go("all");};
 
 // mode toggle
 const bm=document.getElementById("byMass"),ba=document.getElementById("byAtoms");
@@ -487,7 +524,6 @@ function setMode(m){if(m===mode)return;mode=m;bm.setAttribute("aria-pressed",m==
   else say("Back to weighing things. Heavy atoms like iron count for more now.","That's a weight off my shoulders.","talk");}
 bm.onclick=()=>setMode("mass");ba.onclick=()=>setMode("atoms");
 
-// theme changes (slice borders use the panel color)
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>drawChart(false));}catch(e){}
 new MutationObserver(()=>drawChart(false)).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
