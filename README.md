@@ -36,3 +36,11 @@ Each entry's `source` says where the master copy lives:
   **"sync Tony's Lab"**: Claude pulls the current version of each artifact into `demos/`,
   refreshes thumbnails, and pushes.
 - `"type": "local"` → a file on Scott's PC; copy it in by hand or attach it in Claude.
+
+## Reusing Tony's canvas rig and moves
+
+`assets/tony-rig-canvas.js` is the canvas Tony (poses, miner hat, held props, headlamp beam).
+`assets/tony-actions.js` adds reusable moves on top of it: `inspect` (pull a prop from behind his
+back and study it under the headlamp) and `present` (hold a prop or answer card up to the viewer),
+plus `TonyProps.rock()` and `TonyProps.card(text)`. Usage notes are at the top of that file.
+Demos stay single self-contained files, so paste both scripts into a demo rather than linking them.

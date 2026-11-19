@@ -164,12 +164,46 @@ const Tony=(function(){
     ctx.beginPath();ctx.ellipse(ft,243.5,8.5,4.2,0,0,TAU);ctx.fillStyle=BONE;ctx.fill();ctx.lineWidth=2.6;ctx.strokeStyle=INK;ctx.stroke();joint(ctx,kn[0],kn[1]);
     ctx.restore();ctx.restore();
   }
+
+  // ---- held props + headlamp beam ----
+  // A pose may carry P.prop = {draw(ctx,{lit}), side:'R', behind:bool, rot, at:[dx,dy], upright:bool, lit:0..1}
+  // and P.beam = 0..1 (needs the hat's headlamp). The prop is drawn centred at its own (0,0),
+  // in Tony's units (his skull is about 84 wide), offset from the wrist by `at`.
+  let CUR=null,HAND=null,LAMP=null;
+  function propAt(ctx,pr,wr){const at=pr.at||[7,7];ctx.save();ctx.translate(wr[0]+at[0],wr[1]+at[1]);if(pr.upright){const m=ctx.getTransform();ctx.rotate(-Math.atan2(m.b,m.a));}ctx.rotate(pr.rot||0);pr.draw(ctx,{lit:pr.lit||0});ctx.restore();}
+  function frontProp(ctx,P){
+    const pr=P.prop;if(!pr||pr.behind||!HAND)return;
+    const at=pr.at||[7,7],b=Math.max(0,Math.min(1,P.beam||0));
+    if(b>0&&LAMP){
+      const a=LAMP.M.transformPoint(new DOMPoint(LAMP.x,LAMP.y)),c=HAND.M.transformPoint(new DOMPoint(HAND.wr[0]+at[0],HAND.wr[1]+at[1]));
+      const sc=Math.hypot(HAND.M.a,HAND.M.b),dx=c.x-a.x,dy=c.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,w0=4*sc,w1=19*sc;
+      ctx.save();ctx.setTransform(1,0,0,1,0,0);
+      const cone=(wa,wb)=>{ctx.beginPath();ctx.moveTo(a.x+nx*wa,a.y+ny*wa);ctx.lineTo(c.x+nx*wb,c.y+ny*wb);ctx.lineTo(c.x-nx*wb,c.y-ny*wb);ctx.lineTo(a.x-nx*wa,a.y-ny*wa);ctx.closePath();};
+      // outer beam
+      let g=ctx.createLinearGradient(a.x,a.y,c.x,c.y);g.addColorStop(0,`rgba(255,236,120,${.95*b})`);g.addColorStop(1,`rgba(255,236,120,${.6*b})`);
+      cone(w0,w1);ctx.fillStyle=g;ctx.fill();
+      ctx.lineWidth=1.4*sc;ctx.strokeStyle=`rgba(232,170,20,${.85*b})`;ctx.stroke();
+      // bright core
+      g=ctx.createLinearGradient(a.x,a.y,c.x,c.y);g.addColorStop(0,`rgba(255,255,240,${.95*b})`);g.addColorStop(1,`rgba(255,255,235,${.35*b})`);
+      cone(w0*.45,w1*.45);ctx.fillStyle=g;ctx.fill();
+      // lamp flare
+      g=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,12*sc);g.addColorStop(0,`rgba(255,255,235,${b})`);g.addColorStop(1,'rgba(255,240,150,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(a.x,a.y,12*sc,0,TAU);ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();ctx.setTransform(HAND.M);propAt(ctx,Object.assign({},pr,{lit:b}),HAND.wr);handG(ctx,HAND.wr,HAND.tips);ctx.restore();
+    if(b>0&&LAMP){const c=HAND.M.transformPoint(new DOMPoint(HAND.wr[0]+at[0],HAND.wr[1]+at[1])),sc=Math.hypot(HAND.M.a,HAND.M.b);
+      ctx.save();ctx.setTransform(1,0,0,1,0,0);const g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,22*sc);g.addColorStop(0,`rgba(255,250,200,${.5*b})`);g.addColorStop(1,'rgba(255,250,200,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(c.x,c.y,22*sc,0,TAU);ctx.fill();ctx.restore();}
+  }
   function arm(ctx,side,A){
     const L=side==='L',sh=L?[74,153]:[126,153],el=L?[63,142.5]:[136,164.5],wr=L?[48,128]:[150,180];
     const tips=L?[[38.2,125.9],[40.8,121.1],[45.5,118.3]]:[[159.6,182.9],[156.6,187.5],[151.8,189.8]];
     ctx.save();rot(ctx,sh,A[0]);bone(ctx,sh[0],sh[1],el[0],el[1],9);
     ctx.save();rot(ctx,el,A[1]);bone(ctx,el[0],el[1],wr[0],wr[1],9);
-    ctx.save();rot(ctx,wr,A[2]);handG(ctx,wr,tips);ctx.restore();
+    ctx.save();rot(ctx,wr,A[2]);
+    const pr=CUR&&CUR.prop;if(pr&&(pr.side||'R')===side){HAND={M:ctx.getTransform(),wr,tips};if(pr.behind)propAt(ctx,pr,wr);}
+    handG(ctx,wr,tips);ctx.restore();
     joint(ctx,el[0],el[1]);ctx.restore();ctx.restore();
   }
   function torso(ctx){
@@ -251,6 +285,7 @@ const Tony=(function(){
     ctx.beginPath();ctx.arc(100,31.5,11,0,TAU);ctx.fillStyle='#aeb6c7';ctx.fill();ctx.lineWidth=2.6;ctx.stroke();
     ctx.beginPath();ctx.arc(100,31.5,7.2,0,TAU);ctx.fillStyle='#fff7c2';ctx.fill();ctx.lineWidth=1.6;ctx.stroke();
     ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(97.4,29,2.3,0,TAU);ctx.fill();
+    LAMP={M:ctx.getTransform(),x:100,y:31.5};
     ctx.restore();
     ctx.restore();
   }
@@ -295,7 +330,7 @@ const Tony=(function(){
   function sooty(t){const P=blank();P.soot=true;P.jaw=.45;P.pupilScale=.55;P.pupil=[Math.cos(t*4)*2.5,Math.sin(t*4)*2.5];P.head=Math.sin(t*1.5)*.12;
     P.armL=[.6,.3,0];P.armR=[-.6,-.3,0];P.browL=.25;P.browR=-.25;return P;}
   function draw(ctx,o){
-    const P=o.pose;
+    const P=o.pose;CUR=P;HAND=null;LAMP=null;
     ctx.save();ctx.translate(o.x,o.y);ctx.scale(o.s,o.s);ctx.translate(-100,-247);
     ctx.lineCap='round';ctx.lineJoin='round';
     leg(ctx,'L',P.legL[0],P.legL[1]);leg(ctx,'R',P.legR[0],P.legR[1]);
@@ -304,11 +339,145 @@ const Tony=(function(){
     torso(ctx);if(P.harness)harness(ctx);neck(ctx);head(ctx,P);
     if(P.soot){[[84,168,12,.4],[117,184,11,.35],[100,200,9,.3]].forEach(b=>smudge(ctx,b[0],b[1],b[2],b[3]));}
     ctx.restore();ctx.restore();
+    frontProp(ctx,P);CUR=null;
   }
   function think(t){const P=idle(t);P.armR=reach('R',110,141);P.head=-.08+Math.sin(t*1.2)*.03;P.pupil=[-2.5,-2.5];P.browL=-.18;P.browR=.05;return P;}
   function point(t){const P=idle(t);P.armR=reach('R',176+Math.sin(t*4)*2,128);P.head=.05;P.pupil=[2.5,0];return P;}
   function surprise(t){const P=blank();P.jaw=.5+Math.sin(t*9)*.05;P.browL=-.4;P.browR=.4;P.pupilScale=.6;P.armL=reach('L',58,112);P.armR=reach('R',142,112);P.head=Math.sin(t*20)*.02;return P;}
-  return {draw,idle,talk,wave,cheer,nervous,sooty,think,point,surprise};
+  return {draw,idle,talk,wave,cheer,nervous,sooty,think,point,surprise,reach};
+})();
+
+/* ---------- Tony actions: reusable keyframed moves for the canvas rig ----------
+   Needs the Tony rig (with prop/beam support and Tony.reach) loaded first.
+
+   Use:
+     const act = TonyActs.player();
+     act.play('inspect', { prop: TonyProps.rock(), on: { peak(){ say('Hmm!') } }, onDone(){} });
+     // in your draw loop, after choosing a base pose:
+     act.apply(P, performance.now()/1000);   // overrides the right arm, head, eyes and brows while playing
+     act.busy()     -> true while an action plays
+     act.release()  -> lets a held action (opts.hold) finish
+     act.stop()     -> ends at once
+
+   Built-in actions (right hand):
+     inspect  pull a prop from behind his back, light it with the headlamp, turn it, put it back
+     present  pull a prop from behind his back and hold it up toward the viewer, then put it back
+   Events fired through opts.on: out (prop in view), lightOn, peak, lightOff, away (prop back behind him)
+   opts.hold = true pauses at the hold point until release() (e.g. keep an answer card up).
+   Add new moves to TonyActs.actions with the same key format:
+     {t: seconds, hand:[x,y] (Tony units; shoulder is 126,153; reach ~36), behind:0/1,
+      head, px, py (pupils), brow (raise), jaw, beam (0..1), rot (prop spin), event:'name', hold:true}
+   Channels left out of a key are interpolated from the keys around it (smooth ease).
+*/
+const TonyActs=(function(){
+  const HIP=[114,195],SIDE=[150,182];
+  const actions={
+    inspect:{keys:[
+      {t:0,hand:HIP,behind:1,head:0,px:0,py:0,brow:0,beam:0,rot:0},
+      {t:.45,hand:SIDE,behind:1},
+      {t:.5,behind:0,event:'out'},
+      {t:1.0,hand:[154,135],head:.12,px:2.6,py:2.6,brow:.25},
+      {t:1.2,beam:0},{t:1.32,beam:1,event:'lightOn'},
+      {t:1.9,rot:.4},{t:2.6,rot:-.35},{t:3.1,rot:.1,event:'peak',hold:true},
+      {t:3.5,beam:1},{t:3.7,beam:0,event:'lightOff'},
+      {t:3.9,hand:[154,135],head:.12,px:2.6,py:2.6,brow:.25},
+      {t:4.3,hand:SIDE,head:0,px:0,py:0,brow:0,rot:0},
+      {t:4.32,behind:0},{t:4.36,behind:1},
+      {t:4.7,hand:HIP,event:'away'}
+    ]},
+    present:{keys:[
+      {t:0,hand:HIP,behind:1,head:0,px:0,py:0,brow:0,jaw:0,rot:0},
+      {t:.45,hand:SIDE,behind:1},
+      {t:.5,behind:0,event:'out'},
+      {t:.95,hand:[156,130],head:-.04,brow:.35,jaw:.3,rot:-.12},
+      {t:1.1,event:'peak'},
+      {t:2.4,hand:[156,130],jaw:.3,brow:.35,rot:-.12,hold:true},
+      {t:2.8,hand:SIDE,head:0,brow:0,jaw:0,rot:0},
+      {t:2.82,behind:0},{t:2.86,behind:1},
+      {t:3.2,hand:HIP,event:'away'}
+    ]}
+  };
+  const ease=x=>x<=0?0:x>=1?1:x*x*(3-2*x);
+  const STEP={behind:1};
+  function sample(keys,ch,t){
+    let a=null,b=null;
+    for(const k of keys){if(k[ch]===undefined)continue;if(k.t<=t)a=k;else{b=k;break;}}
+    if(!a)return b?b[ch]:undefined;
+    if(!b||STEP[ch])return a[ch];
+    const u=ease((t-a.t)/(b.t-a.t)),va=a[ch],vb=b[ch];
+    return Array.isArray(va)?va.map((v,i)=>v+(vb[i]-v)*u):va+(vb-va)*u;
+  }
+  function player(){
+    let cur=null;
+    return {
+      play(name,opts){const a=actions[name];if(!a)throw new Error('No Tony action: '+name);
+        const keys=a.keys.slice().sort((x,y)=>x.t-y.t);
+        cur={keys,opts:opts||{},start:null,last:-1,held:0,end:keys[keys.length-1].t,released:false};},
+      busy(){return !!cur;},
+      release(){if(cur)cur.released=true;},
+      stop(){if(cur){const d=cur.opts.onDone;cur=null;d&&d();}},
+      apply(P,now){
+        if(!cur)return P;
+        if(cur.start===null)cur.start=now;
+        let t=now-cur.start-cur.held;
+        const hk=cur.opts.hold&&!cur.released&&cur.keys.find(k=>k.hold&&k.t<=t&&cur.last<k.t+1e-9);
+        if(hk){cur.held+=t-hk.t;t=hk.t;}
+        for(const k of cur.keys)if(k.event&&k.t>cur.last&&k.t<=t){const f=cur.opts.on&&cur.opts.on[k.event];f&&f();}
+        cur.last=t;
+        const K=cur.keys,v=ch=>sample(K,ch,t);
+        const hand=v('hand');if(hand)P.armR=Tony.reach('R',hand[0],hand[1]);
+        const head=v('head');if(head!==undefined)P.head=(P.head||0)*.3+head;
+        const px=v('px'),py=v('py');if(px!==undefined)P.pupil=[px,py||0];
+        const br=v('brow');if(br!==undefined){P.browL=-br;P.browR=br;}
+        const jaw=v('jaw');if(jaw!==undefined)P.jaw=Math.max(P.jaw||0,jaw);
+        P.beam=v('beam')||0;
+        if(cur.opts.prop)P.prop={draw:cur.opts.prop.draw,side:'R',behind:!!v('behind'),rot:v('rot')||0,at:cur.opts.prop.at,upright:cur.opts.prop.upright};
+        if(t>=cur.end){const d=cur.opts.onDone;cur=null;d&&d();}
+        return P;
+      }
+    };
+  }
+  return {player,actions};
+})();
+
+/* ---------- Props Tony can hold ----------
+   Each returns {draw(ctx,{lit}), at?, upright?}. upright keeps it level however the hand turns. Drawn centred on (0,0) in Tony units; lit (0..1) is how
+   strongly the headlamp is on it.
+     TonyProps.rock({color, dark, light, speck, r, seed})   a lumpy rock (defaults: brown)
+     TonyProps.card(text, {color, ink})                      an answer card for quiz apps
+*/
+const TonyProps=(function(){
+  const INK='#2d2452',TAU=Math.PI*2;
+  function rock(o){
+    o=o||{};const r=o.r||16,seed=o.seed||3;
+    const base=o.color||'#8a5a3b',dark=o.dark||'#5e3b24',light=o.light||'#b9875f',speck=o.speck||'#4a2e1c';
+    const pts=[];for(let i=0;i<9;i++){const a=i/9*TAU+.3,k=.8+.2*Math.abs(Math.sin(seed*7.3+i*2.1));pts.push([Math.cos(a)*r*k*1.12,Math.sin(a)*r*k*.92]);}
+    const path=new Path2D();
+    pts.forEach((p,i)=>{const q=pts[(i+1)%pts.length],m=[(p[0]+q[0])/2,(p[1]+q[1])/2];if(i===0){const z=pts[pts.length-1];path.moveTo((z[0]+p[0])/2,(z[1]+p[1])/2);}path.quadraticCurveTo(p[0],p[1],m[0],m[1]);});
+    path.closePath();
+    const spots=[];for(let i=0;i<(o.spots||6);i++){const a=seed*3.1+i*2.4,d=r*.55*Math.abs(Math.sin(seed+i*1.7));spots.push([Math.cos(a)*d,Math.sin(a)*d*.8,.7+.5*Math.abs(Math.cos(i*3.3+seed))]);}
+    return {draw(ctx,s){
+      ctx.save();ctx.fillStyle=base;ctx.fill(path);
+      ctx.save();ctx.clip(path);
+      ctx.fillStyle=dark;ctx.beginPath();ctx.ellipse(r*.45,r*.5,r*.9,r*.6,-.4,0,TAU);ctx.fill();
+      ctx.fillStyle=light;ctx.beginPath();ctx.ellipse(-r*.4,-r*.45,r*.45,r*.25,-.5,0,TAU);ctx.fill();
+      ctx.fillStyle=speck;spots.forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,TAU);ctx.fill();});
+      if(s&&s.lit>0){const g=ctx.createRadialGradient(-r*.2,-r*.3,0,0,0,r*1.3);g.addColorStop(0,`rgba(255,248,200,${.75*s.lit})`);g.addColorStop(1,'rgba(255,248,200,0)');ctx.fillStyle=g;ctx.fillRect(-r*2,-r*2,r*4,r*4);}
+      ctx.restore();
+      ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.strokeStyle=INK;ctx.stroke(path);ctx.restore();
+    }};
+  }
+  function card(text,o){
+    o=o||{};const w=Math.max(22,text.length*5.2+8),h=15;
+    return {at:[11,-3],upright:true,draw(ctx,s){
+      ctx.save();ctx.translate(0,-h/2-4);
+      ctx.beginPath();ctx.roundRect?ctx.roundRect(-w/2,-h/2,w,h,3):ctx.rect(-w/2,-h/2,w,h);
+      ctx.fillStyle=o.color||'#ffffff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();
+      ctx.fillStyle=o.ink||INK;ctx.font='700 9px Fredoka, Nunito, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,0,.5);
+      ctx.restore();
+    }};
+  }
+  return {rock,card};
 })();
 
 (function(){
@@ -523,9 +692,25 @@ function pose(t,now){
   if(now<T.talkUntil&&T.mood!=="cheer"&&T.mood!=="surprise")P.jaw=.1+Math.abs(Math.sin(t*11))*.22;
   return P;
 }
+// Tony pulls out a rock and studies it under his headlamp
+const act=TonyActs.player();
+const ROCKS={
+  crust:TonyProps.rock(),
+  contCrust:TonyProps.rock({color:"#cdbca9",dark:"#a8927c",light:"#ece0d2",speck:"#3b3436",spots:9,seed:5}),   // granite
+  oceanCrust:TonyProps.rock({color:"#4b4f57",dark:"#33363c",light:"#6c727c",speck:"#23252a",seed:7})            // basalt
+};
+function inspect(id,peakLine,peakPun){
+  if(act.busy())return;
+  act.play("inspect",{prop:ROCKS[id]||ROCKS.crust,on:peakLine?{peak(){say(peakLine,peakPun,"talk");}}:{}});
+}
+const tonyCanvas=document.getElementById("tony");
+tonyCanvas.style.cursor="pointer";
+tonyCanvas.addEventListener("click",()=>{if(act.busy())return;say("Ooh, I found something in my back pocket. Let me get a light on it…",null,"talk");
+  inspect("crust","Yep, that's a rock! Mostly oxygen and silicon, like most of the crust.","I'm a rock expert. I never take it for granite.");});
 function loop(now){
   const t=reduce?0:now/1000;
-  tc.clearRect(0,0,300,420);Tony.draw(tc,{x:150,y:412,s:1.62,pose:pose(t,reduce?0:now)});
+  const P=act.apply(pose(t,reduce?0:now),now/1000);
+  tc.clearRect(0,0,300,420);Tony.draw(tc,{x:150,y:412,s:1.62,pose:P});
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
@@ -545,6 +730,7 @@ function renderPanel(speak){
   if(speak){
     if(n.sym){const e=EL[n.sym];say(e.n+": "+e.f,PUNS[n.sym]||null,"cheer");}
     else{const t=level==="all"?ALL_TALK:(TALK[level]||TALK.earth);say(t[0],t[1],t[2]);}
+    if(ROCKS[level])inspect(level);
   }
   panel.innerHTML="";
   if(n.parent){const bk=document.createElement("button");bk.className="back";bk.type="button";bk.textContent="← Back to "+nodes[n.parent].name.toLowerCase().replace(/earth/,"Earth");bk.onclick=()=>go(n.parent);panel.appendChild(bk);}
