@@ -194,34 +194,41 @@ const Tony=(function(){
     ctx.beginPath();ctx.arc(100,174,4.4,0,TAU);ctx.fillStyle='#ffd166';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();}
 
   // classic miner's hard hat with headlamp (drawn in head space, so it nods with Tony)
+  // Seen straight on but from slightly above: the visor dips toward the viewer in the middle.
   const HAT_Y='#f5b919',HAT_D='#d99a07',HAT_L='#ffe07a';
-  const DOME=new Path2D('M57 53 C55 24 74 7 100 7 C126 7 145 24 143 53 Z');
-  const BRIM=new Path2D('M42 52 Q100 40 158 52 Q162 59 153 61 Q100 51 47 61 Q38 59 42 52 Z');
-  const RIDGE=new Path2D('M93 8.5 Q100 6.5 107 8.5 L107.5 30 L92.5 30 Z');
+  const FIN=new Path2D('M91 24 C91 6 94 -1 100 -1 C106 -1 109 6 109 24 Z');
+  const DOME=new Path2D('M58 54 C56 27 76 9 100 9 C124 9 144 27 142 54 Z');
+  const COMB=new Path2D('M92.5 10.5 C94 4 106 4 107.5 10.5 L108.5 44 L91.5 44 Z');
+  const BRIM=new Path2D('M53 51 Q100 44 147 51 Q151.5 55.5 146 58.5 Q100 63 54 58.5 Q48.5 55.5 53 51 Z');
   function mineHat(ctx,P){
     ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.translate(0,-3);  // sit high enough that the brows show under the visor
+    if(P.hatTilt){ctx.translate(100,52);ctx.rotate(P.hatTilt);ctx.translate(-100,-52);}
+    // raised comb peeking above the crown
+    ctx.fillStyle=HAT_D;ctx.fill(FIN);ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke(FIN);
     // dome
     ctx.fillStyle=HAT_Y;ctx.fill(DOME);
     ctx.save();ctx.clip(DOME);
-    ctx.fillStyle=HAT_D;ctx.beginPath();ctx.ellipse(134,40,18,34,-.15,0,TAU);ctx.fill();   // shadow side
-    ctx.fillStyle=HAT_L;ctx.beginPath();ctx.ellipse(72,26,8,15,.55,0,TAU);ctx.fill();      // shine
+    ctx.fillStyle=HAT_D;ctx.beginPath();ctx.ellipse(135,42,17,34,-.15,0,TAU);ctx.fill();
+    ctx.fillStyle=HAT_L;ctx.beginPath();ctx.ellipse(73,28,7.5,14,.55,0,TAU);ctx.fill();
     ctx.restore();
-    ctx.fillStyle=HAT_D;ctx.fill(RIDGE);ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke(RIDGE);
     ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke(DOME);
+    // comb running down the front of the dome
+    ctx.fillStyle=HAT_Y;ctx.fill(COMB);ctx.lineWidth=2.4;ctx.stroke(COMB);
+    ctx.strokeStyle=HAT_L;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(97,9);ctx.lineTo(96.5,22);ctx.stroke();
     // headband strap
-    ctx.beginPath();ctx.moveTo(57.5,44);ctx.quadraticCurveTo(100,34,142.5,44);ctx.lineTo(143,51);ctx.quadraticCurveTo(100,41,57,51);ctx.closePath();
-    ctx.fillStyle='#2b2733';ctx.fill();ctx.lineWidth=2;ctx.stroke();
-    // brim
+    ctx.beginPath();ctx.moveTo(58,45);ctx.quadraticCurveTo(100,36,142,45);ctx.lineTo(142.5,51.5);ctx.quadraticCurveTo(100,43,57.5,51.5);ctx.closePath();
+    ctx.fillStyle='#2b2733';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();
+    // short visor brim
     ctx.fillStyle=HAT_Y;ctx.fill(BRIM);ctx.lineWidth=3;ctx.strokeStyle=INK;ctx.stroke(BRIM);
-    ctx.strokeStyle=HAT_D;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(52,57.5);ctx.quadraticCurveTo(100,48.5,148,57.5);ctx.stroke();
-    // lamp glow
-    const g=ctx.createRadialGradient(100,33,4,100,33,30);g.addColorStop(0,'rgba(255,246,170,.85)');g.addColorStop(1,'rgba(255,246,170,0)');
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(100,33,30,0,TAU);ctx.fill();
-    // lamp: mount, rim, lens
-    rr(ctx,89,38,22,9,3);ctx.fillStyle='#5d6478';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();
-    ctx.beginPath();ctx.arc(100,31,11.5,0,TAU);ctx.fillStyle='#aeb6c7';ctx.fill();ctx.lineWidth=2.6;ctx.stroke();
-    ctx.beginPath();ctx.arc(100,31,7.6,0,TAU);ctx.fillStyle='#fff7c2';ctx.fill();ctx.lineWidth=1.6;ctx.stroke();
-    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(97.3,28.4,2.4,0,TAU);ctx.fill();
+    ctx.strokeStyle=HAT_D;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(57,56);ctx.quadraticCurveTo(100,51,143,56);ctx.stroke();
+    // lamp glow, mount, rim, lens
+    const g=ctx.createRadialGradient(100,33,4,100,33,28);g.addColorStop(0,'rgba(255,246,170,.85)');g.addColorStop(1,'rgba(255,246,170,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(100,33,28,0,TAU);ctx.fill();
+    rr(ctx,89.5,38,21,9,3);ctx.fillStyle='#5d6478';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=INK;ctx.stroke();
+    ctx.beginPath();ctx.arc(100,31.5,11,0,TAU);ctx.fillStyle='#aeb6c7';ctx.fill();ctx.lineWidth=2.6;ctx.stroke();
+    ctx.beginPath();ctx.arc(100,31.5,7.2,0,TAU);ctx.fillStyle='#fff7c2';ctx.fill();ctx.lineWidth=1.6;ctx.stroke();
+    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(97.4,29,2.3,0,TAU);ctx.fill();
     ctx.restore();
   }
   function head(ctx,P){
