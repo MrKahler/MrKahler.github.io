@@ -706,7 +706,10 @@ function inspect(id,peakLine,peakPun){
 const tonyCanvas=document.getElementById("tony");
 tonyCanvas.style.cursor="pointer";
 tonyCanvas.addEventListener("click",()=>{if(act.busy())return;say("Ooh, I found something in my back pocket. Let me get a light on it…",null,"talk");
-  inspect("crust","Yep, that's a rock! Mostly oxygen and silicon, like most of the crust.","Me and this rock? We're both pretty hard-headed.");});
+  inspect("crust","Yep, that's a rock! Mostly oxygen and silicon, like most of the crust.",nextPun());});
+const ROCK_PUNS=["Me and this rock? We're both pretty hard-headed.","Metamorphic rocks are gneiss, but sedimentary rocks are just too shale.","My geologist friend is so grounded. Truly down-to-earth.","Don't take shale too seriously. It'll break under pressure.","I'm feeling boulder than ever today.","Sedimentary, my dear Watson.","That's gneiss of you to say!","May the quartz be with you!","I'm just trying to keep it together, like tectonic plates.","It's a hard rock life for us.","A tour of a volcano would really magma day.","There's no halfway with a geologist. It's all ore nothing.","Why was the rock extra cheap? Because it was on shale.","That joke was rocky."];
+let lastPun=-1;
+function nextPun(){let i;do{i=Math.floor(Math.random()*ROCK_PUNS.length);}while(i===lastPun&&ROCK_PUNS.length>1);lastPun=i;return ROCK_PUNS[i];}
 function loop(now){
   const t=reduce?0:now/1000;
   const P=act.apply(pose(t,reduce?0:now),now/1000);
