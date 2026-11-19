@@ -532,7 +532,7 @@ const TALK={
   mantle:["The mantle is about two-thirds of Earth's weight. It's hot rock, mostly solid, made mainly of oxygen, magnesium, and silicon.","I'd put a trophy on it. Get it? A mantle-piece!","talk"],
   shell:["Everything you've ever touched (rocks, oceans, air, and every living thing) fits in this thin shell: less than half of one percent of Earth.","Small, but it's where all the fun is.","think"],
   crust:["The crust is the rocky skin we live on. Under continents it averages about 35 km thick; under the oceans only about 7 km.","Oxygen is the top element in rocks. Rocks aren't breathing, they just have a lot of it locked up.","talk"],
-  contCrust:["Continental crust is light-colored rock like granite, rich in silicon, aluminum, and potassium.","Granite? I take it for granite every day.","talk"],
+  contCrust:["Continental crust is light-colored rock like granite, rich in silicon, aluminum, and potassium.","Granite has pink, white, and black specks. It's a real mixed bag!","talk"],
   oceanCrust:["Ocean-floor crust is dark basalt, with more iron, magnesium, and calcium than the continents.","Basalt is so dense. Must be a heavy reader.","talk"],
   water:["All the water on Earth together is only about 0.02% of Earth's weight. Almost all of it is in the oceans.","Water you waiting for? Click the oceans!","talk"],
   oceans:["Seawater is about 96.5% water and 3.5% salt. The salt is mostly chlorine and sodium.","Why is the ocean so friendly? It always waves!","wave"],
@@ -706,7 +706,7 @@ function inspect(id,peakLine,peakPun){
 const tonyCanvas=document.getElementById("tony");
 tonyCanvas.style.cursor="pointer";
 tonyCanvas.addEventListener("click",()=>{if(act.busy())return;say("Ooh, I found something in my back pocket. Let me get a light on it…",null,"talk");
-  inspect("crust","Yep, that's a rock! Mostly oxygen and silicon, like most of the crust.","I'm a rock expert. I never take it for granite.");});
+  inspect("crust","Yep, that's a rock! Mostly oxygen and silicon, like most of the crust.","Me and this rock? We're both pretty hard-headed.");});
 function loop(now){
   const t=reduce?0:now/1000;
   const P=act.apply(pose(t,reduce?0:now),now/1000);
