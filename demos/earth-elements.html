@@ -80,12 +80,12 @@ footer{color:var(--muted);font-size:.85rem;text-align:center}
   <header>
     <div>
       <h1>What's <span>Earth</span> Made Of?</h1>
-      <p class="sub">Every slice is sized by how much stuff is there. Elements first shows all of Earth's elements; Layers first splits Earth into core, mantle, and crust. Click a ring to zoom in, click the center to zoom out.</p>
+      <p class="sub">Every slice is sized by how much stuff is there. Click a ring to zoom in, click the center to zoom back out, or jump with the buttons.</p>
     </div>
     <div class="toggles">
     <div class="toggle" role="group" aria-label="Show first">
-      <button id="byElement" type="button" aria-pressed="true">Elements first</button>
-      <button id="byLayer" type="button" aria-pressed="false">Layers first</button>
+      <button id="byLayer" type="button" aria-pressed="true">Layers first</button>
+      <button id="byElement" type="button" aria-pressed="false">Elements first</button>
     </div>
     <div class="toggle" role="group" aria-label="Measure by">
       <button id="byMass" type="button" aria-pressed="true">By weight</button>
@@ -375,7 +375,7 @@ function textOn(hex){const c=parseInt(hex.slice(1),16),r=c>>16,g=c>>8&255,b=c&25
 // ---------- sunburst (hand-built SVG) ----------
 const NS="http://www.w3.org/2000/svg",CX=300,CY=300,R0=92,R1=196,R2=292;
 const burst=document.getElementById("burst"),tip=document.getElementById("tip"),box=document.getElementById("chartbox");
-let level="all";
+let level="earth";
 function pt(a,r){return [CX+r*Math.sin(a),CY-r*Math.cos(a)];}
 function sector(a0,a1,ri,ro){
   if(a1-a0>=Math.PI*2-1e-6)return sector(a0,a0+Math.PI,ri,ro)+" "+sector(a0+Math.PI,a0+2*Math.PI,ri,ro);
@@ -509,7 +509,7 @@ function render(animate,speak){
 // chips (layers view)
 const chipBox=document.getElementById("chips");
 ["earth","innerCore","outerCore","mantle","crust","oceans","air","life"].forEach(id=>{const n=nodes[id];const b=document.createElement("button");b.className="chip";b.type="button";b.dataset.id=id;
-  b.innerHTML='<i></i><span></span>';b.querySelector("i").style.background=n.color;b.querySelector("span").textContent=id==="earth"?"Earth's layers":n.name;b.onclick=()=>go(id);chipBox.appendChild(b);});
+  b.innerHTML='<i></i><span></span>';b.querySelector("i").style.background=n.color;b.querySelector("span").textContent=n.name;b.onclick=()=>go(id);chipBox.appendChild(b);});
 
 // group toggle
 const gl=document.getElementById("byLayer"),ge=document.getElementById("byElement");
