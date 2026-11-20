@@ -55,3 +55,19 @@ demos.json            gallery list; "source" says where each demo's master copy 
 - No em dashes anywhere (code comments and kid-facing text included).
 - Credit: "Created by Scott Kahler", "(c) 2026 S. Kahler Teaching", "Mr. Kahler".
 - Grades 1-3 games are mouse-first and played with a parent.
+
+## Planned: one Tony everywhere (agreed Nov 2026, not started)
+
+Goal: retire the canvas Tony so every game uses `shared/tony/`. Work in this order, one
+step per session, rebuilding and testing each game before moving on:
+1. **Shared pose system** in `shared/tony/`: take the canvas rig's pose object (head, jaw,
+   pupil, pupilScale, browL/R, armL/R, legL/R, lean) and `Tony.reach` arm math from
+   `assets/tony-rig-canvas.js`, and apply them to the SVG joints (each joint group has its
+   pivot in `data-pivot`). Port `assets/tony-actions.js` keyframed moves on top.
+2. **Bomb Squad**: move into `games/`, swap canvas Tony for the SVG rig. Soot and harness
+   become wardrobe pieces.
+3. **Earth's Elements**: held props, headlamp beam, inspect/present moves.
+4. **Tony's Picker**: promote walk, legReach, noHead and cupTilt into the shared pose system.
+5. Delete `assets/tony-rig-canvas.js` and `assets/tony-actions.js`; update README.
+Check first in each game whether scenery is drawn in front of Tony on the same canvas
+(layering), and compare old vs new Tony side by side.
