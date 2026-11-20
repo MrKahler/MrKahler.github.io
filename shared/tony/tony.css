@@ -1,0 +1,37 @@
+/* ==========================================================================
+   TONY BONY RIG STYLES (shared). (c) 2026 S. Kahler Teaching
+   Included into each game's <style> by tools/build.py.
+   ========================================================================== */
+
+/* Wardrobe: every costume piece is hidden unless Tony is wearing it.
+   Adding a new piece? Add its "wear-ITEM .tbw-ITEM" pair to the list below. */
+#tb-tony .tbw{display:none}
+#tb-tony.wear-chefhat .tbw-chefhat,
+#tb-tony.wear-mininghat .tbw-mininghat,
+#tb-tony.wear-labcoat .tbw-labcoat{display:inline}
+
+/* The hook on his skull only shows when no hat is on (and mid hat-flip). */
+#tb-tony.hatted #tb-hook{display:none}
+#tb-hatSlot{cursor:pointer}
+
+/* Optional idle motion with plain CSS (no GSAP). Turn it on by adding class
+   "tb-idle" to the game's svg#tonySvg. Games that animate Tony with GSAP leave it off. */
+.tb-idle #tb-armL{transform-origin:74px 153px;animation:tbWave 2.6s ease-in-out infinite}
+.tb-idle #tb-forearmL{transform-origin:63px 142.5px;animation:tbFlap 1.3s ease-in-out infinite}
+.tb-idle #tb-head{transform-origin:100px 140px;animation:tbTilt 4.4s ease-in-out infinite}
+.tb-idle #tb-pupilL,.tb-idle #tb-pupilR{animation:tbLook 6s ease-in-out infinite}
+.tb-idle #tb-eyes{transform-origin:100px 83px;animation:tbBlink 4.2s infinite}
+
+/* Talking jaw: add class "talking" to svg#tonySvg while he speaks. */
+.talking #tb-jaw{animation:tbChat .16s ease-in-out infinite alternate}
+
+/* Hat flip used by TonyRig.flipHat(). */
+#tb-hatSlot.tb-flip{transform-origin:100px 40px;animation:tbHat 1.1s ease-in-out}
+
+@keyframes tbWave{50%{transform:rotate(-18deg)}}
+@keyframes tbFlap{50%{transform:rotate(-22deg)}}
+@keyframes tbTilt{50%{transform:rotate(3deg)}}
+@keyframes tbLook{0%,40%{transform:translate(0,0)}50%,70%{transform:translate(-4px,1px)}80%,95%{transform:translate(4px,0)}}
+@keyframes tbBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes tbChat{to{transform:translateY(5px)}}
+@keyframes tbHat{0%{transform:translateY(0) rotate(0)}30%{transform:translateY(-75px) rotate(-14deg)}55%{transform:translateY(-70px) rotate(12deg)}82%{transform:translateY(0) rotate(0)}88%{transform:scale(1.12,.82)}100%{transform:none}}

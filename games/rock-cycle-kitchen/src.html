@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================================
+   TONY BONY'S ROCK CYCLE KITCHEN  ·  v0.4
+   Created by Scott Kahler, (c) 2026 S. Kahler Teaching.
+   Made for science education: the "older grades" rock cycle lab (about grades 4 and up).
+   Free to share for classroom and home-school use.
+  ==========================================================================================
+   ABOUT THE ROCK CYCLE
+   God made the rocks of the earth to change form, around and around, much like the water cycle.
+   * IGNEOUS rock forms when magma (lava, once it reaches the surface) cools and hardens.
+     Light, sticky, silica-rich magma makes granite (slow, underground), rhyolite (fast, surface),
+     obsidian (super fast, glass), and pumice (gassy froth). Dark, runny, iron-rich magma makes
+     gabbro (slow), basalt (fast), and scoria (gassy).
+   * SEDIMENTARY rock forms when weathering breaks rock into sediment (gravel, sand, mud, shells,
+     lime mud) and the pieces are compacted and cemented together.
+   * METAMORPHIC rock forms when heat and pressure change a rock without melting it.
+     Shale -> slate -> schist -> gneiss shows rising grade; limestone -> marble; sandstone -> quartzite.
+   Machines: Weather Blender (weathering + erosion), Squish Press (compaction + cementation),
+   Pressure Cooker (metamorphism), Lava Pot (melting), Cooling Station (crystallization).
+
+   HOW THIS FILE IS BUILT
+   One self-contained HTML file that runs offline. Rock art is drawn with canvas and SVG, sounds
+   are synthesized with WebAudio, and the Fredoka and Nunito fonts (SIL Open Font License 1.1)
+   are embedded. Progress is saved in the browser's localStorage.
+  ==========================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Scott Kahler, S. Kahler Teaching">
+<meta name="description" content="Tony Bony's Rock Cycle Kitchen: a rock cycle lab for science education. (c) 2026 S. Kahler Teaching.">
+<title>Tony Bony's Rock Cycle Kitchen</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M8%2044%20C5%2030%2014%2016%2030%2014%20C46%2012%2059%2024%2057%2040%20C56%2052%2044%2058%2031%2057%20C18%2057%2010%2053%208%2044Z%22%20fill%3D%22%239a93a8%22%20stroke%3D%22%232d2452%22%20stroke-width%3D%223.5%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M16%2030%20C20%2022%2028%2019%2036%2020%22%20stroke%3D%22%23c9c3d6%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2238%22%20r%3D%224%22%20fill%3D%22%232d2452%22/%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%2238%22%20r%3D%224%22%20fill%3D%22%232d2452%22/%3E%3Cpath%20d%3D%22M28%2046%20Q32%2050%2036%2046%22%20stroke%3D%22%232d2452%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2245%22%20r%3D%223%22%20fill%3D%22%23ff8fb5%22%20opacity%3D%22.8%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%2245%22%20r%3D%223%22%20fill%3D%22%23ff8fb5%22%20opacity%3D%22.8%22/%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2226%22%20r%3D%222%22%20fill%3D%22%237c7590%22/%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2232%22%20r%3D%221.5%22%20fill%3D%22%237c7590%22/%3E%3C/svg%3E">
+<style>
+/* @fonts Fredoka:500,600,700 Nunito:600,700,800,900 */
+:root{
+  /* Layout: a cartoon kitchen. Rock shelf on the left, counter + microscope in the middle,
+     machines on the right, Tony Bony the skeleton chef across the top. One bright visual world. */
+  --wall:#7fd8ca;
+  --wall-line:#71cbbd;
+  --cream:#fff8ec;
+  --ink:#2d2452;
+  --ink-soft:#615888;
+  --coral:#ff8466;
+  --pink:#ff6fa8;
+  --sun:#ffd03d;
+  --wood:#c98a52;
+  --wood-dark:#9e6435;
+  --ig:#ff7a3d; --sedr:#e9a800; --meta:#8b6cff; --sedi:#b98049; --mag:#f0392b;
+  --p-blend:#55bbff; --p-press:#ffc93a; --p-heat:#8b6cff; --p-melt:#ff5040; --p-cool:#2ec4b6;
+  --display:"Fredoka","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --pop:0 6px 0 rgba(45,36,82,.20);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background-color:var(--wall);
+  background-image:linear-gradient(var(--wall-line) 3px,transparent 3px),linear-gradient(90deg,var(--wall-line) 3px,transparent 3px);
+  background-size:54px 54px;
+  color:var(--ink);font-family:var(--body);font-weight:700;
+}
+button{font-family:inherit;color:inherit}
+button:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;text-wrap:balance}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px 10px;max-width:1500px;margin:0 auto}
+.brandwrap{display:flex;flex-direction:column;align-items:flex-start}
+.byline{font-family:Fredoka,sans-serif;font-weight:700;font-size:clamp(14px,1.8vw,20px);color:#2d2452;margin:0 0 2px 6px}
+.credit{display:block;margin:14px 18px 12px auto;font:700 13px Fredoka,sans-serif;color:#2d2452;opacity:.7;cursor:pointer;z-index:50;background:none;border:0}
+.logo{font-size:clamp(30px,4.4vw,50px);font-weight:700;letter-spacing:.5px;line-height:1;display:flex;gap:1px;text-shadow:0 5px 0 rgba(45,36,82,.22)}
+.logo span{display:inline-block;color:#fff}
+.logo span:nth-child(7n+1){color:var(--pink);transform:rotate(-6deg)}
+.logo span:nth-child(7n+2){color:var(--sun);transform:translateY(3px) rotate(4deg)}
+.logo span:nth-child(7n+3){color:#fff;transform:rotate(-3deg)}
+.logo span:nth-child(7n+4){color:var(--coral);transform:translateY(-2px) rotate(5deg)}
+.logo span:nth-child(7n+5){color:#b9a6ff;transform:rotate(-5deg)}
+.logo span:nth-child(7n+6){color:var(--sun);transform:translateY(2px) rotate(3deg)}
+.logo span:nth-child(7n){color:#fff;transform:rotate(-2deg)}
+.logo .gap{width:.3em}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;background:var(--cream);border-radius:999px;padding:4px;box-shadow:var(--pop)}
+.seg button{border:0;background:transparent;border-radius:999px;padding:9px 16px;font:700 15px var(--display);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--pink);color:#fff}
+.pill{border:0;border-radius:999px;background:var(--cream);padding:11px 16px;font:700 15px var(--display);box-shadow:var(--pop);cursor:pointer}
+.found{background:var(--sun);border-radius:999px;padding:11px 16px;font:700 15px var(--display);box-shadow:var(--pop);font-variant-numeric:tabular-nums}
+
+/* grid */
+.app{display:grid;gap:18px;padding:6px 16px 32px;max-width:1500px;margin:0 auto;
+  grid-template-columns:minmax(260px,310px) minmax(0,1fr) minmax(320px,410px);
+  grid-template-areas:"shelf tony tony" "shelf counter machines" "shelf map machines";align-items:start}
+.panel{background:var(--cream);border-radius:30px;box-shadow:var(--pop);padding:16px}
+.panel>h2{font-size:22px;margin-bottom:10px}
+.tony{grid-area:tony}.shelf{grid-area:shelf}.counter{grid-area:counter}.machines{grid-area:machines}.map{grid-area:map}
+
+/* Tony */
+.tony{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(220px,300px);gap:14px;align-items:center;background:var(--ink);background-image:radial-gradient(circle at 12% 30%,#4a3d86 0 70px,transparent 71px),radial-gradient(circle at 94% 120%,#3e3275 0 90px,transparent 91px)}
+.tony-btn{border:0;background:none;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tony-svg{width:133px;height:auto;overflow:visible;animation:bob 3s ease-in-out infinite}
+.tony-name{font:700 13px var(--display);background:var(--sun);color:var(--ink);border-radius:999px;padding:3px 10px}
+.arm-l{transform-origin:40px 102px;animation:wave 2.6s ease-in-out infinite}
+.pupils{animation:look 6s ease-in-out infinite}
+.talking .jaw{animation:chat .16s ease-in-out infinite alternate}
+.bubble{position:relative;background:#fff;border-radius:24px;padding:14px 18px;font-size:16.5px;line-height:1.45;min-height:84px;box-shadow:0 4px 0 rgba(45,36,82,.12)}
+.bubble::before{content:"";position:absolute;left:-14px;top:30px;border:9px solid transparent;border-right:14px solid #fff;border-left:0}
+.bubble b{color:var(--pink)}
+.bubble .time{display:inline-block;margin-top:6px;background:#efeaff;color:var(--ink);border-radius:12px;padding:3px 10px;font-size:13.5px}
+.quest{background:#fff;border-radius:22px;padding:12px 14px;box-shadow:0 4px 0 rgba(45,36,82,.12)}
+.quest h3{font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.quest ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;max-height:220px;overflow:auto}
+.quest li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.3;color:var(--ink-soft);padding:4px 6px;border-radius:10px}
+.quest li .dot{flex:none;width:20px;height:20px;border-radius:50%;background:#eee8f6;display:grid;place-items:center;font:700 11px var(--display);color:var(--ink-soft)}
+.quest li.done{color:#9a93b5;text-decoration:line-through}
+.quest li.done .dot{background:var(--p-cool);color:#fff}
+.quest li.now{background:#fff3c4;color:var(--ink)}
+.quest li.now .dot{background:var(--pink);color:#fff}
+.quest li.bonus .dot{background:#fff0b3}
+.reset{border:0;background:#f1ecfa;border-radius:999px;padding:4px 10px;font:700 12px var(--display);cursor:pointer}
+
+/* shelf */
+.shelf{background:#fff3df}
+.shelf-group{margin-bottom:14px}
+.sign{display:inline-block;font:700 14px var(--display);color:#fff;border-radius:10px 10px 0 0;padding:4px 12px;margin-left:8px}
+.plank{display:flex;flex-wrap:wrap;gap:2px 4px;padding:8px 6px 4px;border-bottom:13px solid var(--wood);border-radius:12px 12px 6px 6px;background:rgba(201,138,82,.12);box-shadow:0 5px 0 var(--wood-dark)}
+.rock-btn{width:64px;border:0;background:none;padding:2px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;font:800 11px var(--body);line-height:1.1;text-align:center;border-radius:14px;transition:transform .15s}
+.rock-btn svg{width:54px;height:54px;display:block}
+.rock-btn:hover{transform:translateY(-4px) rotate(-3deg)}
+.rock-btn.sel{background:#fff;box-shadow:0 3px 0 rgba(45,36,82,.15)}
+.rock-btn.locked{color:#a99f8c}
+.rock-btn .nm{min-height:24px;display:flex;align-items:center}
+
+/* counter */
+.counter{background:var(--coral);color:var(--ink)}
+.counter>h2{color:#fff}
+.counter-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.plate-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.plate{width:min(100%,230px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 45%,#fff 0 58%,#f1e7d6 59% 66%,#fff8ec 67%);display:grid;place-items:center;box-shadow:0 8px 0 rgba(45,36,82,.22)}
+.plate svg{width:72%;height:72%}
+.plate.pop svg{animation:popin .55s cubic-bezier(.3,1.6,.5,1)}
+.plate.cook svg{animation:shrink .5s ease-in forwards}
+.plate-name{font:700 26px var(--display);color:#fff;text-shadow:0 3px 0 rgba(45,36,82,.25);text-align:center}
+.scope-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.lens{position:relative;width:min(100%,230px);aspect-ratio:1;border-radius:50%;padding:12px;background:var(--ink);box-shadow:0 8px 0 rgba(45,36,82,.3),inset 0 0 0 6px #4a3f78}
+.lens canvas{width:100%;height:100%;border-radius:50%;display:block}
+.beam{position:absolute;left:12px;right:12px;top:12px;height:8px;border-radius:4px;background:linear-gradient(90deg,transparent,#9effef,transparent);opacity:0;pointer-events:none}
+.lens.scan .beam{animation:beam .9s ease-in-out}
+.knob{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--sun);right:-6px;top:30%;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.scope-label{font:700 14px var(--display);background:var(--ink);color:#fff;border-radius:999px;padding:4px 12px}
+.info{margin-top:16px;background:var(--cream);border-radius:24px;padding:16px 18px}
+.info h3{font-size:28px}
+.kind-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}
+.badge{color:#fff;border-radius:999px;padding:4px 12px;font:700 14px var(--display)}
+.sub{color:var(--ink-soft);font-size:14px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fact{background:#fff;border-radius:18px;padding:10px 14px}
+.fact h4,.info>h4{font-size:15px;color:var(--pink);margin-bottom:3px}
+.fact p{margin:0;font-size:14.5px;line-height:1.45;font-weight:600}
+.info>h4{margin-top:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{display:flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:4px 12px 4px 5px;font-size:13.5px}
+.chip i{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(45,36,82,.18)}
+.funfact{margin-top:12px;background:#fff3c4;border-radius:18px;padding:10px 14px;font-size:14.5px;line-height:1.45;font-weight:600}
+.funfact b{font-family:var(--display);color:var(--ink)}
+
+/* machines */
+.machines{background:#efe9ff}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mach{border:0;border-radius:24px;padding:10px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;box-shadow:0 6px 0 rgba(45,36,82,.25);transition:transform .1s,box-shadow .1s}
+.mach:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(45,36,82,.25)}
+.mach svg{width:100%;max-width:130px;height:auto;overflow:visible}
+.mach .mn{font:700 17px var(--display)}
+.mach .mp{font-size:12.5px;opacity:.85}
+.m-blend{background:var(--p-blend)}.m-press{background:var(--p-press)}
+.m-heat{background:var(--p-heat);color:#fff}.m-melt{background:var(--p-melt);color:#fff}
+.mach.busy svg{animation:shake .12s linear infinite}
+.mach.nope{animation:nope .4s}
+.m-press.busy .ptop{animation:squish .5s ease-in-out infinite alternate}
+.m-heat.busy .needle{animation:needle .4s ease-in-out infinite alternate;transform-origin:50px 50px}
+.flames{transform-origin:50px 84px}
+.busy .flames{animation:flick .15s infinite alternate}
+.m-blend.busy .spin{animation:spin .4s linear infinite;transform-origin:50px 40px}
+.m-melt.busy .bubs{animation:rise .5s ease-in infinite}
+.cool{grid-column:1/-1;background:var(--p-cool);border-radius:24px;padding:12px;box-shadow:0 6px 0 rgba(45,36,82,.25);color:#fff}
+.cool-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cool-head svg{width:44px;height:44px}
+.cool-head .mn{font:700 17px var(--display)}
+.cool-head .mp{font-size:12.5px;opacity:.9}
+.copts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.copt{border:0;border-radius:18px;background:#fff;color:var(--ink);padding:8px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 4px 0 rgba(45,36,82,.22);font:700 14px var(--display);line-height:1.1;text-align:center}
+.copt small{font:700 11px var(--body);color:var(--ink-soft)}
+.copt svg{width:42px;height:34px}
+.copt:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(45,36,82,.22)}
+.cool.dim .copt{opacity:.55}
+.cool.busy .copts{animation:shake .12s linear infinite}
+
+/* map */
+.map{background:#e6fbf7}
+.map svg{width:100%;height:auto;display:block;max-height:360px}
+.map .node circle.ring{fill:none;stroke:var(--ink);stroke-width:4;opacity:0}
+.map .node.here circle.ring{opacity:1;animation:ring 1.2s ease-in-out infinite}
+.map .arrow{fill:none;stroke-linecap:round;transition:stroke-width .2s}
+.map .arrow.side{stroke-dasharray:3 7;opacity:.55}
+.map .arrow.hot{stroke-width:9 !important;opacity:1;stroke-dasharray:14 8;animation:march .5s linear infinite}
+.map-note{font-size:13.5px;color:var(--ink-soft);margin:6px 0 0;line-height:1.4}
+
+/* confetti */
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confetti i{position:absolute;top:-20px;width:12px;height:16px;border-radius:4px;animation:fall 2.8s ease-in forwards}
+
+
+/* @include shared/tony/tony.css */
+@keyframes bob{50%{transform:translateY(-5px)}}
+@keyframes wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-22deg)}}
+@keyframes look{0%,40%{transform:translate(0,0)}50%,70%{transform:translate(-2px,1px)}80%,95%{transform:translate(2px,0)}}
+@keyframes chat{to{transform:translateY(4px)}}
+@keyframes popin{0%{transform:scale(.2) rotate(-20deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes shrink{to{transform:scale(.1) rotate(40deg);opacity:0}}
+@keyframes beam{0%{top:12px;opacity:1}100%{top:calc(100% - 20px);opacity:1}}
+@keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-2deg)}50%{transform:translate(2px,-1px) rotate(2deg)}75%{transform:translate(-1px,-1px) rotate(-1deg)}}
+@keyframes nope{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes squish{to{transform:translateY(12px)}}
+@keyframes needle{from{transform:rotate(0)}to{transform:rotate(110deg)}}
+@keyframes flick{to{transform:scaleY(1.2)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{to{transform:translateY(-10px);opacity:.3}}
+@keyframes ring{50%{stroke-width:9;opacity:.5}}
+@keyframes march{to{stroke-dashoffset:-22}}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+@media (max-width:1150px){
+  .app{grid-template-columns:1fr 1fr;grid-template-areas:"tony tony" "shelf shelf" "counter machines" "map map"}
+  .shelf-groups{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-areas:"tony" "shelf" "counter" "machines" "map";padding:4px 12px 28px;gap:14px}
+  .shelf-groups{display:block}
+  .tony{position:sticky;top:6px;z-index:10;grid-template-columns:64px minmax(0,1fr);gap:10px;padding:10px 12px}
+  .tony-svg{width:46px}
+  .tony-name{font-size:10px;padding:2px 6px}
+  .bubble{font-size:14.5px;min-height:0;padding:10px 12px;max-height:150px;overflow:auto}
+  .bubble::before{top:20px}
+  .quest{grid-column:1/-1;padding:8px 12px}
+  .quest ol{display:none}
+  .plank{flex-wrap:nowrap;overflow-x:auto}
+  .rock-btn{flex:none}
+  .counter-top{grid-template-columns:1fr 1fr;gap:10px}
+  .plate-name{font-size:20px}
+  .facts{grid-template-columns:1fr}
+  .copts{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brandwrap"><div class="byline">Tony Bony's</div><h1 class="logo" aria-label="Tony Bony's Rock Cycle Kitchen"><span>R</span><span>o</span><span>c</span><span>k</span><span class="gap"></span><span>C</span><span>y</span><span>c</span><span>l</span><span>e</span><span class="gap"></span><span>K</span><span>i</span><span>t</span><span>c</span><span>h</span><span>e</span><span>n</span></h1></div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Mode">
+      <button id="mQuest" aria-pressed="true">Rock Cycle Quest</button>
+      <button id="mFree" aria-pressed="false">Free Play</button>
+    </div>
+    <div class="found" id="found">Rocks found 5/17</div>
+    <button class="pill" id="snd" aria-pressed="true">Sound: on</button>
+  </div>
+</header>
+
+<main class="app">
+  <section class="tony panel" aria-label="Tony Bony, your helper">
+    <button class="tony-btn" id="tonyBtn" aria-label="Tap Tony Bony for a joke">
+      <svg class="tony-svg tb-idle" id="tonySvg" viewBox="20 -50 160 302" aria-hidden="true">
+<!-- @include shared/tony/tony-rig.svg -->
+</svg>
+      <span class="tony-name">Tony Bony</span>
+    </button>
+    <div class="bubble" id="bubble" aria-live="polite"></div>
+    <div class="quest" id="quest"></div>
+  </section>
+
+  <section class="shelf panel" aria-label="Rock shelf">
+    <h2>Rock Shelf</h2>
+    <div class="shelf-groups" id="shelf"></div>
+  </section>
+
+  <section class="counter panel" aria-label="Counter and microscope">
+    <h2>The Counter</h2>
+    <div class="counter-top">
+      <div class="plate-wrap">
+        <div class="plate" id="plate"></div>
+        <div class="plate-name" id="plateName"></div>
+      </div>
+      <div class="scope-wrap">
+        <div class="lens" id="lens"><canvas id="scope" width="300" height="300" aria-label="Microscope view"></canvas><div class="beam"></div><div class="knob"></div></div>
+        <div class="scope-label">Rock Scanner &middot; 30x zoom</div>
+      </div>
+    </div>
+    <div class="info" id="info"></div>
+  </section>
+
+  <section class="machines panel" aria-label="Machines">
+    <h2>Kitchen Machines</h2>
+    <div class="mgrid">
+      <button class="mach m-blend" data-m="blend">
+        <svg viewBox="0 0 100 84" aria-hidden="true">
+          <rect x="30" y="62" width="40" height="17" rx="6" fill="#2d2452"/><circle cx="50" cy="70.5" r="4" fill="#ffd03d"/>
+          <path d="M25 12 H75 L67 62 H33 Z" fill="#effaff"/>
+          <g class="spin">
+            <path d="M37 36 a7 7 0 0 1 11 -6 a8 8 0 0 1 15 4 a5 5 0 0 1 0 10 h-24 a5 5 0 0 1 -2 -8z" fill="#bfe6ff"/>
+            <path d="M41 49 q3 5 0 7 q-3 -2 0 -7z M51 51 q3 5 0 7 q-3 -2 0 -7z M60 48 q3 5 0 7 q-3 -2 0 -7z" fill="#2f9be8"/>
+            <path d="M44 22 v8 M40 26 h8 M41 23 l6 6 M47 23 l-6 6" stroke="#8fd3ff" stroke-width="1.8" stroke-linecap="round"/>
+          </g>
+          <rect x="22" y="6" width="56" height="9" rx="4.5" fill="#ff6fa8"/>
+        </svg>
+        <span class="mn">Weather Blender</span><span class="mp">Weathering &amp; erosion</span>
+      </button>
+      <button class="mach m-press" data-m="press">
+        <svg viewBox="0 0 100 84" aria-hidden="true">
+          <rect x="18" y="18" width="7" height="50" rx="3" fill="#2d2452" opacity=".55"/><rect x="75" y="18" width="7" height="50" rx="3" fill="#2d2452" opacity=".55"/>
+          <rect x="22" y="52" width="56" height="7" fill="#e9b96c"/><rect x="22" y="45" width="56" height="7" fill="#d39a4b"/><rect x="22" y="59" width="56" height="7" fill="#b98049"/>
+          <g class="ptop"><rect x="47" y="2" width="6" height="24" fill="#2d2452"/><rect x="30" y="0" width="40" height="7" rx="3.5" fill="#ff6fa8"/><rect x="15" y="24" width="70" height="12" rx="5" fill="#fff8ec"/></g>
+          <rect x="11" y="66" width="78" height="12" rx="5" fill="#2d2452"/>
+        </svg>
+        <span class="mn">Squish Press</span><span class="mp">Compaction &amp; cementation</span>
+      </button>
+      <button class="mach m-heat" data-m="heat">
+        <svg viewBox="0 0 100 84" aria-hidden="true">
+          <g class="flames"><path transform="translate(34 84)" d="M0 0 q-7 -9 1 -18 q1 7 5 8 q1 -7 -2 -13 q13 9 4 23z" fill="#ffb52e"/><path transform="translate(49 84)" d="M0 0 q-7 -9 1 -18 q1 7 5 8 q1 -7 -2 -13 q13 9 4 23z" fill="#ff7a1a"/><path transform="translate(64 84)" d="M0 0 q-7 -9 1 -18 q1 7 5 8 q1 -7 -2 -13 q13 9 4 23z" fill="#ffb52e"/></g>
+          <rect x="13" y="40" width="12" height="7" rx="3.5" fill="#2d2452"/><rect x="75" y="40" width="12" height="7" rx="3.5" fill="#2d2452"/>
+          <rect x="20" y="28" width="60" height="40" rx="11" fill="#fff8ec"/>
+          <path d="M17 31 Q50 8 83 31Z" fill="#ff6fa8"/><circle cx="50" cy="14" r="5" fill="#2d2452"/>
+          <circle cx="50" cy="50" r="11" fill="#fff" stroke="#2d2452" stroke-width="3"/>
+          <line class="needle" x1="50" y1="50" x2="43" y2="45" stroke="#ff4d3d" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span class="mn">Pressure Cooker</span><span class="mp">Heat &amp; pressure</span>
+      </button>
+      <button class="mach m-melt" data-m="melt">
+        <svg viewBox="0 0 100 84" aria-hidden="true">
+          <g class="flames"><path transform="translate(32 84)" d="M0 0 q-7 -9 1 -18 q1 7 5 8 q1 -7 -2 -13 q13 9 4 23z" fill="#ffd03d"/><path transform="translate(48 84)" d="M0 0 q-7 -9 1 -18 q1 7 5 8 q1 -7 -2 -13 q13 9 4 23z" fill="#ffb52e"/><path transform="translate(64 84)" d="M0 0 q-7 -9 1 -18 q1 7 5 8 q1 -7 -2 -13 q13 9 4 23z" fill="#ffd03d"/></g>
+          <path d="M10 30 h8 M82 30 h8" stroke="#2d2452" stroke-width="6" stroke-linecap="round"/>
+          <path d="M16 30 H84 Q84 70 50 70 Q16 70 16 30Z" fill="#2d2452"/>
+          <ellipse cx="50" cy="30" rx="34" ry="8" fill="#ffb52e"/><ellipse cx="50" cy="30" rx="24" ry="4.5" fill="#ffe27a"/>
+          <g class="bubs"><circle cx="40" cy="22" r="4" fill="#ff8a2a"/><circle cx="60" cy="19" r="3" fill="#ffd03d"/><circle cx="52" cy="12" r="2.5" fill="#ff8a2a"/></g>
+        </svg>
+        <span class="mn">Lava Pot</span><span class="mp">Melting</span>
+      </button>
+      <div class="cool dim" id="cool">
+        <div class="cool-head">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20" fill="#fff"/><path d="M22 8 v28 M10 15 l24 14 M34 15 l-24 14" stroke="#2ec4b6" stroke-width="3.5" stroke-linecap="round"/><circle cx="22" cy="22" r="4" fill="#ff6fa8"/></svg>
+          <div><div class="mn">Cooling Station</div><div class="mp">Magma cools into igneous rock. How fast? You pick!</div></div>
+        </div>
+        <div class="copts">
+          <button class="copt" data-c="slow"><svg viewBox="0 0 42 34" aria-hidden="true"><rect x="0" y="6" width="42" height="28" rx="5" fill="#b98049"/><rect x="0" y="6" width="42" height="5" fill="#7bc96f"/><ellipse cx="21" cy="25" rx="9" ry="5" fill="#ff7a1a"/></svg>Slow &amp; deep<small>underground</small></button>
+          <button class="copt" data-c="fast"><svg viewBox="0 0 42 34" aria-hidden="true"><path d="M2 33 L16 8 h10 L40 33Z" fill="#8a7f70"/><path d="M16 8 h10 l-3 7 l-2 -3 l-3 4z" fill="#ff5040"/><circle cx="18" cy="4" r="3" fill="#cfc6b8"/><circle cx="25" cy="3" r="2.5" fill="#cfc6b8"/></svg>Quick<small>on the surface</small></button>
+          <button class="copt" data-c="splash"><svg viewBox="0 0 42 34" aria-hidden="true"><path d="M0 22 q7 -6 14 0 t14 0 t14 0 V34 H0Z" fill="#55bbff"/><path d="M14 18 q2 -10 7 -14 q5 4 7 14" fill="none" stroke="#55bbff" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="14" r="4" fill="#ff7a1a"/></svg>Splash!<small>into water</small></button>
+          <button class="copt" data-c="gas"><svg viewBox="0 0 42 34" aria-hidden="true"><circle cx="12" cy="22" r="8" fill="none" stroke="#8b6cff" stroke-width="3"/><circle cx="28" cy="14" r="6" fill="none" stroke="#ff6fa8" stroke-width="3"/><circle cx="31" cy="28" r="4" fill="none" stroke="#2ec4b6" stroke-width="3"/><circle cx="16" cy="6" r="3" fill="none" stroke="#ffb52e" stroke-width="2.5"/></svg>Fizzy<small>full of gas</small></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="map panel" aria-label="Rock cycle map">
+    <h2>Where am I in the rock cycle?</h2>
+    <svg id="cycle" viewBox="-30 0 420 325" role="img" aria-label="Rock cycle map with five stops: igneous rock, sediment, sedimentary rock, metamorphic rock, and magma"></svg>
+    <p class="map-note">Bold arrows are the big loop. Dotted arrows are shortcuts: any rock can be weathered, melted, or changed by heat and pressure.</p>
+  </section>
+</main>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+/* @include shared/tony/tony.js */
+</script>
+<script>
+/* ---------------- DATA ---------------- */
+const KIND = {
+  igneous:{label:'Igneous rock', color:'var(--ig)', hex:'#ff7a3d'},
+  sedimentary:{label:'Sedimentary rock', color:'var(--sedr)', hex:'#e9a800'},
+  metamorphic:{label:'Metamorphic rock', color:'var(--meta)', hex:'#8b6cff'},
+  sediment:{label:'Sediment (not rock yet!)', color:'var(--sedi)', hex:'#b98049'},
+  magma:{label:'Magma (melted rock)', color:'var(--mag)', hex:'#f0392b'}
+};
+const M = (n,c)=>({n,c});
+const ITEMS = {
+  granite:{name:'Granite',kind:'igneous',sub:'Intrusive: cooled underground',base:'#f0c4bb',
+    icon:{p:'speck',c:['#fffaf3','#3a3340','#e48a8a']},
+    tex:{t:'crystals',c:['#f6f2ec','#efa59c','#d9d3cb','#e7c2a8'],w:[3,3,2,1],s:20,flakes:{c:'#2a2530',n:55,s:7}},
+    min:[M('Quartz','#f4f1ea'),M('Feldspar','#efa59c'),M('Biotite mica','#2a2530'),M('Hornblende','#3f4a3c')],
+    see:'Coarse-grained. Big crystals lock together like puzzle pieces, and you can see them without a magnifier.',
+    formed:'Light magma cooled very slowly, deep underground. Slow cooling gives crystals lots of time to grow big.',
+    fact:'Mount Rushmore is carved into granite. Those black flecks are biotite, a mica that peels apart into paper-thin sheets.',
+    hint:'Melt a light rock, then cool it slowly, deep underground.'},
+  gabbro:{name:'Gabbro',kind:'igneous',sub:'Intrusive: cooled underground',base:'#545a54',dark:true,
+    icon:{p:'speck',c:['#d9d9cc','#2a2e2b','#8aa060']},
+    tex:{t:'crystals',c:['#2c302d','#cfd0c4','#3f4a37','#5c6650'],w:[4,3,2,1],s:18,flakes:{c:'#7a9a3a',n:22,s:5}},
+    min:[M('Pyroxene','#2c302d'),M('Plagioclase feldspar','#cfd0c4'),M('Olivine','#7a9a3a')],
+    see:'Coarse-grained and dark, with big black and white crystals mixed together.',
+    formed:'Dark magma cooled slowly underground. It has the same ingredients as basalt, but slow cooling made big crystals.',
+    fact:'Gabbro makes up a big part of the deep ocean crust, hiding underneath the basalt of the sea floor.',
+    hint:'Melt basalt, then cool the dark magma slowly, deep underground.'},
+  rhyolite:{name:'Rhyolite',kind:'igneous',sub:'Extrusive: cooled on the surface',base:'#e6b4a0',
+    icon:{p:'speck',c:['#f6e6db','#c98a76']},
+    tex:{t:'fine',bg:'#ddab98',c:['#f0d6c9','#c88f7c','#e8c0ae'],ph:['#faf5ee','#2f2a33']},
+    min:[M('Quartz','#f4f1ea'),M('Feldspar','#efa59c'),M('A little biotite','#2a2530')],
+    see:'Fine-grained. The crystals are too tiny to see, with maybe a few bigger ones floating in it.',
+    formed:'Light magma erupted and cooled fast on the surface. Same ingredients as granite, just cooled faster!',
+    fact:'The giant volcano under Yellowstone National Park has erupted huge amounts of rhyolite.',
+    hint:'Melt a light rock, then cool it quickly on the surface.'},
+  basalt:{name:'Basalt',kind:'igneous',sub:'Extrusive: cooled on the surface',base:'#40434c',dark:true,
+    icon:{p:'speck',c:['#5b5f6b','#2b2d33','#7d9b3d']},
+    tex:{t:'fine',bg:'#3b3e46',c:['#4e525c','#2a2c32','#454852'],ph:['#7d9b3d','#d9d6cc'],holes:8},
+    min:[M('Pyroxene','#2c302d'),M('Plagioclase feldspar','#cfd0c4'),M('Olivine','#7a9a3a')],
+    see:'Fine-grained and dark. Sometimes it has little holes where gas bubbles were trapped.',
+    formed:'Runny dark lava cooled quickly at the surface, like the lava flows on Hawaii.',
+    fact:'Most of the ocean floor is basalt, and so are the dark patches you can see on the Moon.',
+    hint:'Melt basalt, then cool the dark magma quickly on the surface.'},
+  obsidian:{name:'Obsidian',kind:'igneous',sub:'Extrusive: volcanic glass',base:'#211d2a',dark:true,
+    icon:{p:'shine'},tex:{t:'glass'},
+    min:[M('Volcanic glass (mostly silica)','#211d2a'),M('No crystals at all!','#ffffff')],
+    see:'Glassy and smooth. It breaks with curved, shell-shaped edges.',
+    formed:'Light, sticky lava cooled so fast that crystals had no time to form at all.',
+    fact:'People long ago made knives and arrowheads from obsidian. A fresh edge can be sharper than a steel scalpel.',
+    hint:'Melt a light rock, then splash the magma into water!'},
+  pumice:{name:'Pumice',kind:'igneous',sub:'Extrusive: frothy volcanic rock',base:'#ebe6da',
+    icon:{p:'holes',c:['#c9c0ad']},
+    tex:{t:'vesicles',bg:'#e7e1d3',c:['#d9d1c0','#f3efe6'],hole:'#b9af9a',rim:'#fbf8f1',n:150,min:3,max:11},
+    min:[M('Volcanic glass','#d9d1c0'),M('Trapped gas holes','#b9af9a')],
+    see:'Light and frothy, full of tiny holes called vesicles.',
+    formed:'Gassy, light lava foamed up like a shaken soda and froze before the bubbles could escape.',
+    fact:'Pumice is so full of air pockets that it can float on water!',
+    hint:'Melt a light rock, then cool it the fizzy, gassy way.'},
+  scoria:{name:'Scoria',kind:'igneous',sub:'Extrusive: bubbly volcanic rock',base:'#7d3b30',dark:true,
+    icon:{p:'holes',c:['#4a1f19']},
+    tex:{t:'vesicles',bg:'#7a382d',c:['#8e4637','#5f2a22'],hole:'#3a1612',rim:'#b06a55',n:65,min:6,max:18},
+    min:[M('Pyroxene','#2c302d'),M('Plagioclase feldspar','#cfd0c4'),M('Iron oxide (rusty red)','#a8432e')],
+    see:'Dark and bubbly with bigger holes. Heavier than pumice.',
+    formed:'Gassy dark lava full of bubbles cooled quickly.',
+    fact:'Scoria sinks in water. It is the reddish "lava rock" people use in gardens and gas grills.',
+    hint:'Melt basalt, then cool the dark magma the fizzy, gassy way.'},
+  conglomerate:{name:'Conglomerate',kind:'sedimentary',sub:'Clastic: made of rock pieces',base:'#cfae82',
+    icon:{p:'pebbles',c:['#8d8a85','#efe8dc','#a5694a','#5c5a63']},
+    tex:{t:'pebbles',bg:'#c9a678',sand:['#b8925f','#e0c497','#a07b4c'],c:['#8d8a85','#efe8dc','#a5694a','#5c5a63','#c9b8a0'],n:20,min:16,max:36},
+    min:[M('Rounded pebbles (any rock!)','#8d8a85'),M('Sand','#e0c497'),M('Natural cement','#f4f1ea')],
+    see:'Rounded pebbles glued together in a sandy cement.',
+    formed:'Gravel from a river or beach was buried, squished, and cemented together.',
+    fact:'The pebbles are round because water tumbled them. Sharp, jagged pieces would make a cousin rock called breccia.',
+    hint:'Blend any rock into gravel, then squish the gravel.'},
+  sandstone:{name:'Sandstone',kind:'sedimentary',sub:'Clastic: made of sand grains',base:'#e9b96c',
+    icon:{p:'stripes',c:['#d39a4b','#f3d293']},
+    tex:{t:'grains',bg:'#b98042',c:['#efc98a','#e3b36a','#f5dcae','#d9a35e'],n:950,min:5,max:9,layers:true},
+    min:[M('Quartz sand','#f5dcae'),M('Feldspar grains','#efa59c'),M('Cement (calcite or iron oxide)','#b98042')],
+    see:'Sand-sized grains you can feel with your finger. It often shows layers.',
+    formed:'Sand from beaches, rivers, or deserts was buried, packed down, and cemented.',
+    fact:'The red arches in Arches National Park, Utah, are sandstone. Iron oxide (rust) colors the red ones.',
+    hint:'Blend gravel into sand, then squish the sand.'},
+  shale:{name:'Shale',kind:'sedimentary',sub:'Clastic: made of mud',base:'#7e8590',dark:true,
+    icon:{p:'stripes',c:['#6a707b','#98a0ab']},
+    tex:{t:'layers',c:['#7b828d','#6a707b','#8d949f','#5f6570'],min:3,max:9,fossil:true},
+    min:[M('Clay minerals','#8d949f'),M('Silt-sized quartz','#d9d3cb'),M('Fossil bits of once-living things','#4c4436')],
+    see:'Very fine-grained. It splits into thin, flat layers.',
+    formed:'Mud settled in quiet water, like lakes or the deep sea, and was pressed into rock.',
+    fact:'Shale is the most common sedimentary rock, and it is a great place to find fossils.',
+    hint:'Blend sand into mud, then squish the mud.'},
+  limestone:{name:'Limestone',kind:'sedimentary',sub:'Made from shells and sea life',base:'#ddd5c2',
+    icon:{p:'shells',c:['#f6f1e6','#b9ae96']},
+    tex:{t:'shells',bg:'#d6cdb8',c:['#cbc1ab','#e6dfcf'],sc:['#f2ecdf','#e5dccb','#c9bea6'],n:22},
+    min:[M('Calcite (from shells and coral)','#f2ecdf'),M('Fossils','#c9bea6')],
+    see:'Fine to grainy. You might spot shells or coral pieces in it.',
+    formed:'Shells, coral, and lime mud piled up in warm, shallow seas and were cemented together.',
+    fact:'Limestone fizzes when you drip vinegar on it. The Great Pyramids of Egypt are built mostly from limestone.',
+    hint:'Squish some Seashell Bits.'},
+  slate:{name:'Slate',kind:'metamorphic',sub:'Foliated, low grade',base:'#4b5465',dark:true,
+    icon:{p:'stripes',c:['#3f4757','#5a6477']},
+    tex:{t:'slate',bg:'#465063'},
+    min:[M('Tiny mica flakes, all lined up','#c9cfd8'),M('Clay minerals','#8d949f'),M('Quartz','#f4f1ea')],
+    see:'Very fine and smooth. It splits into flat sheets.',
+    formed:'Shale was squeezed and gently heated, so its flat clay flakes all lined up the same way.',
+    fact:'Slate was used for old school chalkboards, and it is still used for roof tiles.',
+    hint:'Pressure-cook some shale.'},
+  schist:{name:'Schist',kind:'metamorphic',sub:'Foliated, medium grade',base:'#8f948a',
+    icon:{p:'waves',c:['#d4dad2','#5f645c']},
+    tex:{t:'schist',bg:'#80857c',c:['#9aa096','#6c7168','#b8beb4','#565a52'],g:7},
+    min:[M('Mica (sparkly!)','#d4dad2'),M('Quartz','#f4f1ea'),M('Garnet','#a3243a')],
+    see:'Sparkly, wavy layers of mica you can see. Sometimes it has little red garnets.',
+    formed:'More heat and pressure than slate. The mica crystals grew big enough to sparkle.',
+    fact:'Many of the skyscrapers in Manhattan stand on a hard rock called Manhattan schist.',
+    hint:'Pressure-cook slate. (Basalt works too!)'},
+  gneiss:{name:'Gneiss',kind:'metamorphic',sub:'Foliated, high grade. Say it "nice"!',base:'#bdb5aa',
+    icon:{p:'bands',c:['#3b3a40','#efe7da']},
+    tex:{t:'gneiss',dark:'#3d3c42',light:['#ece4d7','#e2b9a8','#d8d2c6']},
+    min:[M('Feldspar','#efa59c'),M('Quartz','#f4f1ea'),M('Biotite mica','#2a2530'),M('Hornblende','#3f4a3c')],
+    see:'Light and dark minerals separated into stripes, called bands.',
+    formed:'Rock was squeezed and heated so much (but not melted!) that its minerals sorted into bands.',
+    fact:'The stripes in gneiss can bend into wild swirls and folds, showing just how hard the rock was squeezed.',
+    hint:'Pressure-cook schist or granite.'},
+  marble:{name:'Marble',kind:'metamorphic',sub:'Non-foliated',base:'#f4f1eb',
+    icon:{p:'veins',c:['#aaa6b8']},tex:{t:'marble'},
+    min:[M('Calcite (regrown crystals)','#fbfaf7'),M('Other minerals make the swirls','#aaa6b8')],
+    see:'Sugary crystals that sparkle, often with swirly colored veins.',
+    formed:'Limestone was heated and squeezed, so its calcite regrew into bigger crystals.',
+    fact:'Michelangelo carved his famous statue David from marble, and the Taj Mahal is covered in it.',
+    hint:'Pressure-cook limestone.'},
+  quartzite:{name:'Quartzite',kind:'metamorphic',sub:'Non-foliated',base:'#f1d8cd',
+    icon:{p:'speck',c:['#ffffff','#e2b6a6']},
+    tex:{t:'crystals',c:['#f7e6de','#efd3c7','#fbf3ee','#e6c0b1'],w:[3,3,2,1],s:14},
+    min:[M('Quartz (grains fused together)','#fbf3ee'),M('A little iron for color','#e2b6a6')],
+    see:'Very hard and a little glassy. The grains are welded together.',
+    formed:'Sandstone was heated and squeezed until its quartz grains fused.',
+    fact:'Quartzite is so tough that when it breaks, it cracks right through the sand grains instead of around them.',
+    hint:'Pressure-cook sandstone.'},
+  metacong:{name:'Metaconglomerate',kind:'metamorphic',sub:'Stretched pebbles',base:'#a99d8d',
+    icon:{p:'stretched',c:['#e7ded0','#6b6670','#b57a5d']},
+    tex:{t:'stretched',bg:'#9c907f',sand:['#8a7f70','#b3a795'],c:['#e7ded0','#6b6670','#b57a5d','#cfc6b8'],n:26,min:26,max:60},
+    min:[M('Squashed pebbles','#e7ded0'),M('Quartz','#f4f1ea'),M('Mica','#d4dad2')],
+    see:'Pebbles squashed and stretched into long, flat shapes.',
+    formed:'Conglomerate was heated and squeezed so hard that its pebbles flattened out.',
+    fact:'Geologists can tell which way a rock was squeezed by checking which way its pebbles stretched.',
+    hint:'Pressure-cook conglomerate.'},
+  gravel:{name:'Gravel',kind:'sediment',sub:'Pebbles bigger than 2 mm',base:'#a3978a',
+    icon:{p:'pebbles',c:['#8d8780','#d6cdbf','#6c6660','#b48a6a']},
+    tex:{t:'pebbles',bg:'#4a3f35',sand:['#5b4f43','#3a3129'],c:['#8d8780','#d6cdbf','#6c6660','#b48a6a','#a59d93'],n:42,min:18,max:34},
+    min:[M('Broken bits of rock','#8d8780')],
+    see:'Loose, chunky pieces of rock.',
+    formed:'Rain, ice, wind, and roots broke rock into pieces (weathering), and rivers carried them away (erosion).',
+    fact:'Water expands about 9% when it freezes. Ice in cracks can split rocks apart. That is called frost wedging.',
+    hint:'Put any rock in the Weather Blender.'},
+  sand:{name:'Sand',kind:'sediment',sub:'Grains from 1/16 mm to 2 mm',base:'#e9c98c',
+    icon:{p:'speck',c:['#d1a862','#f6e3b9','#c49255']},
+    tex:{t:'grains',bg:'#7a5a34',c:['#efc98a','#e3b36a','#f5dcae','#d9a35e','#c9b8a0'],n:1100,min:4,max:8},
+    min:[M('Quartz','#f5dcae'),M('Feldspar','#efa59c')],
+    see:'Loose grains, small but still big enough to see one by one.',
+    formed:'More weathering ground the rock smaller. Quartz lasts the longest because it is so hard.',
+    fact:'Most beach sand is quartz, because quartz is hard and does not dissolve easily.',
+    hint:'Blend some gravel.'},
+  mud:{name:'Mud',kind:'sediment',sub:'Silt and clay, smaller than sand',base:'#8a6a4f',dark:true,
+    icon:{p:'speck',c:['#735641','#a3836a']},
+    tex:{t:'mud',bg:'#7d5f46',c:['#8e6f55','#6c5039','#9b7d62']},
+    min:[M('Clay minerals','#9b7d62'),M('Silt','#c9b8a0')],
+    see:'Super smooth and sticky. The grains are too small to see.',
+    formed:'The tiniest bits of weathered rock settle out of calm water.',
+    fact:'Clay grains are so tiny that hundreds of them could line up across one millimeter.',
+    hint:'Blend some sand.'},
+  shells:{name:'Seashell Bits',kind:'sediment',sub:'Broken shells and lime mud',base:'#efe6d3',
+    icon:{p:'shells',c:['#fffaf0','#e0b9a6']},
+    tex:{t:'shells',bg:'#e7dcc6',c:['#dccfb6','#f2eadb'],sc:['#fff8ee','#f3d9c4','#ecc9d4','#d7cdb9'],n:32},
+    min:[M('Calcite','#fff8ee')],
+    see:'Loose pieces of shells and coral.',
+    formed:'Sea creatures build shells from calcite dissolved in seawater. When they die, the shells pile up on the sea floor.',
+    fact:'The White Cliffs of Dover in England are chalk, a limestone made of the tiny shells of ocean plankton.',
+    hint:'You start with these on the shelf!'},
+  limemud:{name:'Lime Mud',kind:'sediment',sub:'Fine calcite mud',base:'#e6e0d1',
+    icon:{p:'speck',c:['#f6f2e8','#cfc6b2']},
+    tex:{t:'mud',bg:'#ddd6c5',c:['#ebe6da','#d3cbb8','#f4f0e6']},
+    min:[M('Calcite','#fff8ee')],
+    see:'Very fine, pale, and smooth. The grains are too tiny to see.',
+    formed:'Rainwater is slightly acidic, so it slowly dissolves limestone and marble. Rivers carry the dissolved calcite to the sea, where it settles out as fine lime mud.',
+    fact:'Look at old marble gravestones: the carved letters slowly fade as rain dissolves the calcite.',
+    hint:'Blend some limestone or marble.'},
+  magmaL:{name:'Light Magma',kind:'magma',sub:'Melted rock, rich in silica',base:'#ff8a2a',
+    icon:{p:'magma'},tex:{t:'magma',c:['#fff3a0','#ffb52e','#ff6a1a','#b8200e']},
+    min:[M('Silica','#f4f1ea'),M('Aluminum','#cfd0c4'),M('Potassium & sodium','#efa59c'),M('Water & gas','#bfe6ff')],
+    see:'Thick and sticky, like cold honey.',
+    formed:'Rock got hot enough to melt, roughly 650 to 850 °C. Underground it is magma. When it erupts, it is lava.',
+    fact:'Sticky magma traps gas, which is why volcanoes with light magma can explode violently.',
+    hint:'Put a light-colored rock in the Lava Pot.'},
+  magmaD:{name:'Dark Magma',kind:'magma',sub:'Melted rock, rich in iron and magnesium',base:'#e2401f',
+    icon:{p:'magma'},tex:{t:'magma',c:['#ffd76a','#ff7a1a','#d8300f','#6e0f08']},
+    min:[M('Iron','#6e0f08'),M('Magnesium','#cfd0c4'),M('Silica','#f4f1ea')],
+    see:'Runny, like warm syrup. It is hotter: about 1,000 to 1,200 °C.',
+    formed:'Usually made by melting deep in the mantle, under the crust.',
+    fact:'Runny basalt lava in Hawaii can flow for miles as glowing rivers.',
+    hint:'Put basalt in the Lava Pot.'}
+};
+const ROCKS = Object.keys(ITEMS).filter(k=>['igneous','sedimentary','metamorphic'].includes(ITEMS[k].kind));
+const GROUPS = [
+  ['Igneous','var(--ig)',k=>ITEMS[k].kind==='igneous'],
+  ['Sedimentary','var(--sedr)',k=>ITEMS[k].kind==='sedimentary'],
+  ['Metamorphic','var(--meta)',k=>ITEMS[k].kind==='metamorphic'],
+  ['Sediment & Magma','var(--sedi)',k=>['sediment','magma'].includes(ITEMS[k].kind)]
+];
+const COOL = {
+  slow:{L:'granite',D:'gabbro',time:'Slow. Big crystals need time to grow.'},
+  fast:{L:'rhyolite',D:'basalt',time:'Fast. A lava flow can crust over in minutes and cool in days to weeks.'},
+  splash:{L:'obsidian',D:'basalt',time:'Super fast. Seconds to minutes!'},
+  gas:{L:'pumice',D:'scoria',time:'Fast. The frozen bubbles get locked in within minutes.'}
+};
+const HEAT = {shale:'slate',slate:'schist',schist:'gneiss',sandstone:'quartzite',limestone:'marble',conglomerate:'metacong',
+  granite:'gneiss',gabbro:'schist',basalt:'schist',scoria:'schist',rhyolite:'schist',obsidian:'schist',pumice:'schist'};
+const PRESS = {gravel:'conglomerate',sand:'sandstone',mud:'shale',shells:'limestone',limemud:'limestone'};
+const TIME = {blend:'Usually slow, bit by bit. Floods, landslides, and freezing water can break and move lots of rock quickly!',press:'It depends on how much weight is on top and how much natural cement is in the water.',heat:'It depends on how hot it gets and how hard the rock is squeezed.',melt:'Rock has to reach roughly 650 to 1,200 °C to melt.'};
+const QUEST = [
+  {target:'gravel',title:'Weather the granite',intro:'Granite is an <b>igneous</b> rock. It formed when magma cooled slowly underground. Let\'s take it all the way around the rock cycle! Put Granite on the counter and tap the <b>Weather Blender</b>.'},
+  {target:'sand',title:'Grind the gravel into sand',intro:'Rain, ice, and rivers keep breaking things down. Blend the gravel <b>again</b> to make sand.'},
+  {target:'sandstone',title:'Squish sand into sandstone',intro:'Over time, sand gets buried under more and more layers. Use the <b>Squish Press</b> to compact and cement it into rock.'},
+  {target:'quartzite',title:'Pressure-cook the sandstone',intro:'Sandstone is a <b>sedimentary</b> rock. Now bury it deep, where it is hot and squeezy. <b>Pressure Cooker</b> time!'},
+  {target:'magmaL',title:'Melt the quartzite',intro:'Quartzite is <b>metamorphic</b>: changed by heat and pressure, but never melted. Now let\'s melt it all the way. Into the <b>Lava Pot</b>!'},
+  {target:'granite',title:'Cool the magma slowly',intro:'Magma! In the <b>Cooling Station</b>, cool it <b>slow &amp; deep</b> so big crystals can grow.'},
+  {target:'obsidian',bonus:true,title:'Bonus: make obsidian',intro:'Bonus challenge: make volcanic glass! Light magma has to cool super, super fast.'},
+  {target:'marble',bonus:true,title:'Bonus: seashells to marble',intro:'Bonus challenge: turn <b>Seashell Bits</b> into shiny marble. It takes two machines.'},
+  {target:'gneiss',bonus:true,title:'Bonus: shale to gneiss',intro:'Bonus challenge: start with <b>Shale</b> and keep pressure-cooking. Watch it go slate, schist, gneiss!'},
+  {target:'ALL',bonus:true,title:'Super bonus: find all 17 rocks',intro:'Last challenge: fill the whole shelf! Tap any <b>?</b> rock and I\'ll give you a hint.'}
+];
+const JOKES = [
+"Why didn't the skeleton go to the dance? He had no body to go with. So I came here instead!",
+"That rock is gneiss. Really gneiss.",
+"I tried to tell a sedimentary joke, but it had too many layers.",
+"I don't have any guts, but I've got plenty of grit.",
+"Shale we keep going?",
+"I lava good rock cycle.",
+"I've got a bone to pick with that magma. Way too hot!",
+"Why are skeletons so calm? Nothing gets under their skin!",
+"What's a skeleton's favorite instrument? The trom-BONE!",
+"Why don't skeletons ever fight each other? They don't have the guts.",
+"What do you call a sleeping rock? Bedrock!",
+"What's a rock's favorite cereal? Cocoa Pebbles!",
+"Why was the obsidian so proud? It was a cut above the rest!",
+"How does a skeleton call his friends? On the tele-BONE!",
+"What do you call a rock that tells jokes? A pun-ice stone!",
+"What's the best way to make a skeleton laugh? Tickle his funny bone!",
+"Why did the volcano tell so many jokes? It wanted everyone to erupt with laughter!",
+"Why do skeletons drink so much milk? It's good for the bones!",
+"What do you call a skeleton who won't get out of bed? Lazy bones!",
+"Why was the beach wet? Because the sea weed!",
+"What's a skeleton's favorite snack? Spare ribs!",
+"I'm reading a book about pumice. It's so light, I can't put it down!",
+"What did the boulder say to the pebble? Someday you'll be big like me! Just kidding. You're going in the Weather Blender.",
+"What kind of rocks do skeletons collect? Boulders. Bone-lders? I'm still working on that one.",
+"Why did the geologist take his rock to the party? He wanted it to have a blast!",
+"Did you hear about the skeleton who got a job at the rock shop? He works for skele-TONS of customers!",
+"Why was the magma always so grumpy? It had a short temper. And a very hot one.",
+"What did one tectonic plate say when it bumped the other? Sorry, my fault!",
+"Why don't skeletons play music in church? They have no organs!",
+"What do you call a rock that never goes to school? A skipping stone!",
+"My friend Gneil the rock is a great listener. He's very... gneiss to talk to.",
+"Knock knock. Who's there? Lava. Lava who? Lava you, but I'm too hot to hug!",
+"Metamorphic rocks are gneiss, but sedimentary rocks are just too shale.",
+"My geologist friend is so grounded. Truly down-to-earth.",
+"Don't take shale too seriously. It'll break under pressure.",
+"I'm feeling boulder than ever today.",
+"Sedimentary, my dear Watson.",
+"That's gneiss of you to say!",
+"May the quartz be with you!",
+"I'm just trying to keep it together, like tectonic plates.",
+"It's a hard rock life for us.",
+"A tour of a volcano would really magma day.",
+"There's no halfway with a geologist. It's all ore nothing.",
+"Why was the rock extra cheap? Because it was on shale.",
+"That joke was rocky."
+];
+const PUNS = {"blend": ["Talk about a crushing experience!", "That rock really broke down. Poor thing.", "Weather or not you like it, rocks break!", "Smashing work!"], "press": ["Under a lot of pressure? Same.", "Squish happens!", "That's what I call a tight squeeze.", "Press-tastic!"], "heat": ["Things are really heating up in here!", "That rock is going through some changes.", "Metamorphic? More like meta-MORE-phic!", "It's getting hot in here. Good thing I'm all bones, no sweat."], "melt": ["Hot stuff coming through!", "Total meltdown!", "Lava-ly job!", "That rock just went with the flow."], "cool": ["Cool, cool, cool.", "Chill out, magma!", "Ice work! Well, rock work.", "Now that's what I call a cool rock."]};
+
+/* ---------------- STATE ---------------- */
+const S = {found:new Set(['granite','basalt','sandstone','shale','limestone','shells']),cur:'granite',mode:'quest',step:0,sound:true,busy:false};
+try{
+  const d=JSON.parse(localStorage.getItem('rockCycleKitchen')||'null');
+  if(d){ (d.found||[]).forEach(k=>ITEMS[k]&&S.found.add(k)); if(ITEMS[d.cur]) S.cur=d.cur; if(d.mode) S.mode=d.mode; if(typeof d.step==='number') S.step=d.step; if(typeof d.sound==='boolean') S.sound=d.sound; }
+}catch(e){}
+function save(){ try{localStorage.setItem('rockCycleKitchen',JSON.stringify({found:[...S.found],cur:S.cur,mode:S.mode,step:S.step,sound:S.sound}))}catch(e){} }
+
+/* ---------------- HELPERS ---------------- */
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash(s){let h=2166136261;for(const ch of s){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+const $=id=>document.getElementById(id);
+const lc=k=>ITEMS[k].name.toLowerCase();
+
+/* ---------------- ROCK ICONS (SVG characters) ---------------- */
+const BLOBS=[
+  'M18,62 C10,40 28,18 52,16 C76,14 92,34 88,58 C85,80 64,88 46,86 C28,84 22,78 18,62Z',
+  'M12,60 C12,36 34,22 56,22 C80,22 92,42 88,64 C84,82 62,88 42,85 C22,82 12,74 12,60Z',
+  'M20,70 C10,52 22,24 46,20 C70,14 92,32 86,58 C83,76 70,86 50,86 C34,86 25,80 20,70Z',
+  'M16,58 C14,40 26,26 44,22 C58,18 70,26 80,30 C92,40 90,62 80,74 C70,86 46,88 32,82 C22,78 17,68 16,58Z'
+];
+let uid=0;
+function iconSVG(k,locked){
+  const it=ITEMS[k], r=rng(hash(k)), id='cp'+(++uid);
+  const R=(a,b)=>a+r()*(b-a);
+  let shape, fy=52;
+  if(it.kind==='sediment'){shape='M6,88 C14,60 32,40 50,40 C68,40 86,60 94,88 Z';fy=66}
+  else if(it.kind==='magma'){shape='M16,62 C8,40 30,20 50,22 C72,22 94,40 86,62 C82,80 64,88 50,86 C32,86 20,80 16,62Z'}
+  else shape=BLOBS[hash(k)%BLOBS.length];
+  if(locked) return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="${shape}" fill="rgba(45,36,82,.12)" transform="translate(0 4)"/><path d="${shape}" fill="#e3dccd"/><text x="50" y="${fy+11}" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="32" fill="#b6ab95">?</text></svg>`;
+  const c=it.icon.c||[]; let p='';
+  switch(it.icon.p){
+    case 'speck': for(let i=0;i<30;i++) p+=`<circle cx="${R(8,92).toFixed(1)}" cy="${R(14,92).toFixed(1)}" r="${R(1.4,3.8).toFixed(1)}" fill="${c[i%c.length]}"/>`; break;
+    case 'stripes': for(let y=18,i=0;y<96;y+=8,i++) p+=`<path d="M0,${y} Q25,${y-3} 50,${y} T100,${y} V${y+4} Q75,${y+7} 50,${y+4} T0,${y+4}Z" fill="${c[i%2]}" opacity=".85"/>`; break;
+    case 'waves': for(let y=18,i=0;y<96;y+=9,i++) p+=`<path d="M0,${y} Q12,${y-5} 25,${y} T50,${y} T75,${y} T100,${y}" stroke="${c[i%2]}" stroke-width="3.2" fill="none"/>`;
+      for(let i=0;i<10;i++) p+=`<circle cx="${R(10,90).toFixed(1)}" cy="${R(20,88).toFixed(1)}" r="1.6" fill="#fff"/>`; break;
+    case 'bands': for(let y=14,i=0;y<100;y+=13,i++) p+=`<path d="M0,${y} Q25,${y-6} 50,${y} T100,${y}" stroke="${c[i%2]}" stroke-width="${i%2?5:8}" fill="none"/>`; break;
+    case 'holes': for(let i=0;i<16;i++){const x=R(14,86),y=R(20,88),rr=R(2,6);p+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rr.toFixed(1)}" fill="${c[0]}"/>`} break;
+    case 'shine': p=`<path d="M26,40 Q38,24 58,24" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none" opacity=".45"/><circle cx="68" cy="28" r="3.5" fill="#fff" opacity=".5"/><path d="M60,76 Q74,72 80,60" stroke="#8b7fb8" stroke-width="3" fill="none" opacity=".6"/>`; break;
+    case 'pebbles': for(let i=0;i<9;i++) p+=`<ellipse cx="${R(14,86).toFixed(1)}" cy="${R(fy-14,90).toFixed(1)}" rx="${R(6,11).toFixed(1)}" ry="${R(4.5,8).toFixed(1)}" fill="${c[i%c.length]}" transform="rotate(${R(-40,40).toFixed(0)} 50 60)"/>`; break;
+    case 'stretched': for(let i=0;i<8;i++) p+=`<ellipse cx="${R(14,86).toFixed(1)}" cy="${R(20,88).toFixed(1)}" rx="${R(10,18).toFixed(1)}" ry="${R(2.5,4).toFixed(1)}" fill="${c[i%c.length]}"/>`; break;
+    case 'shells': for(let i=0;i<7;i++){const x=R(14,86),y=R(fy-10,88),s=R(5,8),rot=R(-60,60);p+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(0)})"><path d="M${-s},0 A${s},${s} 0 0 1 ${s},0 Z" fill="${c[i%c.length]}"/><path d="M0,0 L${-s*.6},${-s*.8} M0,0 L0,${-s} M0,0 L${s*.6},${-s*.8}" stroke="rgba(45,36,82,.25)" stroke-width="1"/></g>`} break;
+    case 'veins': p=`<path d="M10,30 C30,40 40,20 60,40 S80,70 96,60" stroke="${c[0]}" stroke-width="2.5" fill="none"/><path d="M6,70 C26,60 40,80 62,66" stroke="${c[0]}" stroke-width="1.6" fill="none"/>`; break;
+    case 'magma': p=`<path d="M10,40 Q50,20 90,40 V100 H10Z" fill="#ffd34d" opacity=".55"/>`; for(let i=0;i<6;i++) p+=`<circle cx="${R(20,80).toFixed(1)}" cy="${R(26,84).toFixed(1)}" r="${R(2,5).toFixed(1)}" fill="none" stroke="#fff2a8" stroke-width="2"/>`; break;
+  }
+  const ec=it.dark||it.kind==='magma'?'#fff8ec':'#2d2452', hi=it.dark||it.kind==='magma'?'#2d2452':'#fff';
+  const glow=it.kind==='magma'?`<path d="${shape}" fill="#ffb52e" opacity=".45" transform="translate(50 54) scale(1.13) translate(-50 -54)"/>`:'';
+  const face=`<circle cx="40" cy="${fy}" r="4.6" fill="${ec}"/><circle cx="60" cy="${fy}" r="4.6" fill="${ec}"/><circle cx="41.4" cy="${fy-1.5}" r="1.4" fill="${hi}"/><circle cx="61.4" cy="${fy-1.5}" r="1.4" fill="${hi}"/><path d="M44,${fy+8} Q50,${fy+13} 56,${fy+8}" stroke="${ec}" stroke-width="2.8" fill="none" stroke-linecap="round"/><ellipse cx="31" cy="${fy+7}" rx="5" ry="3" fill="#ff7fa8" opacity=".6"/><ellipse cx="69" cy="${fy+7}" rx="5" ry="3" fill="#ff7fa8" opacity=".6"/>`;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="${id}"><path d="${shape}"/></clipPath></defs>${glow}<path d="${shape}" fill="rgba(45,36,82,.2)" transform="translate(0 4)"/><path d="${shape}" fill="${it.base}"/><g clip-path="url(#${id})">${p}</g>${face}</svg>`;
+}
+
+/* ---------------- MICROSCOPE TEXTURES (canvas) ---------------- */
+function drawTexture(ctx,S0,k){
+  const it=ITEMS[k], t=it.tex, r=rng(hash(k)+7), R=(a,b)=>a+r()*(b-a);
+  const pick=(arr,w)=>{if(!w)return arr[Math.floor(r()*arr.length)];let tot=w.reduce((a,b)=>a+b,0),x=r()*tot;for(let i=0;i<arr.length;i++){x-=w[i];if(x<=0)return arr[i]}return arr[arr.length-1]};
+  const poly=(cx,cy,rad,n,rot,fill,stroke)=>{ctx.beginPath();for(let i=0;i<n;i++){const a=rot+i/n*Math.PI*2,rr=rad*(.7+r()*.5),x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.2;ctx.stroke()}};
+  const specks=(n,cols,a,b)=>{for(let i=0;i<n;i++){ctx.fillStyle=cols[i%cols.length];ctx.beginPath();ctx.arc(R(0,S0),R(0,S0),R(a,b),0,7);ctx.fill()}};
+  const band=(top,bot,fill)=>{ctx.beginPath();for(let x=0;x<=S0;x+=6){const y=top(x);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}for(let x=S0;x>=0;x-=6)ctx.lineTo(x,bot(x));ctx.closePath();ctx.fillStyle=fill;ctx.fill()};
+  const fill=c=>{ctx.fillStyle=c;ctx.fillRect(0,0,S0,S0)};
+  ctx.clearRect(0,0,S0,S0);
+  switch(t.t){
+    case 'crystals':{fill(t.c[0]);const n=Math.round(S0*S0/(t.s*t.s)*2.4);
+      for(let i=0;i<n;i++) poly(R(-10,S0+10),R(-10,S0+10),t.s*R(.5,1.1),Math.floor(R(4,7)),R(0,6.3),pick(t.c,t.w),'rgba(40,30,50,.16)');
+      if(t.flakes) for(let i=0;i<t.flakes.n;i++){const s=t.flakes.s*R(.7,1.3);ctx.save();ctx.translate(R(0,S0),R(0,S0));ctx.rotate(R(0,6.3));ctx.fillStyle=t.flakes.c;ctx.beginPath();ctx.moveTo(-s,0);ctx.lineTo(-s*.5,-s*.45);ctx.lineTo(s*.5,-s*.45);ctx.lineTo(s,0);ctx.lineTo(s*.5,s*.45);ctx.lineTo(-s*.5,s*.45);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(255,255,255,.28)';ctx.fillRect(-s*.5,-s*.3,s,1.6);ctx.restore()}
+      break}
+    case 'fine':{fill(t.bg);specks(5200,t.c,.6,1.7);if(t.ph)for(let i=0;i<14;i++)poly(R(0,S0),R(0,S0),R(4,9),Math.floor(R(4,7)),R(0,6.3),pick(t.ph),'rgba(0,0,0,.2)');
+      if(t.holes)for(let i=0;i<t.holes;i++){const x=R(0,S0),y=R(0,S0),rr=R(4,9);ctx.fillStyle='#1f2025';ctx.beginPath();ctx.arc(x,y,rr,0,7);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,rr,.3,2);ctx.stroke()}break}
+    case 'glass':{const g=ctx.createRadialGradient(S0*.4,S0*.35,10,S0*.5,S0*.5,S0*.75);g.addColorStop(0,'#4a4258');g.addColorStop(1,'#0d0b12');fill(g);
+      for(let i=0;i<16;i++){ctx.strokeStyle=`rgba(255,255,255,${R(.04,.15).toFixed(2)})`;ctx.lineWidth=R(1,3.5);ctx.beginPath();ctx.arc(S0*.95,S0*1.05,50+i*21,3.25,4.75);ctx.stroke()}
+      for(let i=0;i<8;i++){ctx.strokeStyle=`rgba(190,170,255,${R(.05,.12).toFixed(2)})`;ctx.lineWidth=R(1,2.5);ctx.beginPath();ctx.arc(S0*.05,-S0*.05,60+i*26,.2,1.4);ctx.stroke()}
+      ctx.save();ctx.translate(S0*.34,S0*.28);ctx.rotate(-.5);ctx.fillStyle='rgba(255,255,255,.13)';ctx.beginPath();ctx.ellipse(0,0,74,30,0,0,7);ctx.fill();ctx.restore();break}
+    case 'vesicles':{fill(t.bg);specks(2600,t.c,.6,1.5);for(let i=0;i<t.n;i++){const x=R(0,S0),y=R(0,S0),rr=R(t.min,t.max);ctx.fillStyle=t.hole;ctx.beginPath();ctx.ellipse(x,y,rr,rr*R(.6,1),R(0,3),0,7);ctx.fill();ctx.strokeStyle=t.rim;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,rr,.3,2.2);ctx.stroke()}break}
+    case 'grains':{fill(t.bg);for(let i=0;i<t.n;i++){const x=R(0,S0),y=R(0,S0),rr=R(t.min,t.max);ctx.fillStyle=pick(t.c);ctx.beginPath();ctx.ellipse(x,y,rr,rr*R(.75,1),R(0,3),0,7);ctx.fill();ctx.strokeStyle='rgba(60,30,10,.18)';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.arc(x-rr*.35,y-rr*.35,rr*.25,0,7);ctx.fill()}
+      if(t.layers)for(let y=10;y<S0;y+=R(30,46)){const a=R(2,5),ph=R(0,6);band(x=>y+Math.sin(x/50+ph)*a,x=>y+12+Math.sin(x/50+ph)*a,'rgba(150,70,20,.16)')}break}
+    case 'pebbles':case 'stretched':{fill(t.bg);specks(3200,t.sand,.8,2);const st=t.t==='stretched';
+      for(let i=0;i<t.n;i++){const x=R(0,S0),y=R(0,S0),rx=R(t.min,t.max),ry=st?rx*R(.14,.28):rx*R(.6,.9),rot=st?R(-.15,.15):R(0,3);ctx.fillStyle=pick(t.c);ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot,0,7);ctx.fill();ctx.strokeStyle='rgba(30,20,10,.22)';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.ellipse(x-rx*.3,y-ry*.35,rx*.35,ry*.25,rot,0,7);ctx.fill()}break}
+    case 'layers':{let y=-10,i=0;while(y<S0+10){const h=R(t.min,t.max),a=R(0,3),ph=R(0,6),per=R(30,70),y0=y;band(x=>y0+Math.sin(x/per+ph)*a,x=>y0+h+1+Math.sin(x/per+ph)*a,t.c[i%t.c.length]);y+=h;i++}
+      specks(1600,['rgba(255,255,255,.12)','rgba(0,0,0,.14)'],.5,1.2);
+      if(t.fossil){ctx.save();ctx.translate(S0*.6,S0*.55);ctx.rotate(-.6);ctx.fillStyle='rgba(50,44,40,.55)';ctx.beginPath();ctx.ellipse(0,0,46,16,0,0,7);ctx.fill();ctx.strokeStyle='rgba(200,200,190,.5)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-46,0);ctx.lineTo(46,0);for(let x=-34;x<40;x+=10){ctx.moveTo(x,0);ctx.lineTo(x+9,-12);ctx.moveTo(x,0);ctx.lineTo(x+9,12)}ctx.stroke();ctx.restore()}break}
+    case 'shells':{fill(t.bg);specks(3200,t.c,.6,1.7);for(let i=0;i<t.n;i++){const s=R(12,28);ctx.save();ctx.translate(R(0,S0),R(0,S0));ctx.rotate(R(0,6.3));ctx.fillStyle=pick(t.sc);ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,s,Math.PI*1.08,Math.PI*1.92);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(80,60,40,.22)';ctx.lineWidth=1.3;ctx.beginPath();for(let a=1.15;a<1.9;a+=.13){ctx.moveTo(0,0);ctx.lineTo(Math.cos(a*Math.PI)*s,Math.sin(a*Math.PI)*s)}ctx.stroke();ctx.restore()}
+      for(let i=0;i<40;i++){ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(R(0,S0),R(0,S0),R(3,7),R(0,3),R(3,6));ctx.stroke()}break}
+    case 'slate':{fill(t.bg);ctx.save();ctx.translate(S0/2,S0/2);ctx.rotate(-.22);for(let i=0;i<170;i++){const y=R(-S0,S0);ctx.strokeStyle=r()>.5?`rgba(255,255,255,${R(.04,.12).toFixed(2)})`:`rgba(0,0,0,${R(.06,.18).toFixed(2)})`;ctx.lineWidth=R(.6,2.2);ctx.beginPath();ctx.moveTo(-S0,y);ctx.lineTo(S0,y);ctx.stroke()}ctx.restore();specks(300,['rgba(255,255,255,.35)'],.4,1);break}
+    case 'schist':{fill(t.bg);for(let y=-20;y<S0+20;y+=R(7,13)){const a=R(4,9),per=R(24,36),ph=R(0,1);ctx.strokeStyle=pick(t.c);ctx.lineWidth=R(4,10);ctx.beginPath();for(let x=0;x<=S0;x+=5){const yy=y+Math.sin(x/per+ph)*a;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy)}ctx.stroke()}
+      for(let i=0;i<280;i++){ctx.fillStyle=r()>.4?'rgba(255,255,255,.75)':'rgba(220,225,235,.6)';ctx.beginPath();ctx.ellipse(R(0,S0),R(0,S0),R(2,5),R(.6,1.4),R(-.3,.3),0,7);ctx.fill()}
+      for(let i=0;i<t.g;i++){const x=R(20,S0-20),y=R(20,S0-20),rr=R(7,11);poly(x,y,rr,6,R(0,1),'#a3243a','#6e1424');ctx.fillStyle='rgba(255,200,210,.5)';ctx.beginPath();ctx.arc(x-rr*.3,y-rr*.3,rr*.25,0,7);ctx.fill()}break}
+    case 'gneiss':{let y=-30,i=0;const per=R(40,60),a=R(9,15);while(y<S0+30){const h=R(10,28),y0=y,ii=i;band(x=>y0+Math.sin(x/per)*a+Math.sin(x/17+ii)*2,x=>y0+h+1+Math.sin(x/per)*a+Math.sin(x/17+ii+1)*2,i%2?t.dark:pick(t.light));y+=h;i++}
+      specks(900,['rgba(255,255,255,.3)','rgba(0,0,0,.25)','rgba(239,165,156,.5)'],.8,2.2);break}
+    case 'marble':{fill('#f6f4ef');for(let i=0;i<900;i++)poly(R(0,S0),R(0,S0),R(5,10),Math.floor(R(4,7)),R(0,6.3),pick(['#fbfaf7','#efece6','#f4f1ec','#e8e4de']),'rgba(150,145,160,.12)');
+      for(let i=0;i<6;i++){ctx.strokeStyle=`rgba(${r()>.5?'120,115,140':'200,150,160'},${R(.25,.5).toFixed(2)})`;ctx.lineWidth=R(1,4);ctx.beginPath();ctx.moveTo(R(-40,S0),-10);ctx.bezierCurveTo(R(0,S0),R(0,S0),R(0,S0),R(0,S0),R(0,S0+40),S0+10);ctx.stroke()}
+      specks(250,['rgba(255,255,255,.95)'],.5,1.3);break}
+    case 'mud':{fill(t.bg);specks(6500,t.c,.5,1.3);ctx.strokeStyle='rgba(50,34,22,.55)';ctx.lineWidth=2.6;ctx.lineCap='round';for(let i=0;i<9;i++){let x=R(0,S0),y=R(0,S0);ctx.beginPath();ctx.moveTo(x,y);for(let j=0;j<6;j++){x+=R(-28,28);y+=R(-28,28);ctx.lineTo(x,y)}ctx.stroke()}break}
+    case 'magma':{const g=ctx.createRadialGradient(S0*.5,S0*.5,8,S0*.5,S0*.5,S0*.7);t.c.forEach((c,i)=>g.addColorStop(i/(t.c.length-1),c));fill(g);
+      for(let i=0;i<20;i++){const x=R(0,S0),y=R(0,S0),rr=R(14,40),gg=ctx.createRadialGradient(x,y,0,x,y,rr);gg.addColorStop(0,'rgba(255,245,170,.7)');gg.addColorStop(1,'rgba(255,245,170,0)');ctx.fillStyle=gg;ctx.fillRect(x-rr,y-rr,rr*2,rr*2)}
+      for(let i=0;i<9;i++)poly(R(0,S0),R(0,S0),R(10,24),Math.floor(R(5,8)),R(0,6),'rgba(70,12,8,.5)');
+      for(let i=0;i<22;i++){ctx.strokeStyle='rgba(255,236,160,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(R(0,S0),R(0,S0),R(3,10),0,7);ctx.stroke()}break}
+  }
+  const v=ctx.createRadialGradient(S0/2,S0/2,S0*.3,S0/2,S0/2,S0*.72);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(20,10,40,.45)');ctx.fillStyle=v;ctx.fillRect(0,0,S0,S0);
+}
+
+/* ---------------- ROCK CYCLE MAP ---------------- */
+const NODES={sediment:{x:180,y:50,l:['Sediment']},sedimentary:{x:310,y:142,l:['Sedimentary','rock']},metamorphic:{x:255,y:262,l:['Metamorphic','rock']},magma:{x:105,y:262,l:['Magma']},igneous:{x:50,y:142,l:['Igneous','rock']}};
+const PC={blend:'#55bbff',press:'#e9a800',heat:'#8b6cff',melt:'#ff5040',cool:'#2ec4b6'};
+const ARROWS=[
+  ['igneous','sediment','blend',1,'Weathering'],
+  ['sediment','sedimentary','press',1,'Compaction'],
+  ['sedimentary','metamorphic','heat',1,'Heat & pressure'],
+  ['metamorphic','magma','melt',1,'Melting'],
+  ['magma','igneous','cool',1,'Cooling'],
+  ['sedimentary','sediment','blend',0],
+  ['metamorphic','sediment','blend',0],
+  ['igneous','metamorphic','heat',0],
+  ['igneous','magma','melt',0],
+  ['sedimentary','magma','melt',0]
+];
+function buildMap(){
+  const C={x:180,y:170},NR=40;let out=`<defs>`;
+  Object.entries(PC).forEach(([k,c])=>out+=`<marker id="ah-${k}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`);
+  out+=`</defs>`;let labels='';
+  ARROWS.forEach(([f,t,p,main,label])=>{
+    const A=NODES[f],B=NODES[t],mx=(A.x+B.x)/2,my=(A.y+B.y)/2;let dx=B.x-A.x,dy=B.y-A.y;const L=Math.hypot(dx,dy);let nx=-dy/L,ny=dx/L;
+    if(nx*(mx-C.x)+ny*(my-C.y)<0){nx=-nx;ny=-ny}
+    const bend=main?24:(['sedimentary>sediment','igneous>magma'].includes(f+'>'+t)?-20:16);
+    const cx=mx+nx*bend,cy=my+ny*bend;
+    const u=(px,py,qx,qy,d)=>{const l=Math.hypot(qx-px,qy-py);return[px+(qx-px)/l*d,py+(qy-py)/l*d]};
+    const [sx,sy]=u(A.x,A.y,cx,cy,NR+3),[ex,ey]=u(B.x,B.y,cx,cy,NR+9);
+    out+=`<path class="arrow ${main?'main':'side'}" id="ar-${f}-${t}" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}" stroke="${PC[p]}" stroke-width="${main?6:3}" marker-end="url(#ah-${p})"/>`;
+    if(main){const lx=cx+nx*16,ly=cy+ny*16+4;labels+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="${p==='press'?'#a87800':PC[p]}" paint-order="stroke" stroke="#e6fbf7" stroke-width="4">${label.replace('&','&amp;')}</text>`}
+  });
+  Object.entries(NODES).forEach(([k,n])=>{
+    out+=`<g class="node" id="nd-${k}"><circle class="ring" cx="${n.x}" cy="${n.y}" r="${NR+7}"/><circle cx="${n.x}" cy="${n.y+4}" r="${NR}" fill="rgba(45,36,82,.18)"/><circle cx="${n.x}" cy="${n.y}" r="${NR}" fill="${KIND[k].hex}"/>`;
+    n.l.forEach((s,i)=>out+=`<text x="${n.x}" y="${n.y+4+(i-(n.l.length-1)/2)*14}" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="${s.length>9?10.5:13}" fill="#fff">${s}</text>`);
+    out+=`</g>`;
+  });
+  $('cycle').innerHTML=out+labels;
+}
+function mapHere(kind,from){
+  document.querySelectorAll('#cycle .node').forEach(n=>n.classList.toggle('here',n.id==='nd-'+kind));
+  document.querySelectorAll('#cycle .arrow').forEach(a=>a.classList.remove('hot'));
+  if(from&&from!==kind){const a=$('ar-'+from+'-'+kind);if(a){a.classList.add('hot');clearTimeout(mapHere.t);mapHere.t=setTimeout(()=>a.classList.remove('hot'),3500)}}
+}
+
+/* ---------------- SOUND ---------------- */
+let AC=null;
+function tone(f,d,type='sine',vol=.14,slide,delay=0){
+  if(!S.sound)return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const t0=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t0);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t0+d);g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.001,t0+d);o.connect(g).connect(AC.destination);o.start(t0);o.stop(t0+d+.02)}catch(e){}
+}
+const SFX={
+  pop:()=>tone(480,.14,'sine',.18,900),
+  nope:()=>{tone(260,.14,'square',.05,200);tone(200,.2,'square',.05,140,.14)},
+  blend:()=>tone(160,1,'sawtooth',.035,340),
+  press:()=>{tone(140,.4,'square',.05,70);tone(120,.4,'square',.05,60,.5)},
+  heat:()=>tone(260,1,'triangle',.08,620),
+  melt:()=>{for(let i=0;i<7;i++)tone(200+Math.random()*300,.12,'sine',.12,500+Math.random()*400,i*.14)},
+  cool:()=>tone(1000,.9,'sine',.07,280),
+  yay:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.25,'triangle',.12,null,i*.11)),
+  boing:()=>tone(300,.3,'sine',.16,700)
+};
+
+/* ---------------- TONY ---------------- */
+let sayTimers=[];
+function say(html,{queue=[] }={}){
+  sayTimers.forEach(clearTimeout);sayTimers=[];
+  const b=$('bubble');b.innerHTML=html;
+  const svg=$('tonySvg');svg.classList.add('talking');
+  sayTimers.push(setTimeout(()=>svg.classList.remove('talking'),Math.min(2600,400+html.length*14)));
+  let delay=0;
+  queue.forEach(q=>{delay+=q.after;sayTimers.push(setTimeout(()=>{b.innerHTML=q.html;svg.classList.add('talking');sayTimers.push(setTimeout(()=>svg.classList.remove('talking'),1800))},delay))});
+}
+let jokeI=Math.floor(Math.random()*JOKES.length);
+(()=>{const h=document.getElementById('tb-hatSlot');
+  h.addEventListener('click',e=>{e.stopPropagation();if(TonyRig.flipHat())SFX.boing()})})();
+$('tonyBtn').addEventListener('click',()=>{SFX.boing();jokeI=(jokeI+1)%JOKES.length;say(JOKES[jokeI])});
+
+/* ---------------- RENDER ---------------- */
+function renderShelf(){
+  let h='';
+  GROUPS.forEach(([label,color,test])=>{
+    h+=`<div class="shelf-group"><span class="sign" style="background:${color}">${label}</span><div class="plank">`;
+    Object.keys(ITEMS).filter(test).forEach(k=>{
+      const f=S.found.has(k);
+      h+=`<button class="rock-btn${f?'':' locked'}${S.cur===k?' sel':''}" data-k="${k}" aria-label="${f?ITEMS[k].name:'Mystery rock, tap for a hint'}">${iconSVG(k,!f)}<span class="nm">${f?ITEMS[k].name:'???'}</span></button>`;
+    });
+    h+=`</div></div>`;
+  });
+  $('shelf').innerHTML=h;
+  const n=ROCKS.filter(k=>S.found.has(k)).length;
+  $('found').textContent=`Rocks found ${n}/${ROCKS.length}`;
+}
+function renderCounter(anim){
+  const k=S.cur,it=ITEMS[k],K=KIND[it.kind];
+  const plate=$('plate');plate.innerHTML=iconSVG(k);plate.classList.remove('pop','cook');
+  if(anim){void plate.offsetWidth;plate.classList.add('pop')}
+  $('plateName').textContent=it.name;
+  const cv=$('scope'),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=300*dpr;cv.height=300*dpr;
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);drawTexture(ctx,300,k);
+  const lens=$('lens');lens.classList.remove('scan');void lens.offsetWidth;lens.classList.add('scan');
+  $('info').innerHTML=`<h3>${it.name}</h3>
+    <div class="kind-row"><span class="badge" style="background:${K.color}">${K.label}</span><span class="sub">${it.sub}</span></div>
+    <div class="facts"><div class="fact"><h4>How it formed</h4><p>${it.formed}</p></div><div class="fact"><h4>What you see</h4><p>${it.see}</p></div></div>
+    <h4>What's inside</h4><div class="chips">${it.min.map(m=>`<span class="chip"><i style="background:${m.c}"></i>${m.n}</span>`).join('')}</div>
+    <div class="funfact"><b>Tony's fun fact:</b> ${it.fact}</div>`;
+  $('cool').classList.toggle('dim',it.kind!=='magma');
+}
+function renderQuest(){
+  const q=$('quest');
+  if(S.mode!=='quest'){q.innerHTML=`<h3>Free Play</h3><p style="margin:6px 0 0;font-size:14px;line-height:1.4;color:var(--ink-soft)">Mix, melt, and squish anything! Tap a <b style="color:var(--pink)">?</b> on the shelf for a hint, or tap me for a joke.</p>`;return}
+  q.innerHTML=`<h3><span>Rock Cycle Quest</span><button class="reset" id="qReset">Start over</button></h3><ol>${QUEST.map((s,i)=>{const cls=i<S.step?'done':i===S.step?'now':'';return`<li class="${cls}${s.bonus?' bonus':''}"><span class="dot">${s.bonus&&i>=S.step?'&#9733;':i<S.step?'&#10003;':(i+1)}</span>${s.title}</li>`}).join('')}</ol>`;
+  const btn=$('qReset');let armed=false;
+  btn.addEventListener('click',()=>{if(!armed){armed=true;btn.textContent='Tap again to reset';setTimeout(()=>{armed=false;if(btn.isConnected)btn.textContent='Start over'},3000);return}
+    S.step=0;S.cur='granite';save();renderAll(true);say(QUEST[0].intro)});
+  const now=q.querySelector('li.now');if(now&&q.querySelector('ol').scrollHeight>q.querySelector('ol').clientHeight)now.scrollIntoView({block:'nearest'});
+}
+function renderMode(){
+  $('mQuest').setAttribute('aria-pressed',S.mode==='quest');$('mFree').setAttribute('aria-pressed',S.mode!=='quest');
+  $('snd').textContent='Sound: '+(S.sound?'on':'off');$('snd').setAttribute('aria-pressed',S.sound);
+}
+function renderAll(anim){renderShelf();renderCounter(anim);renderQuest();renderMode();mapHere(ITEMS[S.cur].kind)}
+
+/* ---------------- MACHINES ---------------- */
+function run(m,opt){
+  const k=S.cur,it=ITEMS[k],n=lc(k);
+  const ok=(res,msg,time)=>({res,msg,time});
+  switch(m){
+    case 'blend':
+      if(it.kind==='magma')return{err:'Whoa, that\'s liquid! Weather can only break down solid rock. Cool the magma first in the <b>Cooling Station</b>.'};
+      if(k==='mud')return{err:'Mud is as tiny as sediment gets! Squish it in the <b>Squish Press</b> to make shale.'};
+      if(k==='shells')return{err:'These are already little bits! Try the <b>Squish Press</b>.'};
+      if(k==='limemud')return{err:'Lime mud is as fine as it gets! Squish it in the <b>Squish Press</b> to make limestone.'};
+      if(k==='gravel')return ok('sand','Rivers tumbled the gravel around in the water, and the pebbles rubbed and knocked each other down into <b>sand</b>!',TIME.blend);
+      if(k==='sand')return ok('mud','Swirling water kept rubbing the grains together until the sand wore down into fine <b>mud</b>: silt and clay!',TIME.blend);
+      if(k==='limestone'||k==='marble')return ok('limemud',`Rainwater is slightly acidic, so it slowly dissolved the ${n}. The calcite washed out to sea and settled as fine <b>lime mud</b>. That's <b>chemical weathering</b>!`,TIME.blend);
+      return ok('gravel',`Rain, ice, wind, and roots broke the ${n} into <b>gravel</b>. That's <b>weathering</b>! Rivers carrying it away is <b>erosion</b>. Weathering always turns rock into sediment.`,TIME.blend);
+    case 'press':
+      if(it.kind==='magma')return{err:'That\'s melted rock, not sediment! Send it to the <b>Cooling Station</b>.'};
+      if(it.kind!=='sediment')return{err:`${it.name} is already solid rock. The press squishes <b>loose sediment</b>. Put it in the <b>Weather Blender</b> first!`};
+      return ok(PRESS[k],`Layers piled on top squeezed out the water (<b>compaction</b>), and minerals glued the bits together (<b>cementation</b>). Now it's <b>${lc(PRESS[k])}</b>, a sedimentary rock! All sedimentary rocks form by compaction and cementation like this.`,TIME.press);
+    case 'heat':{
+      if(it.kind==='magma')return{err:'It\'s already melted! Cool it into rock first, then pressure-cook it.'};
+      if(it.kind==='sediment')return{err:'Loose sediment needs to become rock first. Try the <b>Squish Press</b>!'};
+      const d=HEAT[k];
+      if(!d)return{err:`${it.name} is cooked about as much as it can be. Any hotter and it would melt! Try the <b>Lava Pot</b>.`};
+      let msg=`Deep underground, the intense heat and pressure changed the ${n} (a ${it.kind} rock) into <b>${lc(d)}</b>, a metamorphic rock, without melting it. All metamorphic rocks are made by heat and pressure like this!`;
+      if(it.kind==='metamorphic')msg+=' More heat and pressure makes a higher-grade rock.';
+      if(['basalt','gabbro','scoria'].includes(k))msg+=' (Real geologists call this green kind <b>greenschist</b>.)';
+      return ok(d,msg,TIME.heat)}
+    case 'melt':{
+      if(it.kind==='magma')return{err:'It\'s already melted! Send it to the <b>Cooling Station</b>.'};
+      const d=['basalt','gabbro','scoria'].includes(k)?'magmaD':'magmaL';
+      let msg=`The ${n} got so hot it melted into <b>${lc(d)}</b>! Underground it's called <b>magma</b>. When it erupts, it's <b>lava</b>.`;
+      if(['limestone','marble','shells','limemud'].includes(k))msg+=' (Real limestone mostly breaks down and gives off carbon dioxide gas when it gets this hot. Kitchen magic!)';
+      return ok(d,msg,TIME.melt)}
+    case 'cool':{
+      if(it.kind!=='magma')return{err:'The Cooling Station is only for magma. Melt something in the <b>Lava Pot</b> first!'};
+      const c=COOL[opt],L=k==='magmaL',d=L?c.L:c.D;let msg;
+      if(opt==='slow')msg=`Cooling slowly, deep underground, gave big crystals time to grow. You made <b>${lc(d)}</b>, an <b>intrusive</b> igneous rock!`;
+      if(opt==='fast')msg=`It erupted and cooled quickly on the surface, so the crystals stayed tiny. You made <b>${lc(d)}</b>, an <b>extrusive</b> igneous rock!`;
+      if(opt==='splash')msg=L?'It cooled so fast that no crystals could form at all. Volcanic glass! You made <b>obsidian</b>.':'Splash! The dark lava froze into <b>basalt</b> with a glassy crust. Real obsidian usually comes from light, sticky magma. Try that!';
+      if(opt==='gas')msg=`Gas bubbles got trapped as the lava froze. You made <b>${lc(d)}</b>! `+(L?'It\'s so airy it can float.':'It\'s heavier than pumice, so it sinks.');
+      msg+=' All igneous rocks form when magma or lava cools like this.';
+      return ok(d,msg,c.time)}
+  }
+}
+function machineEl(m){return m==='cool'?$('cool'):document.querySelector(`.mach[data-m="${m}"]`)}
+function useMachine(m,opt){
+  if(S.busy)return;
+  const r=run(m,opt),el=machineEl(m);
+  if(r.err){SFX.nope();el.classList.remove('nope');void el.offsetWidth;el.classList.add('nope');say(r.err);return}
+  S.busy=true;SFX[m]();
+  el.classList.add('busy');$('plate').classList.add('cook');
+  const from=ITEMS[S.cur].kind;
+  setTimeout(()=>{
+    el.classList.remove('busy');
+    const isNew=!S.found.has(r.res);
+    S.cur=r.res;S.found.add(r.res);save();
+    renderShelf();renderCounter(true);mapHere(ITEMS[r.res].kind,from);
+    SFX.pop();
+    const pun=Math.random()<.5?' <i>'+PUNS[m][Math.floor(Math.random()*PUNS[m].length)]+'</i>':'';
+    let html=r.msg+pun+(isNew?' <b>New on your shelf!</b>':'')+`<br><span class="time">How fast? ${r.time}</span>`;
+    S.busy=false;
+    checkQuest(r.res,html);
+  },1150);
+}
+function checkQuest(res,html){
+  if(S.mode!=='quest'||S.step>=QUEST.length){say(html);return}
+  const q=QUEST[S.step];
+  const all=ROCKS.every(k=>S.found.has(k));
+  if(q.target==='ALL'?all:res===q.target){
+    S.step++;save();renderQuest();
+    if(S.step===6){confetti();SFX.yay();
+      say(html,{queue:[{after:3800,html:'<b>YOU DID IT!</b> Igneous &rarr; sediment &rarr; sedimentary &rarr; metamorphic &rarr; magma &rarr; igneous again. That\'s the whole rock cycle! I\'m so proud I could rattle.'},{after:5000,html:QUEST[6].intro}]});
+    }else if(S.step>=QUEST.length){confetti();SFX.yay();say(html,{queue:[{after:3500,html:'<b>Every quest complete!</b> You are an official Rock Cycle Kitchen Master Chef. I\'d give you a hug, but I\'m a little bony.'}]})}
+    else{SFX.yay();say(html,{queue:[{after:3800,html:'<b>Quest step done!</b> '+QUEST[S.step].intro}]})}
+  }else say(html);
+}
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const box=$('confetti'),cols=['#ff6fa8','#ffd03d','#55bbff','#8b6cff','#2ec4b6','#ff7a3d'];
+  for(let i=0;i<90;i++){const p=document.createElement('i');p.style.left=Math.random()*100+'vw';p.style.background=cols[i%cols.length];p.style.animationDelay=Math.random()*.6+'s';p.style.animationDuration=2.2+Math.random()*1.4+'s';p.style.borderRadius=Math.random()>.5?'50%':'4px';box.appendChild(p)}
+  setTimeout(()=>box.innerHTML='',4200);
+}
+
+/* ---------------- EVENTS ---------------- */
+$('shelf').addEventListener('click',e=>{
+  const b=e.target.closest('.rock-btn');if(!b||S.busy)return;const k=b.dataset.k;
+  if(!S.found.has(k)){SFX.nope();say(`That one is still a mystery! <b>Hint:</b> ${ITEMS[k].hint}`);return}
+  SFX.pop();S.cur=k;save();renderShelf();renderCounter(true);mapHere(ITEMS[k].kind);
+  const it=ITEMS[k];
+  say(it.kind==='sediment'||it.kind==='magma'?`${it.name} is on the counter. It's ${KIND[it.kind].label.toLowerCase()}. Check it out under the scanner!`:`${it.name} is on the counter! It's ${/^[aeiou]/i.test(KIND[it.kind].label)?'an':'a'} <b>${KIND[it.kind].label.toLowerCase()}</b>. Check it out under the scanner!`);
+  if(matchMedia('(max-width:760px)').matches)$('plate').scrollIntoView({behavior:'smooth',block:'center'});
+});
+document.querySelectorAll('.mach').forEach(b=>b.addEventListener('click',()=>useMachine(b.dataset.m)));
+document.querySelectorAll('.copt').forEach(b=>b.addEventListener('click',()=>useMachine('cool',b.dataset.c)));
+$('mQuest').addEventListener('click',()=>{S.mode='quest';save();renderQuest();renderMode();say(S.step<QUEST.length?QUEST[S.step].intro:'Every quest is complete! Keep experimenting, Master Chef.')});
+$('mFree').addEventListener('click',()=>{S.mode='free';save();renderQuest();renderMode();say('Free Play! Grab anything, and try every machine. Wrong machine? I\'ll tell you why.')});
+$('snd').addEventListener('click',()=>{S.sound=!S.sound;save();renderMode();if(S.sound)SFX.pop()});
+
+/* ---------------- START ---------------- */
+buildMap();renderAll(false);
+say(S.mode==='quest'&&S.step<QUEST.length
+  ? (S.step===0?'Hi! I\'m <b>Tony Bony</b>, head chef of the Rock Cycle Kitchen. I don\'t have any guts, but I\'ve got plenty of grit! ':'Welcome back to the kitchen! ')+QUEST[S.step].intro
+  : 'Hi! I\'m <b>Tony Bony</b>, head chef of the Rock Cycle Kitchen. Grab a rock from the shelf and try the machines!');
+</script>
+<button class="credit" id="credit" title="About">Tony Bony's Rock Cycle Kitchen &middot; v0.4</button>
+<script>document.getElementById("credit").addEventListener("click",()=>say("<b>Tony Bony's Rock Cycle Kitchen</b> &copy; 2026 S. Kahler Teaching. Made for Mr. Kahler's science class!"));</script>
+</body>
+</html>

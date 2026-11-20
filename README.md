@@ -11,8 +11,24 @@ play.html         wraps one demo with a "back to the Lab" bar: play.html?d=<id>
 demos.json        the list of demos (edit this to add, hide, or reorder)
 demos/*.html      each demo, a single self-contained HTML file
 thumbs/<id>.jpg   640x400 card picture for each demo
-assets/tony.svg   Tony
+assets/tony.svg   Tony (site logo and favicon)
+games/<id>/       source for games built from shared parts (Rock Kitchen, Rock Cycle Kitchen)
+shared/tony/      the one shared Tony: rig, costumes, CSS, JS (see shared/tony/README.md)
+tools/build.py    builds games/<id>/src.html into demos/<id>.html
+CLAUDE.md         working notes and rules for Claude sessions
 ```
+
+## Games built from shared parts
+
+Rock Kitchen and Rock Cycle Kitchen are built, not edited directly. Their Tony comes from
+`shared/tony/`, so a change to Tony (like a new costume) reaches both on the next build.
+
+1. Edit `games/<id>/src.html` or files in `shared/`.
+2. Run `python3 tools/build.py` (needs Python 3, nothing else).
+3. Commit the source and the rebuilt `demos/*.html` together, then push.
+
+Tony's costumes: `TonyRig.wear('mininghat')`, `TonyRig.setOutfit(['mininghat','labcoat'])`.
+Try them all in `demos/tony-wardrobe.html` (hidden from the gallery).
 
 ## Add or update a demo by hand
 
@@ -32,12 +48,14 @@ Updating an existing demo is just step 1 (overwrite the file) and step 4.
 ## Update from Claude
 
 Each entry's `source` says where the master copy lives:
+- `"type": "repo"` → `games/<id>/src.html` in this repo is the master. An `artifact` slug there is
+  a published copy that Claude updates after building; it is never pulled back.
 - `"type": "artifact"` with a `slug` → a Claude artifact. In a Claude session, say
   **"sync Tony's Lab"**: Claude pulls the current version of each artifact into `demos/`,
   refreshes thumbnails, and pushes.
 - `"type": "local"` → a file on Scott's PC; copy it in by hand or attach it in Claude.
 
-## Reusing Tony's canvas rig and moves
+## Reusing Tony's canvas rig and moves (older canvas games)
 
 `assets/tony-rig-canvas.js` is the canvas Tony (poses, miner hat, held props, headlamp beam).
 `assets/tony-actions.js` adds reusable moves on top of it: `inspect` (pull a prop from behind his

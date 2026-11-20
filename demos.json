@@ -36,8 +36,9 @@
       "grades": "1-3",
       "blurb": "Cook up rocks with Tony! Blend, squish, and melt your way around the rock cycle.",
       "source": {
-        "type": "artifact",
-        "slug": "54a54c3c-79ab-4054-b7f6-57cd9bece2d2"
+        "type": "repo",
+        "src": "games/rock-kitchen/src.html",
+        "artifact": "54a54c3c-79ab-4054-b7f6-57cd9bece2d2"
       },
       "about": "Kids pull rocks from the cabinet and run them through kitchen machines like the Weather Blender to see what they turn into. Tony fills orders, cheers discoveries, and tells a pun for every occasion. Built for grades 1–3 playing with a parent."
     },
@@ -49,8 +50,9 @@
       "grades": "4-9",
       "blurb": "The older-grades kitchen: rock-cycle quests, machines, and the real names for every step.",
       "source": {
-        "type": "artifact",
-        "slug": "f385f384-04c7-42ab-8856-5b4c24d7752d"
+        "type": "repo",
+        "src": "games/rock-cycle-kitchen/src.html",
+        "artifact": "f385f384-04c7-42ab-8856-5b4c24d7752d"
       },
       "about": "The same kitchen for older students, with the real vocabulary: weathering, compaction, metamorphism, and melting. Quest mode walks a rock all the way around the cycle, one machine at a time."
     },
@@ -222,6 +224,19 @@
         "slug": "fe964b7d-fe92-4480-b01a-db0cd54d9944"
       },
       "about": "A spinning name wheel for calling on students, with Tony as host. It keeps lists for several classes and can remove names as they're picked, so everyone gets a turn."
+    },
+    {
+      "id": "tony-wardrobe",
+      "title": "Tony's Wardrobe",
+      "file": "demos/tony-wardrobe.html",
+      "category": "tools",
+      "grades": "All",
+      "blurb": "Dress Tony up: try every costume piece in the shared Tony rig.",
+      "source": {
+        "type": "repo",
+        "src": "games/tony-wardrobe/src.html"
+      },
+      "hidden": true
     }
   ]
 }

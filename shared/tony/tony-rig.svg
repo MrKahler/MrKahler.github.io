@@ -1,0 +1,222 @@
+<!-- ============================================================================
+     TONY BONY RIG (shared). Created by Scott Kahler, (c) 2026 S. Kahler Teaching.
+     The one master copy of Tony for every SVG game. Games never paste a copy of it:
+     they put an @include line for this file inside their own svg id="tonySvg"
+     wrapper (viewBox "20 -50 160 302"), and tools/build.py drops it in.
+     Ids all start with tb-. Joint pivots are in data-pivot (SVG units).
+     Wardrobe pieces have class "tbw tbw-ITEM" and stay hidden until the root
+     g#tb-tony has class "wear-ITEM". Use TonyRig.wear('ITEM') from tony.js.
+     See shared/tony/README.md for adding a new costume piece.
+     ============================================================================ -->
+<g id="tb-tony" class="hatted wear-chefhat">
+    <!-- LEGS (behind the torso) -->
+    <!-- WARDROBE: lab coat, back panel (drawn behind the legs and spine) -->
+    <g id="tb-coatBack" class="tbw tbw-labcoat"><path d="M80 146 H120 Q130 149 131 162 L132 214 Q100 220 68 214 L69 162 Q70 149 80 146 Z" fill="#e2e4f1" stroke="#2d2452" stroke-width="2.3" stroke-linejoin="round"/><path d="M100 150 V214" stroke="#d2d5e6" stroke-width="2"/></g>
+    <g id="tb-legs">
+      <g id="tb-legL" data-pivot="88 204">
+<line x1="88" y1="204" x2="87" y2="222" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="88" y1="204" x2="87" y2="222" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+        <g id="tb-shinL" data-pivot="87 222">
+<line x1="87" y1="222" x2="86" y2="240" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="87" y1="222" x2="86" y2="240" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+<ellipse cx="82" cy="243.5" rx="8.5" ry="4.2" fill="#fff6e4" stroke="#2d2452" stroke-width="2.6"/>
+<circle cx="87" cy="222" r="3.4" fill="#fff6e4" stroke="#2d2452" stroke-width="2.2"/>
+        </g>
+      </g>
+      <g id="tb-legR" data-pivot="112 204">
+<line x1="112" y1="204" x2="113" y2="222" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="112" y1="204" x2="113" y2="222" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+        <g id="tb-shinR" data-pivot="113 222">
+<line x1="113" y1="222" x2="114" y2="240" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="113" y1="222" x2="114" y2="240" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+<ellipse cx="118" cy="243.5" rx="8.5" ry="4.2" fill="#fff6e4" stroke="#2d2452" stroke-width="2.6"/>
+<circle cx="113" cy="222" r="3.4" fill="#fff6e4" stroke="#2d2452" stroke-width="2.2"/>
+        </g>
+      </g>
+    </g>
+    <!-- ARMS (behind the ribs). armL waves; armR hangs -->
+    <g id="tb-arms">
+      <g id="tb-armL" data-pivot="74 153">
+<line x1="74" y1="153" x2="63" y2="142.5" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="74" y1="153" x2="63" y2="142.5" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+        <g class="tbw tbw-labcoat"><line x1="75" y1="154" x2="63" y2="142.5" stroke="#2d2452" stroke-width="14.5" stroke-linecap="round"/><line x1="75" y1="154" x2="63" y2="142.5" stroke="#fff" stroke-width="10.5" stroke-linecap="round"/><line x1="66" y1="146" x2="62" y2="142" stroke="#e7e9f5" stroke-width="4" stroke-linecap="round"/></g>
+        <g id="tb-forearmL" data-pivot="63 142.5">
+<line x1="63" y1="142.5" x2="48" y2="128" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="63" y1="142.5" x2="48" y2="128" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+          <g id="tb-handL" data-pivot="48 128">
+<line x1="48" y1="128" x2="38.2" y2="125.9" stroke="#2d2452" stroke-width="5.6" stroke-linecap="round"/>
+<line x1="48" y1="128" x2="40.8" y2="121.1" stroke="#2d2452" stroke-width="5.6" stroke-linecap="round"/>
+<line x1="48" y1="128" x2="45.5" y2="118.3" stroke="#2d2452" stroke-width="5.6" stroke-linecap="round"/>
+<line x1="48" y1="128" x2="38.2" y2="125.9" stroke="#fff6e4" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="48" y1="128" x2="40.8" y2="121.1" stroke="#fff6e4" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="48" y1="128" x2="45.5" y2="118.3" stroke="#fff6e4" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="48" cy="128" r="5" fill="#fff6e4" stroke="#2d2452" stroke-width="2.4"/>
+          </g>
+<circle cx="63" cy="142.5" r="3.4" fill="#fff6e4" stroke="#2d2452" stroke-width="2.2"/>
+        </g>
+      </g>
+      <g id="tb-armR" data-pivot="126 153">
+<line x1="126" y1="153" x2="136" y2="164.5" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="126" y1="153" x2="136" y2="164.5" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+        <g class="tbw tbw-labcoat"><line x1="125" y1="154" x2="136" y2="164.5" stroke="#2d2452" stroke-width="14.5" stroke-linecap="round"/><line x1="125" y1="154" x2="136" y2="164.5" stroke="#fff" stroke-width="10.5" stroke-linecap="round"/><line x1="133" y1="161" x2="137" y2="165" stroke="#e7e9f5" stroke-width="4" stroke-linecap="round"/></g>
+        <g id="tb-forearmR" data-pivot="136 164.5">
+<line x1="136" y1="164.5" x2="150" y2="180" stroke="#2d2452" stroke-width="9.0" stroke-linecap="round"/>
+<line x1="136" y1="164.5" x2="150" y2="180" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+          <g id="tb-handR" data-pivot="150 180">
+<line x1="150" y1="180" x2="159.6" y2="182.9" stroke="#2d2452" stroke-width="5.6" stroke-linecap="round"/>
+<line x1="150" y1="180" x2="156.6" y2="187.5" stroke="#2d2452" stroke-width="5.6" stroke-linecap="round"/>
+<line x1="150" y1="180" x2="151.8" y2="189.8" stroke="#2d2452" stroke-width="5.6" stroke-linecap="round"/>
+<line x1="150" y1="180" x2="159.6" y2="182.9" stroke="#fff6e4" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="150" y1="180" x2="156.6" y2="187.5" stroke="#fff6e4" stroke-width="2.2" stroke-linecap="round"/>
+<line x1="150" y1="180" x2="151.8" y2="189.8" stroke="#fff6e4" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="150" cy="180" r="5" fill="#fff6e4" stroke="#2d2452" stroke-width="2.4"/>
+          </g>
+<circle cx="136" cy="164.5" r="3.4" fill="#fff6e4" stroke="#2d2452" stroke-width="2.2"/>
+        </g>
+      </g>
+    </g>
+    <!-- TORSO: spine shows through the ribs; pivot at the hips for leaning -->
+    <g id="tb-torso" data-pivot="100 200">
+      <g id="tb-spine">
+<rect x="95" y="147" width="10" height="6.5" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="1.8"/>
+<rect x="95" y="155" width="10" height="6.5" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="1.8"/>
+<rect x="95" y="163" width="10" height="6.5" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="1.8"/>
+<rect x="95" y="171" width="10" height="6.5" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="1.8"/>
+<rect x="95" y="179" width="10" height="6.5" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="1.8"/>
+<rect x="95" y="187" width="10" height="6.5" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="1.8"/>
+      </g>
+      <g id="tb-ribTint">
+<path d="M74 150 Q100 140 126 150 Q132 172 124 194 Q100 200 76 194 Q68 172 74 150 Z" fill="#fff6e4" opacity=".28"/>
+      </g>
+      <g id="tb-pelvis">
+<path d="M72 194 Q80 187 92 193 L108 193 Q120 187 128 194 Q132 204 122 208 Q112 206 106 200 L94 200 Q88 206 78 208 Q68 204 72 194Z" fill="#fff6e4" stroke="#2d2452" stroke-width="2.6" stroke-linejoin="round"/>
+      </g>
+      <g id="tb-ribcage">
+<path d="M95 152 C88 149 76 149 73 158 C72 161 72.5 164 74.5 166" stroke="#2d2452" stroke-width="7.6" fill="none" stroke-linecap="round"/>
+<path d="M95 152 C88 149 76 149 73 158 C72 161 72.5 164 74.5 166" stroke="#fff6e4" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<g transform="translate(200,0) scale(-1,1)"><path d="M95 152 C88 149 76 149 73 158 C72 161 72.5 164 74.5 166" stroke="#2d2452" stroke-width="7.6" fill="none" stroke-linecap="round"/>
+<path d="M95 152 C88 149 76 149 73 158 C72 161 72.5 164 74.5 166" stroke="#fff6e4" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+</g><path d="M95 165 C88 162 76 162 73 171 C72 174 72.5 177 74.5 179" stroke="#2d2452" stroke-width="7.6" fill="none" stroke-linecap="round"/>
+<path d="M95 165 C88 162 76 162 73 171 C72 174 72.5 177 74.5 179" stroke="#fff6e4" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<g transform="translate(200,0) scale(-1,1)"><path d="M95 165 C88 162 76 162 73 171 C72 174 72.5 177 74.5 179" stroke="#2d2452" stroke-width="7.6" fill="none" stroke-linecap="round"/>
+<path d="M95 165 C88 162 76 162 73 171 C72 174 72.5 177 74.5 179" stroke="#fff6e4" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+</g><path d="M95 178 C88 175 76 175 73 184 C72 187 72.5 190 74.5 192" stroke="#2d2452" stroke-width="7.6" fill="none" stroke-linecap="round"/>
+<path d="M95 178 C88 175 76 175 73 184 C72 187 72.5 190 74.5 192" stroke="#fff6e4" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+<g transform="translate(200,0) scale(-1,1)"><path d="M95 178 C88 175 76 175 73 184 C72 187 72.5 190 74.5 192" stroke="#2d2452" stroke-width="7.6" fill="none" stroke-linecap="round"/>
+<path d="M95 178 C88 175 76 175 73 184 C72 187 72.5 190 74.5 192" stroke="#fff6e4" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+</g><path d="M91 189 C86 187 81 188 79 192" stroke="#2d2452" stroke-width="7.2" fill="none" stroke-linecap="round"/>
+<path d="M91 189 C86 187 81 188 79 192" stroke="#fff6e4" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+<g transform="translate(200,0) scale(-1,1)"><path d="M91 189 C86 187 81 188 79 192" stroke="#2d2452" stroke-width="7.2" fill="none" stroke-linecap="round"/>
+<path d="M91 189 C86 187 81 188 79 192" stroke="#fff6e4" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+</g><rect x="95.5" y="147" width="9" height="26" rx="4.5" fill="#fff6e4" stroke="#2d2452" stroke-width="2.2"/>
+      </g>
+      
+    </g>
+    <!-- NECK and collarbones -->
+    <g id="tb-neck">
+      <g id="tb-neckBones">
+<rect x="94" y="126" width="12" height="7" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="2"/>
+<rect x="94" y="134" width="12" height="7" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="2"/>
+<rect x="94" y="142" width="12" height="7" rx="3" fill="#e9dcc3" stroke="#2d2452" stroke-width="2"/>
+      </g>
+      <g id="tb-clavicles">
+<line x1="98" y1="147" x2="73" y2="151" stroke="#2d2452" stroke-width="10.5" stroke-linecap="round"/>
+<line x1="98" y1="147" x2="73" y2="151" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+<line x1="102" y1="147" x2="127" y2="151" stroke="#2d2452" stroke-width="10.5" stroke-linecap="round"/>
+<line x1="102" y1="147" x2="127" y2="151" stroke="#fff6e4" stroke-width="4.5" stroke-linecap="round"/>
+      </g>
+    </g>
+    <!-- WARDROBE: lab coat, front panels and collar (over the ribs, under the head) -->
+    <g id="tb-coat" class="tbw tbw-labcoat"><path d="M95 145 L81 147 Q72 150 71 162 L69 213 Q77 216 87 213 L87 182 Z" fill="#fff" stroke="#2d2452" stroke-width="2.3" stroke-linejoin="round"/><path d="M95 145 L87 182 L82 162 L86 150 Z" fill="#e7e9f5" stroke="#2d2452" stroke-width="1.9" stroke-linejoin="round"/><path d="M74 172 Q73 196 74 210" stroke="#e7e9f5" stroke-width="2.6" fill="none" stroke-linecap="round"/><rect x="73" y="192" width="11" height="9" rx="2" fill="#fff" stroke="#2d2452" stroke-width="1.7"/><g transform="translate(200,0) scale(-1,1)"><path d="M95 145 L81 147 Q72 150 71 162 L69 213 Q77 216 87 213 L87 182 Z" fill="#fff" stroke="#2d2452" stroke-width="2.3" stroke-linejoin="round"/><path d="M95 145 L87 182 L82 162 L86 150 Z" fill="#e7e9f5" stroke="#2d2452" stroke-width="1.9" stroke-linejoin="round"/><path d="M74 172 Q73 196 74 210" stroke="#e7e9f5" stroke-width="2.6" fill="none" stroke-linecap="round"/><rect x="73" y="192" width="11" height="9" rx="2" fill="#fff" stroke="#2d2452" stroke-width="1.7"/></g><circle cx="89.5" cy="192" r="1.8" fill="#c9c6dc"/><circle cx="89.5" cy="205" r="1.8" fill="#c9c6dc"/><path d="M95.5 146 L92 136 Q84 137 77 146 L85 152 Z" fill="#fff" stroke="#2d2452" stroke-width="2.2" stroke-linejoin="round"/><path d="M104.5 146 L108 136 Q116 137 123 146 L115 152 Z" fill="#fff" stroke="#2d2452" stroke-width="2.2" stroke-linejoin="round"/></g>
+    <!-- HEAD: pivot at the top of the neck for nods and tilts -->
+    <g id="tb-head" data-pivot="100 140">
+        <g id="tb-mouthGap">
+<rect x="76" y="118" width="48" height="7" fill="#2d2452"/>
+        </g>
+        <g id="tb-cranium">
+<path d="M100 28 C126 28 142 42 142 64 C142 84 134 104 124 120 L76 120 C66 104 58 84 58 64 C58 42 74 28 100 28 Z" fill="#fff6e4" stroke="#2d2452" stroke-width="3" stroke-linejoin="round"/>
+<path d="M59 52 Q100 37 141 52" stroke="#cdb994" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<path d="M82.5 113 v6 M89.5 113 v6 M96.5 113 v6 M103.5 113 v6 M110.5 113 v6 M117.5 113 v6" stroke="#d9c9ac" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="81" cy="84" rx="14" ry="15" fill="#2d2452"/>
+<ellipse cx="119" cy="84" rx="14" ry="15" fill="#2d2452"/>
+        </g>
+        <g id="tb-nose">
+<path d="M100 97 L94 107 C92 111 97 113 100 109 C103 113 108 111 106 107 Z" fill="#2d2452" stroke="#2d2452" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M100 104.8 L100 111" stroke="#fff6e4" stroke-width="1.1" stroke-linecap="round"/>
+<path d="M98.9 111.4 L101.1 111.4 L100 109.6 Z" fill="#fff6e4"/>
+        </g>
+        <g id="tb-blush">
+<ellipse cx="77" cy="105" rx="4.5" ry="2.8" fill="#ff8fb5" opacity=".75"/>
+<ellipse cx="123" cy="105" rx="4.5" ry="2.8" fill="#ff8fb5" opacity=".75"/>
+        </g>
+        <g id="tb-jaw" data-pivot="100 124">
+<path d="M76 124 L124 124 C123 132 119 140 111 142 L89 142 C81 140 77 132 76 124 Z" fill="#fff6e4" stroke="#2d2452" stroke-width="3" stroke-linejoin="round"/>
+<path d="M82.5 125 v5 M89.5 125 v7 M96.5 125 v7 M103.5 125 v7 M110.5 125 v7 M117.5 125 v5" stroke="#d9c9ac" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <!-- HOOK: hidden automatically when #tony has class hatted -->
+        <g id="tb-hook">
+<line x1="100" y1="33" x2="100" y2="25" stroke="#2d2452" stroke-width="6" stroke-linecap="round"/>
+<circle cx="100" cy="20" r="5" fill="none" stroke="#2d2452" stroke-width="6"/>
+<line x1="100" y1="33" x2="100" y2="25" stroke="#a9b1c4" stroke-width="2.8" stroke-linecap="round"/>
+<circle cx="100" cy="20" r="5" fill="none" stroke="#a9b1c4" stroke-width="2.8"/>
+        </g>
+        <g id="tb-eyes">
+          <g id="tb-eyeL" data-pivot="81 83">
+<circle cx="81" cy="83" r="12.5" fill="#d3d8ec" stroke="#2d2452" stroke-width="2.5"/>
+<circle cx="78.8" cy="80.5" r="9.8" fill="#ffffff"/>
+            <g id="tb-pupilL">
+<ellipse cx="82.5" cy="85" rx="4.2" ry="3.86" transform="rotate(-15 82.5 85)" fill="#1b1730"/>
+            </g>
+          </g>
+          <g id="tb-eyeR" data-pivot="119 83">
+<circle cx="119" cy="83" r="12.5" fill="#d3d8ec" stroke="#2d2452" stroke-width="2.5"/>
+<circle cx="116.8" cy="80.5" r="9.8" fill="#ffffff"/>
+            <g id="tb-pupilR">
+<ellipse cx="117.5" cy="85" rx="4.2" ry="3.86" transform="rotate(-15 117.5 85)" fill="#1b1730"/>
+            </g>
+          </g>
+        </g>
+        <g id="tb-brows">
+          <g id="tb-browL" data-pivot="81 62">
+<path d="M75 62.5 L87 61.5" stroke="#2d2452" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+          <g id="tb-browR" data-pivot="119 62">
+<path d="M125 62.5 L113 61.5" stroke="#2d2452" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </g>
+        </g>
+        <!-- HAT SLOT: drawn in front of the skull, moves with the head -->
+        <g id="tb-hatSlot" data-pivot="100 40">
+          <!-- WARDROBE: chef hat -->
+          <g class="tbw tbw-chefhat"><g transform="translate(100 40) scale(1.4) translate(-60 -39)"><path d="M41 33 L35 -2 C30 -24 90 -24 85 -2 L79 33Z" fill="#fff" stroke="#2d2452" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 31 L47 -6 M60 31 V-10 M70 31 L73 -6" stroke="#e3dcf2" stroke-width="3" stroke-linecap="round"/><path d="M40 -12 C46 -18 54 -19 60 -18" stroke="#fff" stroke-width="3" fill="none" opacity=".9"/><rect x="38" y="28" width="44" height="11" rx="3" fill="#e9e2f7" stroke="#2d2452" stroke-width="2"/></g></g>
+          <!-- WARDROBE: mining hat with headlamp (same drawing as the canvas rig's miner hat) -->
+          <g class="tbw tbw-mininghat" transform="translate(0 -3)" stroke-linejoin="round" stroke-linecap="round">
+            <defs>
+              <clipPath id="tb-mhDome"><path d="M58 54 C56 27 76 9 100 9 C124 9 144 27 142 54 Z"/></clipPath>
+              <radialGradient id="tb-mhGlow" cx="100" cy="33" r="28" gradientUnits="userSpaceOnUse"><stop offset="0.14" stop-color="#fff6aa" stop-opacity=".85"/><stop offset="1" stop-color="#fff6aa" stop-opacity="0"/></radialGradient>
+            </defs>
+            <path d="M88 24 L88 6.5 Q88 4 90.5 4 L109.5 4 Q112 4 112 6.5 L112 24 Z" fill="#d99a07" stroke="#2d2452" stroke-width="3"/>
+            <path d="M58 54 C56 27 76 9 100 9 C124 9 144 27 142 54 Z" fill="#f5b919"/>
+            <g clip-path="url(#tb-mhDome)">
+              <ellipse cx="135" cy="42" rx="17" ry="34" transform="rotate(-8.6 135 42)" fill="#d99a07"/>
+              <ellipse cx="73" cy="28" rx="7.5" ry="14" transform="rotate(31.5 73 28)" fill="#ffe07a"/>
+            </g>
+            <path d="M58 54 C56 27 76 9 100 9 C124 9 144 27 142 54 Z" fill="none" stroke="#2d2452" stroke-width="3"/>
+            <g clip-path="url(#tb-mhDome)">
+              <path d="M89.5 9 L110.5 9 L111 44 L89 44 Z" fill="#f5b919" stroke="#2d2452" stroke-width="2.4"/>
+              <path d="M97 9 L96.5 22" stroke="#ffe07a" stroke-width="2.2"/>
+            </g>
+            <path d="M58 45 Q100 36 142 45 L142.5 51.5 Q100 43 57.5 51.5 Z" fill="#2b2733" stroke="#2d2452" stroke-width="2"/>
+            <path d="M53 51 Q100 44 147 51 Q151.5 55.5 146 58.5 Q100 63 54 58.5 Q48.5 55.5 53 51 Z" fill="#f5b919" stroke="#2d2452" stroke-width="3"/>
+            <path d="M57 56 Q100 51 143 56" fill="none" stroke="#d99a07" stroke-width="2"/>
+            <g id="tb-headlamp">
+              <circle cx="100" cy="33" r="28" fill="url(#tb-mhGlow)" stroke="none"/>
+              <rect x="89.5" y="38" width="21" height="9" rx="3" fill="#5d6478" stroke="#2d2452" stroke-width="2"/>
+              <circle cx="100" cy="31.5" r="11" fill="#aeb6c7" stroke="#2d2452" stroke-width="2.6"/>
+              <circle cx="100" cy="31.5" r="7.2" fill="#fff7c2" stroke="#2d2452" stroke-width="1.6"/>
+              <circle cx="97.4" cy="29" r="2.3" fill="#fff" stroke="none"/>
+            </g>
+          </g>
+        
+        </g>
+    </g>
+  </g>
